@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve --port 5000 --host 0.0.0.0",
+    "start": "ng build && node server/index.js",
     "start:api": "node server/index.js",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",

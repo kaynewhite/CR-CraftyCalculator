@@ -3,22 +3,22 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const path = require('path');
+const fs = require('fs');
 const migrate = require('./db/migrate');
 
 const app = express();
-const PORT = process.env.API_PORT || 3001;
+const PORT = process.env.PORT || 5000;
+const DIST_DIR = path.join(__dirname, '..', 'dist', 'crafty-rachel', 'browser');
 
 // ── Middleware ──
 app.use(helmet({ contentSecurityPolicy: false }));
-app.use(cors({
-  origin: process.env.FRONTEND_ORIGIN || '*',
-  credentials: true,
-}));
+app.use(cors({ origin: '*', credentials: true }));
 app.use(morgan('dev'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// ── Routes ──
+// ── API Routes ──
 app.use('/api/users',         require('./routes/users'));
 app.use('/api/materials',     require('./routes/materials'));
 app.use('/api/calculations',  require('./routes/calculations'));
@@ -31,10 +31,17 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// ── 404 ──
-app.use((req, res) => {
-  res.status(404).json({ error: `Route ${req.method} ${req.path} not found` });
-});
+// ── Serve Angular static files ──
+if (fs.existsSync(DIST_DIR)) {
+  app.use(express.static(DIST_DIR));
+  app.get('/*path', (req, res) => {
+    res.sendFile(path.join(DIST_DIR, 'index.html'));
+  });
+} else {
+  app.get('/*path', (req, res) => {
+    res.status(503).send('App is still building, please wait a moment and refresh...');
+  });
+}
 
 // ── Error handler ──
 app.use((err, req, res, next) => {
@@ -47,7 +54,7 @@ async function start() {
   try {
     await migrate();
     app.listen(PORT, '0.0.0.0', () => {
-      console.log(`[Server] Crafty Rachel API running on port ${PORT}`);
+      console.log(`[Server] Crafty Rachel running on port ${PORT}`);
     });
   } catch (err) {
     console.error('[Server] Failed to start:', err.message);
