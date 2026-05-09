@@ -38,3 +38,10 @@ externalPort = 80
 deploymentTarget = "static"
 build = ["npm", "run", "build"]
 publicDir = "dist/crafty-rachel/browser"
+
+[userenv]
+
+[userenv.shared]
+CLERK_PUBLISHABLE_KEY = "pk_test_YWxsb3dpbmctZ29sZGZpc2gtODMuY2xlcmsuYWNjb3VudHMuZGV2JA"
+PORT = "3001"
+NODE_ENV = "development"
