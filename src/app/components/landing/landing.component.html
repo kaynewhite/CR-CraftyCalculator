@@ -1,76 +1,229 @@
-<div class="landing-container">
-  <!-- Top Navigation Bar -->
-  <nav class="navbar navbar-expand-lg navbar-light py-3">
-    <div class="container">
-      <div class="navbar-brand d-flex align-items-center">
-        <!-- Logo Placeholder -->
-        <div class="logo-placeholder me-3">
-          <div class="logo-circle"></div>
+<div class="landing-page">
+
+  <!-- Navbar -->
+  <nav class="landing-nav">
+    <div class="nav-inner">
+      <div class="nav-brand">
+        <div class="nav-logo">
+          <img src="/CRlogo.png" alt="CR" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+          <div class="logo-fallback" style="display:none">CR</div>
         </div>
-        <span class="brand-name">Costing Calculator</span>
+        <span>Crafty Rachel</span>
       </div>
-      <div class="ms-auto">
-        <button class="btn btn-secondary me-2" (click)="navigateToLogin()">LogIn</button>
-        <button class="btn btn-primary" (click)="navigateToSignup()">SignUp</button>
+      <div class="nav-actions">
+        <button class="btn btn-ghost" (click)="navigateToLogin()">Sign In</button>
+        <button class="btn btn-primary" (click)="navigateToSignup()">Get Started</button>
       </div>
     </div>
   </nav>
 
-  <!-- Main Content -->
-  <div class="container main-content">
-    <div class="row justify-content-center align-items-center min-vh-75">
-      <div class="col-12 col-md-8 text-center">
-        <h1 class="display-1 mb-4">Craft Smarter, Not Harder</h1>
-        <p class="lead mb-4">Your ultimate costing calculator for crafts and small businesses</p>
-        <p class="text-muted mb-5">
-          Calculate costs, track materials, and maximize your profits with our easy-to-use craft calculator.
-          Perfect for crafters, artisans, and small business owners.
-        </p>
-        <div class="cta-buttons">
-          <button class="btn btn-primary btn-lg me-3" (click)="navigateToSignup()">
-            Get Started - It's Free
-          </button>
-          <button class="btn btn-outline-secondary btn-lg" (click)="navigateToLogin()">
-            Sign In
-          </button>
+  <!-- Hero -->
+  <section class="hero-section">
+    <div class="hero-bg-orbs">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-badge">
+        <i class="bi bi-stars"></i>
+        <span>Made for Crafters &amp; Small Businesses</span>
+      </div>
+      <h1 class="hero-heading">
+        Craft Smarter,<br>
+        <span class="heading-accent">Profit Better</span>
+      </h1>
+      <p class="hero-subtext">
+        Calculate costs, track materials, and maximize your profits with precision.
+        The ultimate tool for crafters, artisans, and creative entrepreneurs.
+      </p>
+      <div class="hero-cta">
+        <button class="btn btn-primary btn-lg hero-btn-primary" (click)="navigateToSignup()">
+          <i class="bi bi-rocket-takeoff me-2"></i>Start for Free
+        </button>
+        <button class="btn btn-outline-hero btn-lg" (click)="navigateToLogin()">
+          <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+        </button>
+      </div>
+      <div class="hero-trust">
+        <div class="trust-item">
+          <i class="bi bi-check-circle-fill"></i>
+          <span>No credit card required</span>
+        </div>
+        <div class="trust-item">
+          <i class="bi bi-check-circle-fill"></i>
+          <span>Free plan available</span>
+        </div>
+        <div class="trust-item">
+          <i class="bi bi-check-circle-fill"></i>
+          <span>Cancel anytime</span>
         </div>
       </div>
     </div>
 
-    <!-- Features Section -->
-    <div class="row mt-5 mb-5">
-      <div class="col-12 col-md-4 text-center mb-4">
-        <div class="feature-card card p-4">
-          <div class="feature-icon mb-3">
-            <i class="bi bi-calculator-fill" style="font-size: 3rem;"></i>
+    <!-- Hero Visual -->
+    <div class="hero-visual">
+      <div class="preview-card">
+        <div class="preview-header">
+          <div class="preview-dots">
+            <span></span><span></span><span></span>
           </div>
-          <h3>Easy Calculations</h3>
-          <p class="text-muted">Calculate costs and profit margins with just a few clicks</p>
+          <span class="preview-title">Pricing Calculator</span>
+        </div>
+        <div class="preview-body">
+          <div class="preview-row">
+            <span class="preview-label">Product Name</span>
+            <span class="preview-val">Custom Gift Card Set</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview-label">Material Cost</span>
+            <span class="preview-val">₱120.00</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview-label">Labor Cost</span>
+            <span class="preview-val">₱80.00</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview-label">Profit Margin</span>
+            <span class="preview-val preview-highlight">40%</span>
+          </div>
+          <div class="preview-divider"></div>
+          <div class="preview-result">
+            <span>Selling Price</span>
+            <span class="preview-price">₱392.00</span>
+          </div>
+          <div class="preview-pill">
+            <i class="bi bi-graph-up-arrow me-1"></i>₱112 profit per batch
+          </div>
         </div>
       </div>
-      <div class="col-12 col-md-4 text-center mb-4">
-        <div class="feature-card card p-4">
-          <div class="feature-icon mb-3">
-            <i class="bi bi-box-seam" style="font-size: 3rem;"></i>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features-section">
+    <div class="section-wrapper">
+      <div class="section-label">Features</div>
+      <h2 class="section-heading">Everything you need to run your craft business</h2>
+      <p class="section-sub">From pricing to inventory — all in one beautiful dashboard.</p>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon fi-pink">
+            <i class="bi bi-calculator-fill"></i>
           </div>
-          <h3>Material Tracking</h3>
-          <p class="text-muted">Keep track of your inventory and material costs</p>
+          <h3>Smart Calculator</h3>
+          <p>Calculate batch costs, profit margins, and selling prices with automatic waste adjustment and labor tracking.</p>
         </div>
-      </div>
-      <div class="col-12 col-md-4 text-center mb-4">
-        <div class="feature-card card p-4">
-          <div class="feature-icon mb-3">
-            <i class="bi bi-graph-up" style="font-size: 3rem;"></i>
+
+        <div class="feature-card">
+          <div class="feature-icon fi-orange">
+            <i class="bi bi-box-seam-fill"></i>
+          </div>
+          <h3>Material Inventory</h3>
+          <p>Track your materials, manage quantities, and automatically pull costs into your pricing calculations.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon fi-purple">
+            <i class="bi bi-graph-up-arrow"></i>
           </div>
           <h3>Profit Insights</h3>
-          <p class="text-muted">View trends and analytics to grow your business</p>
+          <p>View saved calculations, track your best-selling products, and identify where your profits come from.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon fi-blue">
+            <i class="bi bi-bookmark-fill"></i>
+          </div>
+          <h3>Save & Revisit</h3>
+          <p>Save your pricing calculations and revisit them anytime. Update prices as material costs change.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon fi-green">
+            <i class="bi bi-shield-fill-check"></i>
+          </div>
+          <h3>Secure &amp; Private</h3>
+          <p>Your business data stays safe. Enterprise-grade security with role-based access control.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon fi-amber">
+            <i class="bi bi-phone-fill"></i>
+          </div>
+          <h3>Works Everywhere</h3>
+          <p>Fully responsive design that looks great on mobile, tablet, and desktop — craft from anywhere.</p>
         </div>
       </div>
     </div>
-  </div>
+  </section>
+
+  <!-- Pricing -->
+  <section class="pricing-section">
+    <div class="section-wrapper">
+      <div class="section-label">Pricing</div>
+      <h2 class="section-heading">Simple, transparent pricing</h2>
+      <p class="section-sub">Start free and upgrade when you need more.</p>
+
+      <div class="pricing-grid">
+        <div class="pricing-card">
+          <div class="plan-name">Free</div>
+          <div class="plan-price"><span class="price-amount">₱0</span><span class="price-period">/mo</span></div>
+          <p class="plan-desc">Perfect for hobbyists just getting started.</p>
+          <ul class="plan-features">
+            <li><i class="bi bi-check2"></i> 3 calculations/month</li>
+            <li><i class="bi bi-check2"></i> 10 inventory items</li>
+            <li><i class="bi bi-check2"></i> Save up to 3 calculations</li>
+            <li><i class="bi bi-check2"></i> Basic categories</li>
+          </ul>
+          <button class="btn btn-outline-plan w-100" (click)="navigateToSignup()">Get Started</button>
+        </div>
+
+        <div class="pricing-card pricing-featured">
+          <div class="featured-badge">Most Popular</div>
+          <div class="plan-name">Basic</div>
+          <div class="plan-price"><span class="price-amount">₱100</span><span class="price-period">/mo</span></div>
+          <p class="plan-desc">For serious crafters growing their business.</p>
+          <ul class="plan-features">
+            <li><i class="bi bi-check2"></i> Unlimited calculations</li>
+            <li><i class="bi bi-check2"></i> 50 inventory items</li>
+            <li><i class="bi bi-check2"></i> Save up to 10 calculations</li>
+            <li><i class="bi bi-check2"></i> Priority support</li>
+          </ul>
+          <button class="btn btn-primary w-100" (click)="navigateToSignup()">Start Basic</button>
+        </div>
+
+        <div class="pricing-card">
+          <div class="plan-name">Pro</div>
+          <div class="plan-price"><span class="price-amount">₱250</span><span class="price-period">/mo</span></div>
+          <p class="plan-desc">For professionals who need everything, unlimited.</p>
+          <ul class="plan-features">
+            <li><i class="bi bi-check2"></i> Everything in Basic</li>
+            <li><i class="bi bi-check2"></i> Unlimited inventory</li>
+            <li><i class="bi bi-check2"></i> Unlimited saves</li>
+            <li><i class="bi bi-check2"></i> Custom categories</li>
+            <li><i class="bi bi-check2"></i> Full cost breakdown</li>
+            <li><i class="bi bi-check2"></i> 24/7 priority support</li>
+          </ul>
+          <button class="btn btn-outline-plan w-100" (click)="navigateToSignup()">Start Pro</button>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <!-- Footer -->
-  <footer class="text-center py-4 mt-5">
-    <p class="text-muted">&copy; 2026 Crafty Rachel. Made to sell, made with love.</p>
+  <footer class="landing-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="footer-logo">CR</div>
+        <div>
+          <p class="footer-name">Crafty Rachel</p>
+          <p class="footer-tagline">Made to sell, made with love.</p>
+        </div>
+      </div>
+      <p class="footer-copy">&copy; 2026 Crafty Rachel. All rights reserved.</p>
+    </div>
   </footer>
+
 </div>

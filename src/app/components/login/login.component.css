@@ -1,103 +1,67 @@
-.login-container {
-  background: linear-gradient(135deg, #FFF5F8 0%, #FFF9E6 100%);
-  min-height: 100vh;
-}
+.login-page { min-height: 100vh; background: var(--bg-body); display: flex; align-items: center; justify-content: center; padding: 1.5rem; position: relative; overflow: hidden; }
 
-body.dark-mode .login-container {
-  background: linear-gradient(135deg, #262626 0%, #1f1f1f 100%);
-}
+.bg-decoration { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+.blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.08; }
+.blob-1 { width: 450px; height: 450px; background: var(--brand-primary); top: -100px; left: -100px; }
+.blob-2 { width: 350px; height: 350px; background: var(--brand-secondary); bottom: -100px; right: -80px; }
+body.dark-mode .blob { opacity: 0.05; }
 
-.logo-placeholder {
-  width: 150px;
-  height: 150px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+.login-wrapper { position: relative; z-index: 1; width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; max-width: 900px; align-items: center; }
 
-.logo-circle-large {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  background-color: transparent;
-  background-image: url('/CRlogo.png');
-  background-size: cover;
-  background-position: center;
-  border: 5px solid var(--color-pink-deep);
-  box-shadow: 0 5px 15px rgba(231, 76, 108, 0.3);
-}
+.login-left { display: flex; flex-direction: column; align-items: flex-start; gap: 1.5rem; }
 
-.brand-name {
-  font-family: 'Sniglet', cursive;
-  font-size: 2rem;
-  font-weight: 500;
-  color: var(--color-pink-deep);
-}
+.auth-brand { display: flex; align-items: center; gap: 0.75rem; }
 
-.logo-section p {
-  font-family: 'Fredoka', sans-serif;
-  font-size: 1.1rem;
-}
+.auth-logo { width: 44px; height: 44px; border-radius: 12px; overflow: hidden; background: var(--brand-primary-light); display: flex; align-items: center; justify-content: center; }
+.auth-logo img { width: 100%; height: 100%; object-fit: cover; }
+.logo-fallback { font-family: 'Fredoka', sans-serif; font-size: 0.9rem; font-weight: 700; color: var(--brand-primary); display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
 
-.login-card {
-  border-radius: 20px;
-  border: none;
-  background-color: var(--color-card-bg);
-}
+.auth-brand-name { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.1rem; font-weight: 800; color: var(--text-primary); }
 
-.login-card h2 {
-  font-family: 'Sniglet', cursive;
-  color: var(--color-pink-deep);
-  font-weight: 500;
-}
+.login-headline { font-size: clamp(1.8rem, 3vw, 2.5rem); font-weight: 800; color: var(--text-primary); line-height: 1.2; margin: 0; }
 
-.form-label {
-  margin-bottom: 10px;
-  font-family: 'Fredoka', sans-serif;
-  font-weight: 600;
-  color: var(--color-text);
-}
+.login-headline .accent { background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 
-.form-control {
-  padding: 12px 14px;
-  font-family: 'Fredoka', sans-serif;
-}
+.login-tagline { font-size: 0.95rem; color: var(--text-secondary); margin: 0; line-height: 1.6; }
 
-.btn-lg {
-  padding: 15px;
-  font-size: 1.1rem;
-  font-weight: 600;
-}
+.login-stats { display: flex; gap: 1.5rem; }
+.stat-item { text-align: center; }
+.stat-num { font-size: 1.4rem; font-weight: 800; color: var(--brand-primary); display: block; }
+.stat-label { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
 
-.alert-info {
-  background-color: #D4F1F4;
-  border-color: #75E6DA;
-  color: #05445E;
-  border-radius: 10px;
-  font-family: 'Fredoka', sans-serif;
-}
+.login-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 2rem; box-shadow: var(--shadow-xl); }
 
-body.dark-mode .alert-info {
-  background-color: rgba(75, 192, 192, 0.15);
-  border-color: #4BC0C0;
-  color: #87CEEB;
-}
+.card-heading { margin-bottom: 1.5rem; }
+.card-heading h2 { font-size: 1.4rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.25rem; }
+.card-heading p { font-size: 0.85rem; color: var(--text-muted); margin: 0; }
 
-a {
-  color: var(--color-pink-deep);
-  font-weight: 600;
-}
+.field-group { margin-bottom: 1rem; }
+.field-label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.5rem; }
 
-a:hover {
-  color: var(--color-pink-coral);
-}
+.password-wrap { position: relative; }
+.password-wrap .form-control { padding-right: 2.75rem !important; }
+.pw-toggle { position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 0.25rem; display: flex; align-items: center; transition: color var(--transition-fast); }
+.pw-toggle:hover { color: var(--brand-primary); }
+
+.forgot-row { display: flex; justify-content: flex-end; margin-top: 0.25rem; margin-bottom: 1rem; }
+.forgot-link { font-size: 0.8rem; color: var(--text-muted); text-decoration: none; transition: color var(--transition-fast); }
+.forgot-link:hover { color: var(--brand-primary); }
+
+.submit-btn { margin-top: 0.5rem; margin-bottom: 1.25rem; }
+
+.divider { display: flex; align-items: center; gap: 0.75rem; margin: 1.25rem 0; }
+.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border-color); }
+.divider span { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; }
+
+.switch-link { text-align: center; font-size: 0.85rem; color: var(--text-secondary); margin: 0; }
+.switch-link a { color: var(--brand-primary); font-weight: 600; text-decoration: none; }
+.switch-link a:hover { text-decoration: underline; }
+
+.demo-info { margin-top: 1rem; background: var(--brand-primary-light); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 0.875rem; }
+.demo-info small { display: block; font-size: 0.78rem; color: var(--text-secondary); }
+.demo-info strong { color: var(--brand-primary); }
 
 @media (max-width: 768px) {
-  .login-card {
-    margin: 20px;
-  }
-  
-  .card-body {
-    padding: 30px !important;
-  }
+  .login-wrapper { grid-template-columns: 1fr; gap: 1.5rem; max-width: 440px; }
+  .login-left { display: none; }
 }

@@ -6,6 +6,7 @@ import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
+  standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css'
@@ -15,11 +16,9 @@ export class LoginComponent {
   password: string = '';
   errorMessage: string = '';
   isLoading: boolean = false;
+  showPassword: boolean = false;
 
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) {}
+  constructor(private authService: AuthService, private router: Router) {}
 
   onSubmit(): void {
     if (!this.email || !this.password) {
@@ -33,7 +32,11 @@ export class LoginComponent {
     this.authService.login(this.email, this.password).subscribe({
       next: (user) => {
         this.isLoading = false;
-        this.router.navigate(['/dashboard']);
+        if (user.role === 'admin' || user.role === 'superadmin') {
+          this.router.navigate(['/admin-dashboard']);
+        } else {
+          this.router.navigate(['/dashboard']);
+        }
       },
       error: (error) => {
         this.isLoading = false;

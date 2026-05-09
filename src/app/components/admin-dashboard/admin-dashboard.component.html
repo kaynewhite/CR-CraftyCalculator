@@ -1,104 +1,228 @@
 <div class="admin-layout">
-  <!-- Sidebar -->
-  <app-sidebar 
-    [isOpen]="sidebarOpen" 
-    [isCollapsed]="sidebarCollapsed"
-    (closeSidebar)="onSidebarClose()"
-    (toggleCollapse)="onCollapseSidebar()">
-  </app-sidebar>
+  <div class="sidebar-wrapper" [class.collapsed]="sidebarCollapsed">
+    <app-sidebar
+      [isOpen]="sidebarOpen"
+      [isCollapsed]="sidebarCollapsed"
+      (closeSidebar)="onSidebarClose()"
+      (toggleCollapse)="onCollapseSidebar()">
+    </app-sidebar>
+  </div>
 
-  <!-- Main Content -->
   <div class="admin-main">
-    <!-- Header -->
-    <div class="admin-header">
-      <button class="sidebar-toggle" (click)="toggleSidebar()" title="Toggle Sidebar">
+    <!-- Sticky Header -->
+    <header class="content-header">
+      <button class="hamburger-btn" (click)="toggleSidebar()" aria-label="Open menu">
         <i class="bi bi-list"></i>
       </button>
-      <div class="admin-title">
-        <h1>Admin Dashboard</h1>
-        <p *ngIf="isSuperAdmin" class="superadmin-badge">SuperAdmin Mode</p>
+      <div class="header-title-area">
+        <h1>Dashboard</h1>
+        <p>{{ isSuperAdmin ? 'SuperAdmin' : 'Admin' }} overview — {{ today | date:'MMMM d, yyyy' }}</p>
       </div>
-    </div>
+      <div class="header-actions">
+        <button class="btn btn-primary btn-sm" (click)="loadDashboardData()">
+          <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+        </button>
+      </div>
+    </header>
 
-    <div class="admin-container" *ngIf="!isLoading">
-    <!-- Dashboard Grid -->
-    <div class="dashboard-grid">
-      <!-- Monthly Revenue Card -->
-      <div class="dashboard-card revenue-card">
-        <div class="card-icon revenue-icon">💰</div>
-        <div class="card-content">
-          <h3>Monthly Revenue</h3>
-          <div class="revenue-amount">₱{{ monthlyRevenue.total.toLocaleString() }}</div>
-          <p class="revenue-subtitle">{{ monthlyRevenue.approvedCount }} approvals this month</p>
+    <!-- Loading -->
+    @if (isLoading) {
+      <div class="page-loading">
+        <div class="spinner-border text-brand" style="width:2.5rem;height:2.5rem;" role="status">
+          <span class="visually-hidden">Loading...</span>
         </div>
+        <p>Loading dashboard…</p>
       </div>
+    }
 
+    <!-- Main Content -->
+    @if (!isLoading) {
+      <div class="admin-container fade-in">
 
-      <!-- Total Users Card -->
-      <div class="dashboard-card users-card">
-        <div class="card-icon users-icon">👥</div>
-        <div class="card-content">
-          <h3>Total Users</h3>
-          <div class="users-count">3</div>
-          <button class="view-users-btn" (click)="viewUserManagement()">Manage Users</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Top Users Section -->
-    <div class="section">
-      <h2>Top 3 Most Active Users</h2>
-      <div class="users-list">
-        <div class="user-card" *ngFor="let user of topUsers">
-          <div class="user-info">
-            <h4>{{ user.name }}</h4>
-            <p class="user-email">{{ user.email }}</p>
-            <p class="user-subscription">Plan: <span class="badge">{{ user.subscription }}</span></p>
+        <!-- KPI Row -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-icon kpi-revenue">
+              <i class="bi bi-currency-dollar"></i>
+            </div>
+            <div class="kpi-body">
+              <p class="kpi-label">Monthly Revenue</p>
+              <h2 class="kpi-value">₱{{ monthlyRevenue.total.toLocaleString() }}</h2>
+              <span class="kpi-sub">{{ monthlyRevenue.approvedCount }} approval{{ monthlyRevenue.approvedCount !== 1 ? 's' : '' }} this month</span>
+            </div>
           </div>
-          <div class="user-stats">
-            <div class="stat">
-              <span class="stat-value">{{ user.calculationCount }}</span>
-              <span class="stat-label">Calculations</span>
+
+          <div class="kpi-card">
+            <div class="kpi-icon kpi-users">
+              <i class="bi bi-people-fill"></i>
+            </div>
+            <div class="kpi-body">
+              <p class="kpi-label">Total Users</p>
+              <h2 class="kpi-value">{{ totalUsers }}</h2>
+              <span class="kpi-sub">Registered accounts</span>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-icon kpi-pending">
+              <i class="bi bi-hourglass-split"></i>
+            </div>
+            <div class="kpi-body">
+              <p class="kpi-label">Pending Payments</p>
+              <h2 class="kpi-value">{{ pendingPayments.length }}</h2>
+              <span class="kpi-sub">Awaiting approval</span>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-icon kpi-calcs">
+              <i class="bi bi-calculator-fill"></i>
+            </div>
+            <div class="kpi-body">
+              <p class="kpi-label">Saved Calculations</p>
+              <h2 class="kpi-value">{{ totalCalculations }}</h2>
+              <span class="kpi-sub">Across all users</span>
             </div>
           </div>
         </div>
+
+        <!-- Charts Row -->
+        <div class="charts-grid">
+          <!-- Revenue Chart -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <h3>Revenue Overview</h3>
+                <p>Monthly approved payments (₱)</p>
+              </div>
+              <span class="badge bg-success">Live</span>
+            </div>
+            <div class="chart-body">
+              <canvas #revenueChart id="revenueChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Subscription Distribution -->
+          <div class="chart-card chart-card-sm">
+            <div class="chart-header">
+              <div>
+                <h3>Plan Distribution</h3>
+                <p>Users by subscription</p>
+              </div>
+            </div>
+            <div class="chart-body chart-doughnut-wrap">
+              <canvas #planChart id="planChart"></canvas>
+              <div class="doughnut-legend">
+                <div class="legend-item">
+                  <span class="legend-dot" style="background:#E74C6C"></span>
+                  <span>Free ({{ planCounts.free }})</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot" style="background:#F39C12"></span>
+                  <span>Basic ({{ planCounts.basic }})</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot" style="background:#27AE60"></span>
+                  <span>Pro ({{ planCounts.pro }})</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Row -->
+        <div class="bottom-grid">
+          <!-- Top Users -->
+          <div class="section-card">
+            <div class="section-header">
+              <div>
+                <h3>Top Active Users</h3>
+                <p>Ranked by calculation count</p>
+              </div>
+              <button class="btn btn-outline-primary btn-sm" (click)="viewUserManagement()">
+                <i class="bi bi-arrow-right me-1"></i>Manage
+              </button>
+            </div>
+            @if (topUsers.length > 0) {
+              <div class="top-users-list">
+                @for (user of topUsers; track user.id; let i = $index) {
+                  <div class="top-user-row">
+                    <div class="rank-badge" [class.rank-1]="i===0" [class.rank-2]="i===1" [class.rank-3]="i===2">
+                      {{ i + 1 }}
+                    </div>
+                    <div class="user-avatar-sm">{{ user.name.charAt(0).toUpperCase() }}</div>
+                    <div class="user-meta">
+                      <p class="u-name">{{ user.name }}</p>
+                      <p class="u-email">{{ user.email }}</p>
+                    </div>
+                    <div class="user-right">
+                      <span class="badge" [class.bg-success]="user.subscription==='pro'" [class.bg-warning]="user.subscription==='basic'" [class.bg-secondary]="user.subscription==='free'">
+                        {{ user.subscription | titlecase }}
+                      </span>
+                      <p class="calc-count">{{ user.calculationCount }} calcs</p>
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="empty-state">
+                <i class="bi bi-people"></i>
+                <p>No user data available</p>
+              </div>
+            }
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="section-card">
+            <div class="section-header">
+              <div>
+                <h3>Quick Actions</h3>
+                <p>Common admin tasks</p>
+              </div>
+            </div>
+            <div class="quick-actions">
+              <button class="quick-action-btn" (click)="viewPaymentApprovals()">
+                <div class="qa-icon qa-payments"><i class="bi bi-credit-card-fill"></i></div>
+                <div class="qa-text">
+                  <span class="qa-title">Payment Approvals</span>
+                  <span class="qa-sub">{{ pendingPayments.length }} pending</span>
+                </div>
+                <i class="bi bi-chevron-right qa-arrow"></i>
+              </button>
+
+              <button class="quick-action-btn" (click)="viewUserManagement()">
+                <div class="qa-icon qa-users"><i class="bi bi-people-fill"></i></div>
+                <div class="qa-text">
+                  <span class="qa-title">User Management</span>
+                  <span class="qa-sub">{{ totalUsers }} registered</span>
+                </div>
+                <i class="bi bi-chevron-right qa-arrow"></i>
+              </button>
+
+              <button class="quick-action-btn" (click)="router.navigate(['/admin-qr'])">
+                <div class="qa-icon qa-qr"><i class="bi bi-qr-code"></i></div>
+                <div class="qa-text">
+                  <span class="qa-title">QR Code Manager</span>
+                  <span class="qa-sub">Payment QR codes</span>
+                </div>
+                <i class="bi bi-chevron-right qa-arrow"></i>
+              </button>
+
+              @if (isSuperAdmin) {
+                <button class="quick-action-btn" (click)="viewSystemLogs()">
+                  <div class="qa-icon qa-logs"><i class="bi bi-journal-text"></i></div>
+                  <div class="qa-text">
+                    <span class="qa-title">System Logs</span>
+                    <span class="qa-sub">Audit trail</span>
+                  </div>
+                  <i class="bi bi-chevron-right qa-arrow"></i>
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+
       </div>
-    </div>
-
-    <!-- Quick Navigation -->
-    <div class="section">
-      <h2>Quick Actions</h2>
-      <div class="actions-grid">
-        <button class="action-btn approvals-btn" (click)="viewPaymentApprovals()">
-          <div class="action-icon">✓</div>
-          <div class="action-text">
-            <h4>Payment Approvals</h4>
-            <p>Review and approve payments</p>
-          </div>
-        </button>
-        
-        <button class="action-btn users-btn" (click)="viewUserManagement()">
-          <div class="action-icon">👥</div>
-          <div class="action-text">
-            <h4>User Management</h4>
-            <p>Manage user accounts</p>
-          </div>
-        </button>
-
-        <button class="action-btn logs-btn" (click)="viewSystemLogs()" *ngIf="isSuperAdmin">
-          <div class="action-icon">📋</div>
-          <div class="action-text">
-            <h4>System Logs</h4>
-            <p>View audit logs</p>
-          </div>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Loading State -->
-  <div *ngIf="isLoading" class="loading-state">
-    <div class="spinner"></div>
-    <p>Loading dashboard...</p>
+    }
   </div>
 </div>

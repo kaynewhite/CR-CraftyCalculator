@@ -1,51 +1,58 @@
 .theme-toggle-global {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
+  bottom: 1.25rem;
+  right: 1.25rem;
   z-index: 10000;
-  width: 45px;
-  height: 45px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0,0,0,0.1);
-  border: none;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-color);
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-md);
+  color: var(--text-secondary);
 }
 
 .theme-toggle-global:hover {
-  background: rgba(0,0,0,0.2);
+  background: var(--brand-primary-light);
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+  transform: scale(1.08);
 }
 
-.theme-toggle-global i {
-  font-size: 1.2rem;
-}
+.theme-toggle-global i { font-size: 1.1rem; }
 
-/* rejection feedback overlay */
 .rejection-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.6);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10001;
+  backdrop-filter: blur(4px);
+  padding: 1.5rem;
 }
+
 .rejection-box {
-  background: var(--color-card-bg);
-  color: var(--color-text);
-  padding: 30px;
-  border-radius: 12px;
-  max-width: 90%;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  padding: 2rem;
+  border-radius: 20px;
+  max-width: 440px;
+  width: 100%;
   text-align: center;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--border-color);
 }
+
 .rejection-box p {
-  margin-bottom: 20px;
-  font-size: 1rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
 }

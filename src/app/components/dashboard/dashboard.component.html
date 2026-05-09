@@ -1,112 +1,161 @@
-<div class="dashboard-layout">
-  <!-- Subscription Expiry Banner -->
-  <app-subscription-expiry-banner></app-subscription-expiry-banner>
+<app-subscription-expiry-banner></app-subscription-expiry-banner>
 
-  <!-- Sidebar -->
+<div class="dashboard-layout">
   <div class="sidebar-wrapper" [class.collapsed]="sidebarCollapsed">
-    <app-sidebar [isOpen]="sidebarOpen" [isCollapsed]="sidebarCollapsed" (closeSidebar)="closeSidebar()" (toggleCollapse)="toggleSidebarCollapse()"></app-sidebar>
+    <app-sidebar
+      [isOpen]="sidebarOpen"
+      [isCollapsed]="sidebarCollapsed"
+      (closeSidebar)="closeSidebar()"
+      (toggleCollapse)="toggleSidebarCollapse()">
+    </app-sidebar>
   </div>
 
-  <!-- Main Content --> 
   <div class="main-content">
     <!-- Header -->
-    <div class="content-header p-4">
-      <div class="d-flex align-items-center justify-content-between">
-        <div>
-          <button class="btn btn-link d-md-none p-0 me-3 hamburger-btn" (click)="toggleSidebar()">
-            <i class="bi bi-list" style="font-size: 1.8rem;"></i>
-          </button>
-          <h1 class="d-inline">Welcome, User</h1>
-          <p class="text-muted mb-0">Here's an overview of your craft business</p>
-        </div>
+    <header class="content-header">
+      <button class="hamburger-btn" (click)="toggleSidebar()" aria-label="Open menu">
+        <i class="bi bi-list"></i>
+      </button>
+      <div>
+        <h1>Dashboard</h1>
+        <p>Welcome back! Here's your craft business at a glance.</p>
       </div>
-    </div>
+    </header>
 
-    <!-- Loading State -->
     @if (isLoading) {
-      <div class="text-center py-5">
-        <div class="spinner-border text-primary" role="status">
+      <div class="page-loading">
+        <div class="spinner-border" style="color:var(--brand-primary);width:2.5rem;height:2.5rem;" role="status">
           <span class="visually-hidden">Loading...</span>
         </div>
+        <p>Loading your dashboard…</p>
       </div>
     }
 
-    <!-- Dashboard Content -->
     @if (!isLoading && summary) {
-      <div class="content-body p-4">
-        <!-- Statistics Cards -->
-        <div class="row mb-4">
-          <div class="col-12 col-md-4 mb-3">
-            <div class="card stat-card">
-              <div class="card-body text-center">
-                <div class="stat-icon mb-2">
-                  <i class="bi bi-calculator-fill"></i>
+      <div class="content-body fade-in">
+
+        <!-- KPI Cards -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-icon kpi-calc">
+              <i class="bi bi-calculator-fill"></i>
+            </div>
+            <div class="kpi-body">
+              <p class="kpi-label">Total Calculations</p>
+              <h2 class="kpi-value">{{ summary.totalCalculations }}</h2>
+              <span class="kpi-sub">Saved pricings</span>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-icon kpi-profit">
+              <i class="bi bi-currency-exchange"></i>
+            </div>
+            <div class="kpi-body">
+              <p class="kpi-label">Avg Profit/Unit</p>
+              <h2 class="kpi-value">₱{{ summary.averageProfit.toFixed(2) }}</h2>
+              <span class="kpi-sub">Across all products</span>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-icon kpi-materials">
+              <i class="bi bi-box-seam-fill"></i>
+            </div>
+            <div class="kpi-body">
+              <p class="kpi-label">Materials</p>
+              <h2 class="kpi-value">{{ summary.totalMaterialsUsed }}</h2>
+              <span class="kpi-sub">In inventory</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Saves + Quick Links -->
+        <div class="row g-3">
+          <div class="col-12 col-lg-7">
+            <div class="card saves-card">
+              <div class="card-header">
+                <div class="saves-header">
+                  <h3>Recent Saves</h3>
+                  <a routerLink="/saved" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-arrow-right me-1"></i>View all
+                  </a>
                 </div>
-                <h3>{{ summary.totalCalculations }}</h3>
-                <p class="text-muted mb-0">Total Calculations</p>
+              </div>
+              <div class="card-body">
+                <p class="hint-text">
+                  Showing latest 3 — your plan allows
+                  {{ savedLimit === Infinity ? 'unlimited' : savedLimit }} saves,
+                  expiring {{ calculationService.getExpiryDays() === Infinity ? 'never' : 'after ' + calculationService.getExpiryDays() + ' days' }}.
+                </p>
+
+                @if (recentSaved.length > 0) {
+                  @for (s of recentSaved; track s.id) {
+                    <div class="save-row">
+                      <div class="save-icon">
+                        <i class="bi bi-bookmark-fill"></i>
+                      </div>
+                      <div class="save-info">
+                        <p class="save-name">{{ s.name }}</p>
+                        <p class="save-meta">{{ s.category }} · {{ s.materials.length }} material{{ s.materials.length !== 1 ? 's' : '' }}</p>
+                      </div>
+                      <div class="save-right">
+                        <span class="save-price">₱{{ s.suggestedPrice.toFixed(2) }}</span>
+                        <span class="save-date">{{ s.createdAt | date:'MMM d' }}</span>
+                      </div>
+                    </div>
+                  }
+                } @else {
+                  <div class="empty-state">
+                    <i class="bi bi-bookmark"></i>
+                    <p>No saved calculations yet. Use the calculator to create and save your first pricing!</p>
+                  </div>
+                }
               </div>
             </div>
           </div>
-          <div class="col-12 col-md-4 mb-3">
-            <div class="card stat-card">
-              <div class="card-body text-center">
-                <div class="stat-icon mb-2">
-                  <i class="bi bi-currency-dollar"></i>
-                </div>
-                <h3>₱{{ summary.averageProfit.toFixed(2) }}</h3>
-                <p class="text-muted mb-0">Avg Profit</p>
+
+          <div class="col-12 col-lg-5">
+            <div class="card">
+              <div class="card-header">
+                <h3 style="font-size:0.95rem;font-weight:700;margin:0;color:var(--text-primary)">Quick Actions</h3>
               </div>
-            </div>
-          </div>
-          <div class="col-12 col-md-4 mb-3">
-            <div class="card stat-card">
-              <div class="card-body text-center">
-                <div class="stat-icon mb-2">
-                  <i class="bi bi-box-seam"></i>
+              <div class="card-body">
+                <div class="quick-links">
+                  <a routerLink="/calculator" class="quick-link-btn">
+                    <div class="ql-icon ql-calc"><i class="bi bi-calculator-fill"></i></div>
+                    <div>
+                      <span class="ql-title">Calculator</span>
+                      <span class="ql-desc">Price a product</span>
+                    </div>
+                  </a>
+                  <a routerLink="/inventory" class="quick-link-btn">
+                    <div class="ql-icon ql-inv"><i class="bi bi-box-seam-fill"></i></div>
+                    <div>
+                      <span class="ql-title">Inventory</span>
+                      <span class="ql-desc">Manage materials</span>
+                    </div>
+                  </a>
+                  <a routerLink="/saved" class="quick-link-btn">
+                    <div class="ql-icon ql-hist"><i class="bi bi-bookmark-fill"></i></div>
+                    <div>
+                      <span class="ql-title">Saved</span>
+                      <span class="ql-desc">View history</span>
+                    </div>
+                  </a>
+                  <a routerLink="/subscription" class="quick-link-btn">
+                    <div class="ql-icon ql-sub"><i class="bi bi-stars"></i></div>
+                    <div>
+                      <span class="ql-title">Upgrade</span>
+                      <span class="ql-desc">View plans</span>
+                    </div>
+                  </a>
                 </div>
-                <h3>{{ summary.totalMaterialsUsed }}</h3>
-                <p class="text-muted mb-0">Materials</p>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Recent Calculations -->
-          <div class="card">
-            <div class="card-header">
-              <h4 class="mb-0">Recent Saves ({{ recentSaved.length }})</h4>
-            </div>
-            <div class="card-body">
-              @if (recentSaved.length > 0) {
-                <small class="text-muted">
-                  Showing the latest 3 entries; your plan allows
-                  {{ savedLimit === Infinity ? 'unlimited' : savedLimit }} saved
-                  calculation{{ savedLimit === Infinity ? '' : 's' }},
-                  expiring after {{ calculationService.getExpiryDays() === Infinity ? 'never' : calculationService.getExpiryDays() + ' days' }}.
-                  Full list available under Saved.
-                </small>
-                <div class="list-group">
-                  @for (s of recentSaved; track s.id) {
-                    <div class="list-group-item d-flex justify-content-between align-items-center">
-                      <div>
-                        <div class="fw-bold">{{ s.name }}</div>
-                        <small class="text-muted">{{ s.category }} • {{ s.materials.length }} items</small>
-                      </div>
-                      <div class="text-end">
-                        <div>₱{{ s.suggestedPrice.toFixed(2) }}</div>
-                        <small class="text-muted">{{ s.createdAt | date:'short' }}</small>
-                      </div>
-                    </div>
-                  }
-                </div>
-              } @else {
-                <div class="empty-state text-center py-4">
-                  <i class="bi bi-inbox"></i>
-                  <p>No saved calculations yet. Start creating and saving calculations!</p>
-                </div>
-              }
-            </div>
-          </div>
       </div>
     }
   </div>

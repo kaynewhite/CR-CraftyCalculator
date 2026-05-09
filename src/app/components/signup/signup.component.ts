@@ -6,6 +6,7 @@ import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-signup',
+  standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './signup.component.html',
   styleUrl: './signup.component.css'
@@ -17,11 +18,10 @@ export class SignupComponent {
   confirmPassword: string = '';
   errorMessage: string = '';
   isLoading: boolean = false;
+  showPassword: boolean = false;
+  showConfirm: boolean = false;
 
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) {}
+  constructor(private authService: AuthService, private router: Router) {}
 
   onSubmit(): void {
     if (!this.name || !this.email || !this.password || !this.confirmPassword) {

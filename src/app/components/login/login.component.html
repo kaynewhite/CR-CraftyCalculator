@@ -1,97 +1,98 @@
-<div class="login-container">
-  <div class="container">
-    <div class="row min-vh-100 align-items-center">
-      <!-- Logo Section (Left) -->
-      <div class="col-12 col-md-4 text-center mb-4 mb-md-0">
-        <div class="logo-section">
-          <div class="logo-placeholder mx-auto">
-            <div class="logo-circle-large"></div>
-          </div>
-          <h2 class="brand-name mt-3">Costing Calculator</h2>
-          <p class="text-muted">Made to sell, made with love.</p>
+<div class="login-page">
+  <div class="bg-decoration">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+  </div>
+
+  <div class="login-wrapper">
+    <!-- Left brand panel -->
+    <div class="login-left">
+      <div class="auth-brand">
+        <div class="auth-logo">
+          <img src="/CRlogo.png" alt="CR" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+          <div class="logo-fallback" style="display:none">CR</div>
+        </div>
+        <span class="auth-brand-name">Crafty Rachel</span>
+      </div>
+      <h1 class="login-headline">
+        Welcome<br>back to<br><span class="accent">your craft</span>
+      </h1>
+      <p class="login-tagline">Track your costs, grow your profits, and build the creative business you deserve.</p>
+      <div class="login-stats">
+        <div class="stat-item">
+          <span class="stat-num">₱0</span>
+          <span class="stat-label">Free to start</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num">3</span>
+          <span class="stat-label">Minutes to setup</span>
         </div>
       </div>
+    </div>
 
-      <!-- Login Form (Right) -->
-      <div class="col-12 col-md-8">
-        <div class="row justify-content-center">
-          <div class="col-12 col-lg-8">
-            <div class="card login-card shadow-lg">
-              <div class="card-body p-5">
-                <h2 class="text-center mb-4">Login Form</h2>
-                
-                <!--Mock Credentials Info -->
-                <!-- <div class="alert alert-info" role="alert">
-                  <strong>Test Credentials:</strong><br>
-                  Email: user&#64;test.com<br>
-                  Password: user123
-                </div> -->
+    <!-- Right form panel -->
+    <div class="login-card">
+      <div class="card-heading">
+        <h2>Sign in to your account</h2>
+        <p>Don't have one? <a routerLink="/signup">Create account</a></p>
+      </div>
 
-                <!-- Error Message -->
-                @if (errorMessage) {
-                  <div class="alert alert-danger" role="alert">
-                    {{ errorMessage }}
-                  </div>
-                }
+      @if (errorMessage) {
+        <div class="alert alert-danger mb-3" role="alert">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ errorMessage }}
+        </div>
+      }
 
-                <!-- Login Form -->
-                <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
-                  <div class="mb-3">
-                    <label for="email" class="form-label">Email Address</label>
-                    <input 
-                      type="email" 
-                      class="form-control" 
-                      id="email" 
-                      name="email"
-                      [(ngModel)]="email" 
-                      required
-                      email
-                      placeholder="Enter your email"
-                    >
-                  </div>
-                  
-                  <div class="mb-4">
-                    <label for="password" class="form-label">Password</label>
-                    <input 
-                      type="password" 
-                      class="form-control" 
-                      id="password" 
-                      name="password"
-                      [(ngModel)]="password" 
-                      required
-                      placeholder="Enter your password"
-                    >
-                  </div>
+      <form (ngSubmit)="onSubmit()" #loginForm="ngForm" autocomplete="on">
+        <div class="field-group">
+          <label class="field-label" for="login-email">
+            <i class="bi bi-envelope me-1"></i>Email Address
+          </label>
+          <input
+            id="login-email"
+            type="email"
+            class="form-control"
+            name="email"
+            [(ngModel)]="email"
+            placeholder="you@example.com"
+            required
+            email
+            autocomplete="username">
+        </div>
 
-                  <div class="d-grid">
-                    <button 
-                      type="submit" 
-                      class="btn btn-primary btn-lg"
-                      [disabled]="isLoading || !loginForm.valid"
-                    >
-                      @if (!isLoading) {
-                        <span>Login</span>
-                      }
-                      @if (isLoading) {
-                        <span>
-                          <span class="spinner-border spinner-border-sm me-2"></span>
-                          Logging in...
-                        </span>
-                      }
-                    </button>
-                  </div>
-                </form>
-
-                <div class="text-center mt-4">
-                  <p class="text-muted">
-                    Don't have an account? 
-                    <a routerLink="/signup" class="text-decoration-none">Sign up here</a>
-                  </p>
-                </div>
-              </div>
-            </div>
+        <div class="field-group">
+          <label class="field-label" for="login-password">
+            <i class="bi bi-lock me-1"></i>Password
+          </label>
+          <div class="password-wrap">
+            <input
+              id="login-password"
+              [type]="showPassword ? 'text' : 'password'"
+              class="form-control"
+              name="password"
+              [(ngModel)]="password"
+              placeholder="••••••••"
+              required
+              autocomplete="current-password">
+            <button type="button" class="pw-toggle" (click)="showPassword = !showPassword" tabindex="-1">
+              <i class="bi" [class.bi-eye]="!showPassword" [class.bi-eye-slash]="showPassword"></i>
+            </button>
           </div>
         </div>
+
+        <button type="submit" class="btn btn-primary btn-lg w-100 submit-btn" [disabled]="isLoading || !loginForm.valid">
+          @if (isLoading) {
+            <span class="spinner-border spinner-border-sm me-2"></span>Signing in…
+          } @else {
+            <i class="bi bi-arrow-right-circle me-2"></i>Sign In
+          }
+        </button>
+      </form>
+
+      <p class="switch-link">New here? <a routerLink="/signup">Create a free account</a></p>
+
+      <div class="demo-info">
+        <small><strong>Demo mode:</strong> Create an account via Sign Up to get started. Admins use <a routerLink="/bigboss-login">Admin Login</a>.</small>
       </div>
     </div>
   </div>

@@ -20,7 +20,8 @@ export const routes: Routes = [
   { path: '', component: LandingComponent, canActivate: [guestGuard] },
   { path: 'login', component: LoginComponent, canActivate: [guestGuard] },
   { path: 'signup', component: SignupComponent, canActivate: [guestGuard] },
-  { path: 'finalboss', component: AdminLoginComponent },
+  { path: 'bigboss-login', component: AdminLoginComponent },
+  { path: 'finalboss', redirectTo: 'bigboss-login' },
   { path: 'admin-dashboard', component: AdminDashboardComponent, canActivate: [adminGuard] },
   { path: 'admin-payments', component: PaymentApprovalComponent, canActivate: [adminGuard] },
   { path: 'admin-qr', component: QrManagerComponent, canActivate: [adminGuard] },
@@ -36,4 +37,3 @@ export const routes: Routes = [
   { path: 'subscription', component: SubscriptionComponent, canActivate: [authGuard] },
   { path: '**', redirectTo: '' }
 ];
-

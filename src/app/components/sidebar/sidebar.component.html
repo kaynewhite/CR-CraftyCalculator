@@ -3,149 +3,149 @@
   <div class="sidebar-overlay" (click)="onOverlayClick()"></div>
 }
 
-<div class="sidebar-container" [class.show]="isOpen" [class.collapsed]="isCollapsed">
-  <!-- Brand Header -->
-  <div class="sidebar-header p-3">
-    <div class="d-flex align-items-center justify-content-between">
-      <div class="d-flex align-items-center">
-        <div class="logo-small me-2"></div>
-        @if (!isCollapsed) {
-          <span class="brand-text">
-            @if (isAdmin) {
-              Admin Panel
-            } @else {
-              Costing Calculator
-            }
-          </span>
-        }
+<aside class="sidebar-container" [class.sidebar-open]="isOpen" [class.sidebar-collapsed]="isCollapsed" role="navigation" aria-label="Main navigation">
+
+  <!-- Header -->
+  <div class="sidebar-header">
+    <div class="header-brand">
+      <div class="brand-logo">
+        <img src="/CRlogo.png" alt="Crafty Rachel" class="logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+        <div class="logo-fallback" style="display:none">CR</div>
       </div>
-      <button class="btn btn-link p-0 d-none d-md-block collapse-toggle" (click)="toggleCollapseSidebar()" title="Toggle sidebar">
-        @if (!isCollapsed) {
-          <i class="bi bi-chevron-left"></i>
-        }
-        @if (isCollapsed) {
-          <i class="bi bi-chevron-right"></i>
-        }
-      </button>
+      @if (!isCollapsed) {
+        <div class="brand-text-wrap">
+          <span class="brand-name">{{ isAdmin ? 'Admin Panel' : 'Crafty Rachel' }}</span>
+          @if (isSuperAdmin) {
+            <span class="superadmin-chip">SuperAdmin</span>
+          }
+        </div>
+      }
     </div>
+
+    <button
+      class="collapse-btn"
+      (click)="toggleCollapseSidebar()"
+      [title]="isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+      aria-label="Toggle sidebar">
+      <i class="bi" [class.bi-chevron-left]="!isCollapsed" [class.bi-chevron-right]="isCollapsed"></i>
+    </button>
   </div>
 
-  <!-- User Info -->
-  @if (currentUser && !isCollapsed) {
-    <div class="user-info p-3 text-center">
-      <div class="user-avatar mx-auto mb-2">
-        <span>{{ currentUser.name.charAt(0).toUpperCase() }}</span>
+  <!-- User Profile -->
+  @if (currentUser) {
+    <div class="user-section" [class.collapsed-user]="isCollapsed">
+      <div class="user-avatar-wrap" [title]="isCollapsed ? currentUser.name : ''">
+        <div class="user-avatar">{{ currentUser.name.charAt(0).toUpperCase() }}</div>
+        <span class="status-dot"></span>
       </div>
-      <h6 class="mb-0">Welcome, {{ currentUser.name }}</h6>
-      <small class="text-muted">{{ currentUser.email }}</small>
-      @if (isSuperAdmin) {
-        <small class="text-warning d-block mt-1">SUPERADMIN</small>
+      @if (!isCollapsed) {
+        <div class="user-details">
+          <p class="user-name">{{ currentUser.name }}</p>
+          <p class="user-email">{{ currentUser.email }}</p>
+        </div>
       }
-    </div>
-  }
-  @if (currentUser && isCollapsed) {
-    <div class="user-info p-3 text-center">
-      <div class="user-avatar mx-auto">
-        <span>{{ currentUser.name.charAt(0).toUpperCase() }}</span>
-      </div>
     </div>
   }
 
-  <!-- Navigation Links -->
-  <nav class="sidebar-nav mt-3">
-    <a [routerLink]="generateLink('dashboard')" routerLinkActive="active" class="nav-link" (click)="onNavigate()" [title]="isCollapsed ? 'Dashboard' : ''">
-      <i class="bi bi-speedometer2 me-2"></i>
-      @if (!isCollapsed) {
-        <span>Dashboard</span>
-      }
-    </a>
-    <a [routerLink]="generateLink('calculator')" routerLinkActive="active" class="nav-link" (click)="onNavigate()" [title]="isCollapsed ? 'Calculator' : ''">
-      <i class="bi bi-calculator me-2"></i>
-      @if (!isCollapsed) {
-        <span>Calculator</span>
-      }
-    </a>
-    <a [routerLink]="generateLink('saved')" routerLinkActive="active" class="nav-link" (click)="onNavigate()" [title]="isCollapsed ? 'Saved' : ''">
-      <i class="bi bi-bookmark me-2"></i>
-      @if (!isCollapsed) {
-        <span>Saved</span>
-      }
-    </a>
-    <a [routerLink]="generateLink('inventory')" routerLinkActive="active" class="nav-link" (click)="onNavigate()" [title]="isCollapsed ? 'Inventory' : ''">
-      <i class="bi bi-box-seam me-2"></i>
-      @if (!isCollapsed) {
-        <span>Inventory</span>
-      }
-    </a>
-    <a routerLink="/profile" routerLinkActive="active" class="nav-link" (click)="onNavigate()" [title]="isCollapsed ? 'Profile' : ''">
-      <i class="bi bi-person me-2"></i>
-      @if (!isCollapsed) {
-        <span>Profile</span>
-      }
-    </a>
-    <!-- hide subscription link for admins (they are always pro) -->
+  <!-- Navigation -->
+  <nav class="sidebar-nav" aria-label="Navigation links">
+
     @if (!isAdmin) {
-      <a routerLink="/subscription" routerLinkActive="active" class="nav-link" (click)="onNavigate()" [title]="isCollapsed ? 'Subscription' : ''">
-        <i class="bi bi-star me-2"></i>
-        @if (!isCollapsed) {
-          <span>Subscription</span>
-        }
-      </a>
+      <!-- User Nav -->
+      <div class="nav-section">
+        @if (!isCollapsed) { <p class="nav-section-label">Main Menu</p> }
+        <a [routerLink]="'/dashboard'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'Dashboard' : ''">
+          <i class="bi bi-speedometer2 nav-icon"></i>
+          @if (!isCollapsed) { <span>Dashboard</span> }
+        </a>
+        <a [routerLink]="'/calculator'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'Calculator' : ''">
+          <i class="bi bi-calculator nav-icon"></i>
+          @if (!isCollapsed) { <span>Calculator</span> }
+        </a>
+        <a [routerLink]="'/saved'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'Saved' : ''">
+          <i class="bi bi-bookmark nav-icon"></i>
+          @if (!isCollapsed) { <span>Saved</span> }
+        </a>
+        <a [routerLink]="'/inventory'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'Inventory' : ''">
+          <i class="bi bi-box-seam nav-icon"></i>
+          @if (!isCollapsed) { <span>Inventory</span> }
+        </a>
+      </div>
+
+      <div class="nav-section">
+        @if (!isCollapsed) { <p class="nav-section-label">Account</p> }
+        <a [routerLink]="'/profile'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'Profile' : ''">
+          <i class="bi bi-person nav-icon"></i>
+          @if (!isCollapsed) { <span>Profile</span> }
+        </a>
+        <a [routerLink]="'/subscription'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'Subscription' : ''">
+          <i class="bi bi-stars nav-icon"></i>
+          @if (!isCollapsed) { <span>Subscription</span> }
+        </a>
+      </div>
     }
 
-    <!-- admin-only links -->
     @if (isAdmin) {
-      <hr />
-      <a routerLink="/admin-payments" routerLinkActive="active" class="nav-link" (click)="onNavigate()" [title]="isCollapsed ? 'Payments' : ''">
-        <i class="bi bi-credit-card me-2"></i>
-        @if (!isCollapsed) {
-          <span>Payment Approvals</span>
-        }
-      </a>
-      <a routerLink="/admin-qr" routerLinkActive="active" class="nav-link" (click)="onNavigate()" [title]="isCollapsed ? 'QR' : ''">
-        <i class="bi bi-qr-code me-2"></i>
-        @if (!isCollapsed) {
-          <span>Manage QR</span>
-        }
-      </a>
-      <a routerLink="/admin-users" routerLinkActive="active" class="nav-link" (click)="onNavigate()" [title]="isCollapsed ? 'Users' : ''">
-        <i class="bi bi-people me-2"></i>
-        @if (!isCollapsed) {
-          <span>Users</span>
-        }
-      </a>
-      @if (isSuperAdmin) {
-        <a routerLink="/admin-logs" routerLinkActive="active" class="nav-link" (click)="onNavigate()" [title]="isCollapsed ? 'Logs' : ''">
-          <i class="bi bi-file-text me-2"></i>
-          @if (!isCollapsed) {
-            <span>System Logs</span>
-          }
+      <!-- Admin Nav -->
+      <div class="nav-section">
+        @if (!isCollapsed) { <p class="nav-section-label">Overview</p> }
+        <a [routerLink]="'/admin-dashboard'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'Dashboard' : ''">
+          <i class="bi bi-grid-1x2 nav-icon"></i>
+          @if (!isCollapsed) { <span>Dashboard</span> }
         </a>
+      </div>
+
+      <div class="nav-section">
+        @if (!isCollapsed) { <p class="nav-section-label">Management</p> }
+        <a [routerLink]="'/admin-payments'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'Payments' : ''">
+          <i class="bi bi-credit-card nav-icon"></i>
+          @if (!isCollapsed) { <span>Payment Approvals</span> }
+        </a>
+        <a [routerLink]="'/admin-users'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'Users' : ''">
+          <i class="bi bi-people nav-icon"></i>
+          @if (!isCollapsed) { <span>User Management</span> }
+        </a>
+        <a [routerLink]="'/admin-qr'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'QR Codes' : ''">
+          <i class="bi bi-qr-code nav-icon"></i>
+          @if (!isCollapsed) { <span>QR Codes</span> }
+        </a>
+        <a [routerLink]="'/admin-inventory'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'Inventory' : ''">
+          <i class="bi bi-box-seam nav-icon"></i>
+          @if (!isCollapsed) { <span>Inventory</span> }
+        </a>
+        <a [routerLink]="'/admin-saved'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'Saved' : ''">
+          <i class="bi bi-bookmark nav-icon"></i>
+          @if (!isCollapsed) { <span>Saved Calcs</span> }
+        </a>
+      </div>
+
+      @if (isSuperAdmin) {
+        <div class="nav-section">
+          @if (!isCollapsed) { <p class="nav-section-label">System</p> }
+          <a [routerLink]="'/admin-logs'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'System Logs' : ''">
+            <i class="bi bi-journal-text nav-icon"></i>
+            @if (!isCollapsed) { <span>System Logs</span> }
+          </a>
+        </div>
       }
     }
+
   </nav>
 
-  <!-- Theme Toggle & Logout -->
-  <div class="sidebar-footer p-3">
-    <button class="btn btn-outline-secondary w-100 mb-2" (click)="toggleTheme()" [title]="isCollapsed ? (isDarkMode ? 'Light Mode' : 'Dark Mode') : ''">
-      @if (isDarkMode) {
-        <i class="bi bi-sun me-2"></i>
-        @if (!isCollapsed) {
-          <span>Light Mode</span>
-        }
-      }
-      @if (!isDarkMode) {
-        <i class="bi bi-moon me-2"></i>
-        @if (!isCollapsed) {
-          <span>Dark Mode</span>
-        }
+  <!-- Footer Actions -->
+  <div class="sidebar-footer">
+    <button class="footer-btn theme-btn" (click)="toggleTheme()" [title]="isCollapsed ? (isDarkMode ? 'Light Mode' : 'Dark Mode') : ''">
+      <i class="bi nav-icon" [class.bi-sun]="isDarkMode" [class.bi-moon-stars]="!isDarkMode"></i>
+      @if (!isCollapsed) {
+        <span>{{ isDarkMode ? 'Light Mode' : 'Dark Mode' }}</span>
       }
     </button>
-    <button class="btn btn-danger w-100" (click)="logout()" [title]="isCollapsed ? 'Logout' : ''">
-      <i class="bi bi-box-arrow-right me-2"></i>
+    <button class="footer-btn logout-btn" (click)="logout()" [title]="isCollapsed ? 'Logout' : ''">
+      <i class="bi bi-box-arrow-right nav-icon"></i>
       @if (!isCollapsed) {
-        <span>Logout</span>
+        <span>Sign Out</span>
       }
     </button>
   </div>
-</div>
+
+</aside>

@@ -1,107 +1,124 @@
 <div class="dashboard-layout">
   <div class="sidebar-wrapper" [class.collapsed]="sidebarCollapsed">
-    <app-sidebar [isOpen]="sidebarOpen" [isCollapsed]="sidebarCollapsed" (closeSidebar)="closeSidebar()" (toggleCollapse)="toggleSidebarCollapse()"></app-sidebar>
+    <app-sidebar
+      [isOpen]="sidebarOpen"
+      [isCollapsed]="sidebarCollapsed"
+      (closeSidebar)="closeSidebar()"
+      (toggleCollapse)="toggleSidebarCollapse()">
+    </app-sidebar>
   </div>
 
   <div class="main-content">
-    <div class="content-header p-4">
-      <button class="btn btn-link d-md-none p-0 me-3 hamburger-btn" (click)="toggleSidebar()">
-        <i class="bi bi-list" style="font-size: 1.8rem;"></i>
+    <header class="content-header">
+      <button class="hamburger-btn" (click)="toggleSidebar()" aria-label="Open menu">
+        <i class="bi bi-list"></i>
       </button>
-      <h1 class="d-inline">Edit Profile</h1>
-      <p class="text-muted">Manage your personal information</p>
-    </div>
+      <div>
+        <h1>Profile</h1>
+        <p>Manage your personal information</p>
+      </div>
+    </header>
 
-    <div class="content-body p-4">
-      <div class="row justify-content-center">
-        <div class="col-12 col-lg-8">
-          <div class="card">
-            <div class="card-body p-4">
-              @if (successMessage) {
-                <div class="alert alert-success" role="alert">
-                  {{ successMessage }}
-                </div>
-              }
+    <div class="content-body">
+      <div class="profile-card">
 
-              @if (errorMessage) {
-                <div class="alert alert-danger" role="alert">
-                  {{ errorMessage }}
-                </div>
-              }
-
-              <form (ngSubmit)="saveProfile()">
-                <div class="mb-3">
-                  <label for="name" class="form-label">Full Name</label>
-                  <input 
-                    type="text" 
-                    class="form-control" 
-                    id="name" 
-                    [(ngModel)]="name"
-                    name="name"
-                    [disabled]="!isEditing"
-                    required
-                  >
-                </div>
-
-                <div class="mb-3">
-                  <label for="email" class="form-label">Email Address</label>
-                  <input 
-                    type="email" 
-                    class="form-control" 
-                    id="email" 
-                    [(ngModel)]="email"
-                    name="email"
-                    [disabled]="!isEditing"
-                    required
-                  >
-                </div>
-
-                @if (currentUser) {
-                  <div class="mb-3">
-                    <label class="form-label">Subscription Plan</label>
-                    <input 
-                      type="text" 
-                      class="form-control" 
-                      [value]="currentUser.subscriptionPlan.toUpperCase()"
-                      disabled
-                    >
-                  </div>
-
-                  <div class="mb-3">
-                    <label class="form-label">Member Since</label>
-                    <input 
-                      type="text" 
-                      class="form-control" 
-                      [value]="currentUser.createdAt | date:'medium'"
-                      disabled
-                    >
-                  </div>
-                }
-
-                <div class="d-flex gap-2">
-                  @if (!isEditing) {
-                    <button type="button" class="btn btn-primary" (click)="toggleEdit()">
-                      <i class="bi bi-pencil me-2"></i>Edit Profile
-                    </button>
-                  }
-                  @if (isEditing) {
-                    <button type="submit" class="btn btn-success" [disabled]="isLoading">
-                      @if (!isLoading) {
-                        <i class="bi bi-check-lg me-2"></i><span>Save Changes</span>
-                      }
-                      @if (isLoading) {
-                        <span class="spinner-border spinner-border-sm me-2"></span><span>Saving...</span>
-                      }
-                    </button>
-                    <button type="button" class="btn btn-secondary" (click)="toggleEdit()" [disabled]="isLoading">
-                      <i class="bi bi-x-lg me-2"></i>Cancel
-                    </button>
-                  }
-                </div>
-              </form>
+        <!-- Avatar + Plan Display -->
+        @if (currentUser) {
+          <div class="avatar-section mb-4">
+            <div class="avatar-large">{{ currentUser.name.charAt(0).toUpperCase() }}</div>
+            <div class="avatar-info">
+              <h3>{{ currentUser.name }}</h3>
+              <span class="plan-badge"
+                [class.plan-free]="currentUser.subscriptionPlan === 'free'"
+                [class.plan-basic]="currentUser.subscriptionPlan === 'basic'"
+                [class.plan-pro]="currentUser.subscriptionPlan === 'pro'">
+                <i class="bi"
+                  [class.bi-gift]="currentUser.subscriptionPlan === 'free'"
+                  [class.bi-bolt]="currentUser.subscriptionPlan === 'basic'"
+                  [class.bi-gem]="currentUser.subscriptionPlan === 'pro'">
+                </i>
+                {{ currentUser.subscriptionPlan | uppercase }} Plan
+              </span>
+              <span class="member-since">
+                <i class="bi bi-calendar3 me-1"></i>Member since {{ currentUser.createdAt | date:'MMMM yyyy' }}
+              </span>
             </div>
           </div>
+        }
+
+        <!-- Form Card -->
+        <div class="card">
+          <div class="card-header d-flex align-items-center justify-content-between">
+            <span style="font-size:0.95rem;font-weight:700;color:var(--text-primary)">
+              <i class="bi bi-person-lines-fill me-2" style="color:var(--brand-primary)"></i>Personal Information
+            </span>
+            @if (!isEditing) {
+              <button type="button" class="btn btn-outline-primary btn-sm" (click)="toggleEdit()">
+                <i class="bi bi-pencil me-1"></i>Edit
+              </button>
+            }
+          </div>
+          <div class="card-body">
+
+            @if (successMessage) {
+              <div class="alert alert-success mb-3" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>{{ successMessage }}
+              </div>
+            }
+
+            @if (errorMessage) {
+              <div class="alert alert-danger mb-3" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ errorMessage }}
+              </div>
+            }
+
+            <form (ngSubmit)="saveProfile()" class="form-section">
+              <div class="field-group">
+                <label for="profile-name" class="form-label">
+                  <i class="bi bi-person me-1"></i>Full Name
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="profile-name"
+                  [(ngModel)]="name"
+                  name="name"
+                  [disabled]="!isEditing"
+                  required>
+              </div>
+
+              <div class="field-group">
+                <label for="profile-email" class="form-label">
+                  <i class="bi bi-envelope me-1"></i>Email Address
+                </label>
+                <input
+                  type="email"
+                  class="form-control"
+                  id="profile-email"
+                  [(ngModel)]="email"
+                  name="email"
+                  [disabled]="!isEditing"
+                  required>
+              </div>
+
+              @if (isEditing) {
+                <div class="d-flex gap-2 mt-2">
+                  <button type="submit" class="btn btn-success" [disabled]="isLoading">
+                    @if (!isLoading) {
+                      <i class="bi bi-check-lg me-2"></i>Save Changes
+                    } @else {
+                      <span class="spinner-border spinner-border-sm me-2"></span>Saving…
+                    }
+                  </button>
+                  <button type="button" class="btn btn-outline-secondary" (click)="toggleEdit()" [disabled]="isLoading">
+                    <i class="bi bi-x-lg me-1"></i>Cancel
+                  </button>
+                </div>
+              }
+            </form>
+          </div>
         </div>
+
       </div>
     </div>
   </div>

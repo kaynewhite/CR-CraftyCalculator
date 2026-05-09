@@ -1,128 +1,221 @@
-.admin-login-container {
+.admin-login-page {
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  background: linear-gradient(135deg, rgba(231, 76, 108, 0.1) 0%, rgba(255, 127, 80, 0.1) 100%);
+  background: var(--bg-body);
+  position: relative;
+  overflow: hidden;
+  padding: 1.5rem;
 }
 
-.login-content {
+/* Background Blobs */
+.bg-decoration { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.12;
+}
+
+.blob-1 {
+  width: 500px;
+  height: 500px;
+  background: var(--brand-primary);
+  top: -150px;
+  right: -100px;
+}
+
+.blob-2 {
+  width: 400px;
+  height: 400px;
+  background: var(--brand-secondary);
+  bottom: -100px;
+  left: -80px;
+}
+
+body.dark-mode .blob {
+  opacity: 0.07;
+}
+
+/* Wrapper */
+.login-wrapper {
+  position: relative;
+  z-index: 1;
   width: 100%;
-  max-width: 400px;
-  padding: 20px;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
 }
 
+/* Brand */
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.brand-logo-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--brand-primary-light);
+  border: 1.5px solid var(--brand-primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.brand-logo-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.logo-fallback {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--brand-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.brand-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.brand-sub {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 2px 0 0;
+}
+
+/* Card */
 .login-card {
-  background: var(--color-card-bg);
-  border-radius: 15px;
-  padding: 40px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
 }
 
-.login-card h2 {
-  font-family: 'Sniglet', cursive;
-  color: var(--color-pink-deep);
+.card-inner {
+  padding: 2rem;
+}
+
+/* Card Top */
+.card-top {
   text-align: center;
-  font-size: 2rem;
-  margin-bottom: 5px;
+  margin-bottom: 1.75rem;
 }
 
-.subtitle {
-  text-align: center;
-  color: var(--color-text);
-  margin-bottom: 30px;
-  font-size: 0.9rem;
+.shield-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--brand-primary-light), rgba(231,76,108,0.05));
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
 }
 
-.form-group {
-  margin-bottom: 20px;
+.shield-icon i {
+  font-size: 1.5rem;
+  color: var(--brand-primary);
 }
 
-.form-group label {
+.card-top h2 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 0.35rem;
+}
+
+.card-top p {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* Field Group */
+.field-group {
+  margin-bottom: 1.125rem;
+}
+
+.field-label {
   display: block;
+  font-size: 0.82rem;
   font-weight: 600;
-  color: var(--color-text-dark);
-  margin-bottom: 8px;
-  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
 }
 
-.form-control {
-  width: 100%;
-  padding: 12px 14px;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  background: var(--color-bg);
-  color: var(--color-text);
-  font-family: 'Fredoka', sans-serif;
-  box-sizing: border-box;
+.password-wrap {
+  position: relative;
 }
 
-.form-control:focus {
-  outline: none;
-  border-color: var(--color-pink-deep);
-  box-shadow: 0 0 0 3px rgba(231, 76, 108, 0.1);
+.password-wrap .form-control {
+  padding-right: 2.75rem !important;
 }
 
-.alert-danger {
-  background-color: rgba(239, 68, 68, 0.1);
-  border: 1px solid #ef4444;
-  color: #ef4444;
-  padding: 12px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  font-size: 0.9rem;
-}
-
-.btn-primary {
-  background-color: var(--color-pink-deep);
-  color: white;
-  padding: 12px;
+.pw-toggle {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
   border: none;
-  border-radius: 8px;
-  font-weight: 600;
+  color: var(--text-muted);
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-family: 'Fredoka', sans-serif;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  transition: color var(--transition-fast);
 }
 
-.btn-primary:hover:not(:disabled) {
-  background-color: var(--color-pink-coral);
-  box-shadow: 0 5px 15px rgba(231, 76, 108, 0.3);
-}
+.pw-toggle:hover { color: var(--brand-primary); }
 
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.w-100 {
-  width: 100%;
-}
-
-.text-center {
+/* Back Link */
+.back-link {
   text-align: center;
+  margin-top: 1.25rem;
 }
 
-.text-muted {
-  color: var(--color-text);
+.back-link a {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color var(--transition-fast);
 }
 
-.mt-3 {
-  margin-top: 1.5rem;
+.back-link a:hover { color: var(--brand-primary); }
+
+/* Footer Note */
+.footer-note {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin: 0;
 }
 
-body.dark-mode .login-card {
-  background: var(--color-card-bg);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-}
-
-body.dark-mode .form-control {
-  background: var(--color-bg);
-  color: var(--color-text-dark);
-  border-color: #555;
-}
-
-body.dark-mode .form-control:focus {
-  border-color: var(--color-pink-coral);
-  box-shadow: 0 0 0 3px rgba(231, 76, 108, 0.2);
+@media (max-width: 480px) {
+  .card-inner { padding: 1.5rem; }
+  .login-brand { flex-direction: column; text-align: center; }
 }

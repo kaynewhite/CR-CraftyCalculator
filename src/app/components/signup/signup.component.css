@@ -1,75 +1,35 @@
-.signup-container {
-  background: linear-gradient(135deg, #FFF5F8 0%, #FFF9E6 100%);
-  min-height: 100vh;
-}
+.signup-page { min-height: 100vh; background: var(--bg-body); display: flex; align-items: center; justify-content: center; padding: 1.5rem; position: relative; overflow: hidden; }
 
-body.dark-mode .signup-container {
-  background: linear-gradient(135deg, #262626 0%, #1f1f1f 100%);
-}
+.bg-decoration { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+.blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.08; }
+.blob-1 { width: 400px; height: 400px; background: var(--brand-primary); top: -80px; right: -80px; }
+.blob-2 { width: 300px; height: 300px; background: var(--brand-secondary); bottom: -80px; left: -60px; }
+body.dark-mode .blob { opacity: 0.05; }
 
-.signup-card {
-  border-radius: 20px;
-  border: none;
-  background-color: var(--color-card-bg);
-}
+.signup-wrapper { position: relative; z-index: 1; width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 1.25rem; }
 
-.signup-card h2 {
-  font-family: 'Sniglet', cursive;
-  color: var(--color-pink-deep);
-  font-weight: 500;
-}
+.signup-brand { display: flex; align-items: center; gap: 0.75rem; }
+.brand-logo { width: 40px; height: 40px; border-radius: 11px; overflow: hidden; background: var(--brand-primary-light); display: flex; align-items: center; justify-content: center; }
+.brand-logo img { width: 100%; height: 100%; object-fit: cover; }
+.logo-fallback { font-family: 'Fredoka', sans-serif; font-size: 0.85rem; font-weight: 700; color: var(--brand-primary); display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+.brand-name { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.05rem; font-weight: 800; color: var(--text-primary); }
 
-.logo-placeholder {
-  width: 100px;
-  height: 100px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+.signup-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 2rem; box-shadow: var(--shadow-xl); }
 
-.logo-circle {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background-image: url('/CRlogo.png');
-  background-size: cover;
-  background-position: center;
-  border: 4px solid var(--color-pink-deep);
-  box-shadow: 0 5px 15px rgba(231, 76, 108, 0.3);
-}
+.card-heading { margin-bottom: 1.5rem; }
+.card-heading h2 { font-size: 1.4rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.25rem; }
+.card-heading p { font-size: 0.85rem; color: var(--text-muted); margin: 0; }
 
-.form-label {
-  font-family: 'Fredoka', sans-serif;
-  font-weight: 600;
-  color: var(--color-text);
-}
+.field-group { margin-bottom: 1rem; }
+.field-label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.5rem; }
 
-.form-control {
-  padding: 12px 14px;
-  font-family: 'Fredoka', sans-serif;
-}
+.password-wrap { position: relative; }
+.password-wrap .form-control { padding-right: 2.75rem !important; }
+.pw-toggle { position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 0.25rem; display: flex; align-items: center; transition: color var(--transition-fast); }
+.pw-toggle:hover { color: var(--brand-primary); }
 
-.btn-lg {
-  padding: 15px;
-  font-size: 1.1rem;
-  font-weight: 600;
-}
+.submit-btn { margin-top: 0.5rem; margin-bottom: 1.25rem; }
 
-a {
-  color: var(--color-pink-deep);
-  font-weight: 600;
-}
-
-a:hover {
-  color: var(--color-pink-coral);
-}
-
-@media (max-width: 768px) {
-  .signup-card {
-    margin: 20px;
-  }
-  
-  .card-body {
-    padding: 30px !important;
-  }
-}
+.switch-link { text-align: center; font-size: 0.85rem; color: var(--text-secondary); margin: 0; }
+.switch-link a { color: var(--brand-primary); font-weight: 600; text-decoration: none; }
+.switch-link a:hover { text-decoration: underline; }
