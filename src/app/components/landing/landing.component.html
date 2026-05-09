@@ -11,8 +11,8 @@
         <span>Crafty Rachel</span>
       </div>
       <div class="nav-actions">
-        <button class="btn btn-ghost" (click)="navigateToLogin()">Sign In</button>
-        <button class="btn btn-primary" (click)="navigateToSignup()">Get Started</button>
+        <button class="btn btn-ghost" (click)="openSignIn()">Sign In</button>
+        <button class="btn btn-primary" (click)="openSignUp()">Get Started</button>
       </div>
     </div>
   </nav>
@@ -38,10 +38,10 @@
         The ultimate tool for crafters, artisans, and creative entrepreneurs.
       </p>
       <div class="hero-cta">
-        <button class="btn btn-primary btn-lg hero-btn-primary" (click)="navigateToSignup()">
+        <button class="btn btn-primary btn-lg hero-btn-primary" (click)="openSignUp()">
           <i class="bi bi-rocket-takeoff me-2"></i>Start for Free
         </button>
-        <button class="btn btn-outline-hero btn-lg" (click)="navigateToLogin()">
+        <button class="btn btn-outline-hero btn-lg" (click)="openSignIn()">
           <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
         </button>
       </div>
@@ -136,7 +136,7 @@
           <div class="feature-icon fi-blue">
             <i class="bi bi-bookmark-fill"></i>
           </div>
-          <h3>Save & Revisit</h3>
+          <h3>Save &amp; Revisit</h3>
           <p>Save your pricing calculations and revisit them anytime. Update prices as material costs change.</p>
         </div>
 
@@ -177,7 +177,7 @@
             <li><i class="bi bi-check2"></i> Save up to 3 calculations</li>
             <li><i class="bi bi-check2"></i> Basic categories</li>
           </ul>
-          <button class="btn btn-outline-plan w-100" (click)="navigateToSignup()">Get Started</button>
+          <button class="btn btn-outline-plan w-100" (click)="openSignUp()">Get Started</button>
         </div>
 
         <div class="pricing-card pricing-featured">
@@ -191,7 +191,7 @@
             <li><i class="bi bi-check2"></i> Save up to 10 calculations</li>
             <li><i class="bi bi-check2"></i> Priority support</li>
           </ul>
-          <button class="btn btn-primary w-100" (click)="navigateToSignup()">Start Basic</button>
+          <button class="btn btn-primary w-100" (click)="openSignUp()">Start Basic</button>
         </div>
 
         <div class="pricing-card">
@@ -206,7 +206,7 @@
             <li><i class="bi bi-check2"></i> Full cost breakdown</li>
             <li><i class="bi bi-check2"></i> 24/7 priority support</li>
           </ul>
-          <button class="btn btn-outline-plan w-100" (click)="navigateToSignup()">Start Pro</button>
+          <button class="btn btn-outline-plan w-100" (click)="openSignUp()">Start Pro</button>
         </div>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe, UpperCasePipe, TitleCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -11,17 +11,20 @@ import { SubscriptionLog, SystemLog } from '../../models/subscription-log.model'
 @Component({
   selector: 'app-system-logs',
   standalone: true,
-  imports: [CommonModule, FormsModule, SidebarComponent],
+  imports: [CommonModule, FormsModule, SidebarComponent, DatePipe, UpperCasePipe, TitleCasePipe],
   templateUrl: './system-logs.component.html',
   styleUrls: ['./system-logs.component.css']
 })
 export class SystemLogsComponent implements OnInit {
   subscriptionLogs: SubscriptionLog[] = [];
   systemLogs: SystemLog[] = [];
-  filteredLogs: (SubscriptionLog | SystemLog)[] = [];
+  filteredSubLogs: SubscriptionLog[] = [];
+  filteredSysLogs: SystemLog[] = [];
 
   activeTab: 'subscription' | 'system' = 'subscription';
   logTypeFilter = 'all';
+  actionFilter = 'all';
+  searchQuery = '';
   dateRangeStart = '';
   dateRangeEnd = '';
   isLoading = true;
@@ -30,6 +33,7 @@ export class SystemLogsComponent implements OnInit {
   isDarkMode = false;
 
   logTypes = ['all', 'approval', 'rejection', 'error', 'system', 'maintenance'];
+  actionTypes = ['all', 'approved', 'rejected', 'upgraded', 'downgraded', 'cancelled'];
 
   constructor(
     private router: Router,
@@ -39,16 +43,14 @@ export class SystemLogsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // ensure theme classes applied
     this.themeService.setTheme(this.themeService.getCurrentTheme());
-    // Initialize theme
     this.themeService.isDarkMode$.subscribe(isDark => {
       this.isDarkMode = isDark;
     });
 
     const currentUser = (this.authService as any).currentUserValue;
     if (!currentUser || currentUser.role !== 'superadmin') {
-      this.router.navigate(['/finalboss']);
+      this.router.navigate(['/admin-login']);
       return;
     }
 
@@ -57,34 +59,53 @@ export class SystemLogsComponent implements OnInit {
 
   loadLogs(): void {
     this.isLoading = true;
-    
-    this.logService.getSubscriptionLogs().subscribe(subLogs => {
-      this.subscriptionLogs = subLogs;
+    this.logService.getSubscriptionLogs().subscribe({
+      next: subLogs => {
+        this.subscriptionLogs = subLogs;
+        this.filterLogs();
+      },
+      error: () => {}
     });
 
-    this.logService.getSystemLogs().subscribe(sysLogs => {
-      this.systemLogs = sysLogs;
-      this.filterLogs();
-      this.isLoading = false;
+    this.logService.getSystemLogs().subscribe({
+      next: sysLogs => {
+        this.systemLogs = sysLogs;
+        this.filterLogs();
+        this.isLoading = false;
+      },
+      error: () => { this.isLoading = false; }
     });
   }
 
   switchTab(tab: 'subscription' | 'system'): void {
     this.activeTab = tab;
     this.logTypeFilter = 'all';
+    this.actionFilter = 'all';
+    this.searchQuery = '';
     this.filterLogs();
   }
 
   filterLogs(): void {
-    if (this.activeTab === 'subscription') {
-      this.filteredLogs = this.filterSubscriptionLogs();
-    } else {
-      this.filteredLogs = this.filterSystemLogs();
-    }
+    this.filteredSubLogs = this.filterSubscriptionLogs();
+    this.filteredSysLogs = this.filterSystemLogs();
   }
 
   filterSubscriptionLogs(): SubscriptionLog[] {
     let filtered = [...this.subscriptionLogs];
+
+    if (this.actionFilter !== 'all') {
+      filtered = filtered.filter(log => log.action === this.actionFilter);
+    }
+
+    if (this.searchQuery.trim()) {
+      const q = this.searchQuery.toLowerCase();
+      filtered = filtered.filter(log =>
+        (log.userName || '').toLowerCase().includes(q) ||
+        (log.userEmail || '').toLowerCase().includes(q) ||
+        log.userId.toLowerCase().includes(q) ||
+        log.plan.toLowerCase().includes(q)
+      );
+    }
 
     if (this.dateRangeStart) {
       const startDate = new Date(this.dateRangeStart);
@@ -107,6 +128,15 @@ export class SystemLogsComponent implements OnInit {
       filtered = filtered.filter(log => log.type === this.logTypeFilter);
     }
 
+    if (this.searchQuery.trim()) {
+      const q = this.searchQuery.toLowerCase();
+      filtered = filtered.filter(log =>
+        log.message.toLowerCase().includes(q) ||
+        (log.userName || '').toLowerCase().includes(q) ||
+        (log.userId || '').toLowerCase().includes(q)
+      );
+    }
+
     if (this.dateRangeStart) {
       const startDate = new Date(this.dateRangeStart);
       filtered = filtered.filter(log => new Date(log.timestamp) >= startDate);
@@ -127,61 +157,64 @@ export class SystemLogsComponent implements OnInit {
 
   getLogTypeIcon(type: string): string {
     const icons: { [key: string]: string } = {
-      'approval': '✓',
-      'rejection': '✕',
-      'error': '⚠',
-      'system': '⚙',
-      'maintenance': '🔧'
+      'approval': 'bi-check-circle-fill',
+      'rejection': 'bi-x-circle-fill',
+      'error': 'bi-exclamation-triangle-fill',
+      'system': 'bi-gear-fill',
+      'maintenance': 'bi-wrench-adjustable'
     };
-    return icons[type] || '•';
+    return icons[type] || 'bi-dot';
   }
 
-  getLogTypeColor(type: string): string {
-    const colors: { [key: string]: string } = {
-      'approval': 'text-success',
-      'rejection': 'text-danger',
-      'error': 'text-warning',
-      'system': 'text-info',
-      'maintenance': 'text-secondary'
+  getLogTypeBadgeClass(type: string): string {
+    const classes: { [key: string]: string } = {
+      'approval': 'badge-type-approval',
+      'rejection': 'badge-type-rejection',
+      'error': 'badge-type-error',
+      'system': 'badge-type-system',
+      'maintenance': 'badge-type-maintenance'
     };
-    return colors[type] || 'text-muted';
+    return classes[type] || '';
+  }
+
+  getActionBadgeClass(action: string): string {
+    const classes: { [key: string]: string } = {
+      'approved': 'action-approved',
+      'rejected': 'action-rejected',
+      'upgraded': 'action-upgraded',
+      'downgraded': 'action-downgraded',
+      'cancelled': 'action-cancelled'
+    };
+    return classes[action] || '';
   }
 
   clearSystemLogs(): void {
-    if (!confirm('Are you sure you want to clear all system logs? This action cannot be undone.')) {
-      return;
-    }
-
-    this.logService.clearSystemLogs().subscribe(() => {
-      this.loadLogs();
-    });
+    if (!confirm('Are you sure you want to clear ALL system logs? This cannot be undone.')) return;
+    this.logService.clearSystemLogs().subscribe(() => this.loadLogs());
   }
 
   exportLogs(): void {
-    const logsToExport = this.activeTab === 'subscription' ? this.filteredLogs : this.filteredLogs;
-    const dataStr = JSON.stringify(logsToExport, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
+    const data = this.activeTab === 'subscription' ? this.filteredSubLogs : this.filteredSysLogs;
+    const dataStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${this.activeTab}-logs-${new Date().toISOString()}.json`;
+    link.download = `${this.activeTab}-logs-${new Date().toISOString().split('T')[0]}.json`;
     link.click();
     URL.revokeObjectURL(url);
   }
 
-  goBack(): void {
-    this.router.navigate(['/admin-dashboard']);
+  clearFilters(): void {
+    this.searchQuery = '';
+    this.logTypeFilter = 'all';
+    this.actionFilter = 'all';
+    this.dateRangeStart = '';
+    this.dateRangeEnd = '';
+    this.filterLogs();
   }
 
-  toggleSidebar(): void {
-    this.sidebarOpen = !this.sidebarOpen;
-  }
-
-  onSidebarClose(): void {
-    this.sidebarOpen = false;
-  }
-
-  onCollapseSidebar(): void {
-    this.sidebarCollapsed = !this.sidebarCollapsed;
-  }
+  toggleSidebar(): void { this.sidebarOpen = !this.sidebarOpen; }
+  onSidebarClose(): void { this.sidebarOpen = false; }
+  onCollapseSidebar(): void { this.sidebarCollapsed = !this.sidebarCollapsed; }
 }

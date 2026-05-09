@@ -1,6 +1,8 @@
 export interface SubscriptionLog {
   id: string;
   userId: string;
+  userName?: string;
+  userEmail?: string;
   action: 'approved' | 'rejected' | 'upgraded' | 'downgraded' | 'cancelled';
   plan: string;
   cost: number;
@@ -15,6 +17,7 @@ export interface SystemLog {
   type: 'approval' | 'rejection' | 'error' | 'system' | 'maintenance';
   message: string;
   userId?: string;
+  userName?: string;
   adminId?: string;
   timestamp: string;
   details?: any;

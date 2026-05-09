@@ -35,6 +35,13 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   isDarkMode = false;
   today = new Date();
 
+  // QR Setup
+  showQrSetup = false;
+  setupGcashQr: string | null = null;
+  setupMayaQr: string | null = null;
+  setupSaving = false;
+  setupError = '';
+
   private revenueChart: Chart | null = null;
   private planChart: Chart | null = null;
   private chartsInitialized = false;
@@ -61,10 +68,11 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
       if (!user) return;
       this.isSuperAdmin = user.role === 'superadmin';
       if (user.role !== 'admin' && user.role !== 'superadmin') {
-        this.router.navigate(['/bigboss-login']);
+        this.router.navigate(['/admin-login']);
         return;
       }
       this.loadDashboardData();
+      this.checkQrSetup();
     });
   }
 
@@ -74,6 +82,58 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
 
   ngOnDestroy(): void {
     this.destroyCharts();
+  }
+
+  checkQrSetup(): void {
+    this.api.getQrCodes().subscribe({
+      next: (data: any) => {
+        const gcash = data.gcash || null;
+        const maya = data.maya || null;
+        this.setupGcashQr = gcash;
+        this.setupMayaQr = maya;
+        if (!gcash || !maya) {
+          this.showQrSetup = true;
+        }
+      },
+      error: () => {
+        this.showQrSetup = true;
+      }
+    });
+  }
+
+  onSetupQrFile(event: any, method: 'gcash' | 'maya'): void {
+    const file = event.target.files?.[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      if (method === 'gcash') this.setupGcashQr = e.target.result;
+      else this.setupMayaQr = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  removeSetupQr(method: 'gcash' | 'maya'): void {
+    if (method === 'gcash') this.setupGcashQr = null;
+    else this.setupMayaQr = null;
+  }
+
+  saveSetupQrs(): void {
+    if (!this.setupGcashQr || !this.setupMayaQr) {
+      this.setupError = 'Please upload both GCash and PayMaya QR codes to continue.';
+      return;
+    }
+    this.setupSaving = true;
+    this.setupError = '';
+    Promise.all([
+      this.api.setQrCode('gcash', this.setupGcashQr).toPromise(),
+      this.api.setQrCode('maya', this.setupMayaQr).toPromise(),
+    ]).then(() => {
+      this.setupSaving = false;
+      this.showQrSetup = false;
+    }).catch(() => {
+      this.setupSaving = false;
+      this.setupError = 'Failed to save QR codes. Please try again.';
+    });
   }
 
   destroyCharts(): void {
@@ -222,5 +282,5 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   toggleSidebar(): void { this.sidebarOpen = !this.sidebarOpen; }
   onSidebarClose(): void { this.sidebarOpen = false; }
   onCollapseSidebar(): void { this.sidebarCollapsed = !this.sidebarCollapsed; }
-  logout(): void { this.authService.logout(); this.router.navigate(['/bigboss-login']); }
+  logout(): void { this.authService.logout(); this.router.navigate(['/admin-login']); }
 }

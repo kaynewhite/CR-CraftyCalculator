@@ -62,7 +62,7 @@ export class PaymentApprovalComponent implements OnInit {
     this.currentUser = (this.authService as any).currentUserValue;
     
     if (!this.currentUser || (this.currentUser.role !== 'admin' && this.currentUser.role !== 'superadmin')) {
-      this.router.navigate(['/finalboss']);
+      this.router.navigate(['/admin-login']);
       return;
     }
 

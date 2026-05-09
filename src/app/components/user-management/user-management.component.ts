@@ -54,7 +54,7 @@ export class UserManagementComponent implements OnInit {
 
     const currentUser = (this.authService as any).currentUserValue;
     if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'superadmin')) {
-      this.router.navigate(['/finalboss']);
+      this.router.navigate(['/admin-login']);
       return;
     }
 

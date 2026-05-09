@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
-import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-landing',
@@ -9,13 +9,13 @@ import { CommonModule } from '@angular/common';
   styleUrl: './landing.component.css'
 })
 export class LandingComponent {
-  constructor(private router: Router) {}
+  constructor(private authService: AuthService) {}
 
-  navigateToLogin(): void {
-    this.router.navigate(['/login']);
+  openSignIn(): void {
+    this.authService.openSignIn('/dashboard');
   }
 
-  navigateToSignup(): void {
-    this.router.navigate(['/signup']);
+  openSignUp(): void {
+    this.authService.openSignUp('/dashboard');
   }
 }

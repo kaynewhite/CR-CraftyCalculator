@@ -46,8 +46,8 @@
           </div>
         }
 
-        <!-- Form Card -->
-        <div class="card">
+        <!-- Personal Information -->
+        <div class="card mb-4">
           <div class="card-header d-flex align-items-center justify-content-between">
             <span style="font-size:0.95rem;font-weight:700;color:var(--text-primary)">
               <i class="bi bi-person-lines-fill me-2" style="color:var(--brand-primary)"></i>Personal Information
@@ -116,6 +116,23 @@
                 </div>
               }
             </form>
+          </div>
+        </div>
+
+        <!-- Account Security -->
+        <div class="card">
+          <div class="card-header">
+            <span style="font-size:0.95rem;font-weight:700;color:var(--text-primary)">
+              <i class="bi bi-shield-lock-fill me-2" style="color:var(--brand-primary)"></i>Account Security
+            </span>
+          </div>
+          <div class="card-body">
+            <p style="font-size:0.88rem;color:var(--text-secondary);margin-bottom:1.25rem;line-height:1.6;">
+              Change your password, update your email address, and manage two-factor authentication through the secure account settings panel.
+            </p>
+            <button class="btn btn-outline-primary" (click)="openAccountSettings()">
+              <i class="bi bi-person-gear me-2"></i>Manage Password &amp; Email
+            </button>
           </div>
         </div>
 

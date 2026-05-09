@@ -53,7 +53,7 @@ export const adminGuard = () => {
     if (user && (user.role === 'admin' || user.role === 'superadmin')) {
       return true;
     }
-    router.navigate(['/bigboss-login']);
+    router.navigate(['/admin-login']);
     return false;
   } catch (e) {
     console.error('adminGuard error:', e);

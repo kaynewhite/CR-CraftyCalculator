@@ -6,6 +6,7 @@ const morgan = require('morgan');
 const path = require('path');
 const fs = require('fs');
 const migrate = require('./db/migrate');
+const seed = require('./db/seed');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -53,6 +54,7 @@ app.use((err, req, res, next) => {
 async function start() {
   try {
     await migrate();
+    await seed();
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`[Server] Crafty Rachel running on port ${PORT}`);
     });

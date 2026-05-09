@@ -89,6 +89,15 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.sidebarService.toggleCollapsed();
   }
 
+  openAccountSettings(): void {
+    const clerk = (window as any).Clerk;
+    if (clerk?.openUserProfile) {
+      clerk.openUserProfile();
+    } else {
+      alert('Account settings are loading. Please try again in a moment.');
+    }
+  }
+
   ngOnDestroy(): void {
     this.sidebarSubscription.unsubscribe();
   }}

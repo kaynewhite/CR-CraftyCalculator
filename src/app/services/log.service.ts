@@ -12,9 +12,17 @@ export class LogService {
       this.api.getSubscriptionLogs().subscribe({
         next: (rows: any[]) => {
           observer.next(rows.map(r => ({
-            id: r.id, userId: r.user_id, action: r.action, plan: r.plan,
-            cost: parseFloat(r.cost), approvedBy: r.approved_by,
-            feedback: r.feedback, timestamp: r.created_at, details: r.details,
+            id: r.id,
+            userId: r.user_id,
+            userName: r.user_name || null,
+            userEmail: r.user_email || null,
+            action: r.action,
+            plan: r.plan,
+            cost: parseFloat(r.cost),
+            approvedBy: r.approved_by,
+            feedback: r.feedback,
+            timestamp: r.created_at,
+            details: r.details,
           })));
           observer.complete();
         },
@@ -37,9 +45,14 @@ export class LogService {
       this.api.getSystemLogs().subscribe({
         next: (rows: any[]) => {
           observer.next(rows.map(r => ({
-            id: r.id, type: r.type, message: r.message,
-            userId: r.user_id, adminId: r.admin_id,
-            timestamp: r.created_at, details: r.details,
+            id: r.id,
+            type: r.type,
+            message: r.message,
+            userId: r.user_id,
+            userName: r.user_name || null,
+            adminId: r.admin_id,
+            timestamp: r.created_at,
+            details: r.details,
           })));
           observer.complete();
         },
