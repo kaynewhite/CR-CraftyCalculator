@@ -1,12 +1,10 @@
 <div class="admin-login-page">
-  <!-- Background decoration -->
   <div class="bg-decoration">
     <div class="blob blob-1"></div>
     <div class="blob blob-2"></div>
   </div>
 
   <div class="login-wrapper">
-    <!-- Brand -->
     <div class="login-brand">
       <div class="brand-logo-wrap">
         <img src="/CRlogo.png" alt="Crafty Rachel" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
@@ -18,7 +16,6 @@
       </div>
     </div>
 
-    <!-- Card -->
     <div class="login-card">
       <div class="card-inner">
         <div class="card-top">
@@ -29,64 +26,21 @@
           <p>Restricted to authorized personnel only</p>
         </div>
 
-        <form (ngSubmit)="login()" #adminForm="ngForm" autocomplete="off">
-          <!-- Error -->
-          @if (error) {
-            <div class="alert alert-danger mb-4" role="alert">
-              <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ error }}
-            </div>
+        @if (error) {
+          <div class="alert alert-danger mb-4" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ error }}
+          </div>
+        }
+
+        <button class="btn btn-primary btn-lg w-100 mt-2" (click)="login()" [disabled]="isLoading">
+          @if (isLoading) {
+            <span class="spinner-border spinner-border-sm me-2"></span>Authenticating...
+          } @else {
+            <i class="bi bi-arrow-right-circle me-2"></i>Sign In to Admin
           }
+        </button>
 
-          <div class="field-group">
-            <label class="field-label" for="admin-email">
-              <i class="bi bi-envelope me-1"></i>Email Address
-            </label>
-            <input
-              id="admin-email"
-              type="email"
-              class="form-control"
-              [(ngModel)]="email"
-              name="email"
-              placeholder="admin@craftyrachel.com"
-              [disabled]="isLoading"
-              required
-              autocomplete="username">
-          </div>
-
-          <div class="field-group">
-            <label class="field-label" for="admin-password">
-              <i class="bi bi-lock me-1"></i>Password
-            </label>
-            <div class="password-wrap">
-              <input
-                id="admin-password"
-                [type]="showPassword ? 'text' : 'password'"
-                class="form-control"
-                [(ngModel)]="password"
-                name="password"
-                placeholder="••••••••••"
-                [disabled]="isLoading"
-                required
-                autocomplete="current-password">
-              <button type="button" class="pw-toggle" (click)="showPassword = !showPassword" tabindex="-1">
-                <i class="bi" [class.bi-eye]="!showPassword" [class.bi-eye-slash]="showPassword"></i>
-              </button>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            class="btn btn-primary btn-lg w-100 mt-2"
-            [disabled]="isLoading || !adminForm.valid">
-            @if (isLoading) {
-              <span class="spinner-border spinner-border-sm me-2"></span>Authenticating...
-            } @else {
-              <i class="bi bi-arrow-right-circle me-2"></i>Sign In to Admin
-            }
-          </button>
-        </form>
-
-        <div class="back-link">
+        <div class="back-link mt-3">
           <a routerLink="/">
             <i class="bi bi-arrow-left me-1"></i>Back to home
           </a>

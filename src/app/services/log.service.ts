@@ -1,74 +1,83 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, of } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { SubscriptionLog, SystemLog } from '../models/subscription-log.model';
+import { ApiService } from './api.service';
 
 @Injectable({ providedIn: 'root' })
 export class LogService {
-  private readonly SUB_LOGS_KEY = 'subscriptionLogs';
-  private readonly SYS_LOGS_KEY = 'systemLogs';
-  
-  private subLogsSubject: BehaviorSubject<SubscriptionLog[]>;
-  private sysLogsSubject: BehaviorSubject<SystemLog[]>;
-  
-  public subscriptionLogs$: Observable<SubscriptionLog[]>;
-  public systemLogs$: Observable<SystemLog[]>;
-
-  constructor() {
-    const storedSubLogs = localStorage.getItem(this.SUB_LOGS_KEY);
-    const storedSysLogs = localStorage.getItem(this.SYS_LOGS_KEY);
-    
-    const subLogs: SubscriptionLog[] = storedSubLogs ? JSON.parse(storedSubLogs) : [];
-    const sysLogs: SystemLog[] = storedSysLogs ? JSON.parse(storedSysLogs) : [];
-    
-    this.subLogsSubject = new BehaviorSubject<SubscriptionLog[]>(subLogs);
-    this.sysLogsSubject = new BehaviorSubject<SystemLog[]>(sysLogs);
-    
-    this.subscriptionLogs$ = this.subLogsSubject.asObservable();
-    this.systemLogs$ = this.sysLogsSubject.asObservable();
-  }
-
-  // Subscription Logs
-  addSubscriptionLog(log: SubscriptionLog): Observable<void> {
-    const logs = [...this.subLogsSubject.value, log];
-    localStorage.setItem(this.SUB_LOGS_KEY, JSON.stringify(logs));
-    this.subLogsSubject.next(logs);
-    return of(void 0);
-  }
+  constructor(private api: ApiService) {}
 
   getSubscriptionLogs(): Observable<SubscriptionLog[]> {
-    return of(this.subLogsSubject.value);
+    return new Observable(observer => {
+      this.api.getSubscriptionLogs().subscribe({
+        next: (rows: any[]) => {
+          observer.next(rows.map(r => ({
+            id: r.id, userId: r.user_id, action: r.action, plan: r.plan,
+            cost: parseFloat(r.cost), approvedBy: r.approved_by,
+            feedback: r.feedback, timestamp: r.created_at, details: r.details,
+          })));
+          observer.complete();
+        },
+        error: (err: any) => observer.error(err),
+      });
+    });
   }
 
   getSubscriptionLogsByUser(userId: string): Observable<SubscriptionLog[]> {
-    return of(this.subLogsSubject.value.filter(log => log.userId === userId));
-  }
-
-  // System Logs
-  addSystemLog(log: SystemLog): Observable<void> {
-    const logs = [...this.sysLogsSubject.value, log];
-    localStorage.setItem(this.SYS_LOGS_KEY, JSON.stringify(logs));
-    this.sysLogsSubject.next(logs);
-    return of(void 0);
+    return new Observable(observer => {
+      this.getSubscriptionLogs().subscribe({
+        next: (logs) => { observer.next(logs.filter(l => l.userId === userId)); observer.complete(); },
+        error: (err: any) => observer.error(err),
+      });
+    });
   }
 
   getSystemLogs(): Observable<SystemLog[]> {
-    return of(this.sysLogsSubject.value);
+    return new Observable(observer => {
+      this.api.getSystemLogs().subscribe({
+        next: (rows: any[]) => {
+          observer.next(rows.map(r => ({
+            id: r.id, type: r.type, message: r.message,
+            userId: r.user_id, adminId: r.admin_id,
+            timestamp: r.created_at, details: r.details,
+          })));
+          observer.complete();
+        },
+        error: (err: any) => observer.error(err),
+      });
+    });
   }
 
   getSystemLogsByType(type: string): Observable<SystemLog[]> {
-    return of(this.sysLogsSubject.value.filter(log => log.type === type));
+    return new Observable(observer => {
+      this.getSystemLogs().subscribe({
+        next: (logs) => { observer.next(logs.filter(l => l.type === type)); observer.complete(); },
+        error: (err: any) => observer.error(err),
+      });
+    });
   }
 
   getSystemLogsByDateRange(startDate: Date, endDate: Date): Observable<SystemLog[]> {
-    return of(this.sysLogsSubject.value.filter(log => {
-      const logDate = new Date(log.timestamp);
-      return logDate >= startDate && logDate <= endDate;
-    }));
+    return new Observable(observer => {
+      this.getSystemLogs().subscribe({
+        next: (logs) => {
+          observer.next(logs.filter(l => { const d = new Date(l.timestamp); return d >= startDate && d <= endDate; }));
+          observer.complete();
+        },
+        error: (err: any) => observer.error(err),
+      });
+    });
   }
 
   clearSystemLogs(): Observable<void> {
-    localStorage.removeItem(this.SYS_LOGS_KEY);
-    this.sysLogsSubject.next([]);
-    return of(void 0);
+    return new Observable(observer => {
+      this.api.clearSystemLogs().subscribe({
+        next: () => { observer.next(); observer.complete(); },
+        error: (err: any) => observer.error(err),
+      });
+    });
   }
+
+  addSubscriptionLog(_log: SubscriptionLog): Observable<void> { return of(void 0); }
+  addSystemLog(_log: SystemLog): Observable<void> { return of(void 0); }
 }

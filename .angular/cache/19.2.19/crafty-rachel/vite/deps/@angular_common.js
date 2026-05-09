@@ -6,7 +6,6 @@ import {
   CurrencyPipe,
   DATE_PIPE_DEFAULT_OPTIONS,
   DATE_PIPE_DEFAULT_TIMEZONE,
-  DOCUMENT,
   DatePipe,
   DecimalPipe,
   DomAdapter,
@@ -41,8 +40,6 @@ import {
   NullViewportScroller,
   NumberFormatStyle,
   NumberSymbol,
-  PLATFORM_BROWSER_ID,
-  PLATFORM_SERVER_ID,
   PRECONNECT_CHECK_BLOCKLIST,
   PathLocationStrategy,
   PercentPipe,
@@ -56,7 +53,6 @@ import {
   VERSION,
   ViewportScroller,
   WeekDay,
-  XhrFactory,
   formatCurrency,
   formatDate,
   formatNumber,
@@ -83,10 +79,7 @@ import {
   getLocaleTimeFormat,
   getLocaleWeekEndRange,
   getNumberOfCurrencyDigits,
-  isPlatformBrowser,
-  isPlatformServer,
   normalizeQueryParams,
-  parseCookieValue,
   provideCloudflareLoader,
   provideCloudinaryLoader,
   provideImageKitLoader,
@@ -94,11 +87,22 @@ import {
   provideNetlifyLoader,
   registerLocaleData,
   setRootDomAdapter
-} from "./chunk-5FTKQOFS.js";
+} from "./chunk-OEQCGYJD.js";
+import {
+  DOCUMENT,
+  PLATFORM_BROWSER_ID,
+  PLATFORM_SERVER_ID,
+  XhrFactory,
+  isPlatformBrowser,
+  isPlatformServer,
+  parseCookieValue
+} from "./chunk-LOTCMRLZ.js";
 import {
   IMAGE_CONFIG
-} from "./chunk-W7BZ4MNI.js";
-import "./chunk-P6U2JBMQ.js";
+} from "./chunk-DLB6UYLD.js";
+import "./chunk-WPM5VTLQ.js";
+import "./chunk-PEBH6BBU.js";
+import "./chunk-4S3KYZTJ.js";
 import "./chunk-WDMUDEB6.js";
 export {
   APP_BASE_HREF,

@@ -1,98 +1,39 @@
 import { Injectable } from '@angular/core';
 import { Material } from '../models/material.model';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
-import { SubscriptionService } from './subscription.service';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class MaterialService {
-  private readonly MATERIALS_KEY = 'materials';
-  private materialsSubject: BehaviorSubject<Material[]>;
-  public materials$: Observable<Material[]>;
+  private materialsSubject = new BehaviorSubject<Material[]>([]);
+  public materials$ = this.materialsSubject.asObservable();
 
-  // Sample materials
-  private sampleMaterials: Material[] = [
-    {
-      id: '1',
-      name: 'Colored Paper A4',
-      quantity: 500,
-      costPerUnit: 0.15,
-      unit: 'sheet',
-      category: 'Paper',
-      createdAt: new Date('2026-01-01'),
-      updatedAt: new Date('2026-01-01')
-    },
-    {
-      id: '2',
-      name: 'Glue Stick',
-      quantity: 20,
-      costPerUnit: 2.50,
-      unit: 'piece',
-      category: 'Adhesive',
-      createdAt: new Date('2026-01-05'),
-      updatedAt: new Date('2026-01-05')
-    },
-    {
-      id: '3',
-      name: 'Ribbon Roll',
-      quantity: 10,
-      costPerUnit: 5.00,
-      unit: 'roll',
-      category: 'Decoration',
-      createdAt: new Date('2026-01-10'),
-      updatedAt: new Date('2026-01-10')
-    },
-    {
-      id: '4',
-      name: 'Cardstock Pack',
-      quantity: 15,
-      costPerUnit: 8.00,
-      unit: 'pack',
-      category: 'Paper',
-      createdAt: new Date('2026-01-12'),
-      updatedAt: new Date('2026-01-12')
-    },
-    {
-      id: '5',
-      name: 'Acrylic Paint Set',
-      quantity: 5,
-      costPerUnit: 15.00,
-      unit: 'piece',
-      category: 'Paint',
-      createdAt: new Date('2026-01-15'),
-      updatedAt: new Date('2026-01-15')
-    }
-  ];
-
-  constructor(
-    private authService: AuthService,
-    private subscriptionService: SubscriptionService
-  ) {
-    const userId = this.authService.currentUserValue?.id || 'guest';
-    const key = `${this.MATERIALS_KEY}_${userId}`;
-    
-    let materials = this.loadMaterials(key);
-    if (materials.length === 0) {
-      materials = this.sampleMaterials;
-      localStorage.setItem(key, JSON.stringify(materials));
-    }
-    
-    this.materialsSubject = new BehaviorSubject<Material[]>(materials);
-    this.materials$ = this.materialsSubject.asObservable();
+  constructor(private api: ApiService, private authService: AuthService) {
+    this.authService.currentUser.subscribe(user => {
+      if (user) this.load();
+      else this.materialsSubject.next([]);
+    });
   }
 
-  private loadMaterials(key: string): Material[] {
-    const stored = localStorage.getItem(key);
-    return stored ? JSON.parse(stored) : [];
+  private toMaterial(row: any): Material {
+    return {
+      id: row.id,
+      name: row.name,
+      quantity: parseFloat(row.quantity),
+      costPerUnit: parseFloat(row.cost_per_unit),
+      unit: row.unit,
+      category: row.category,
+      createdAt: new Date(row.created_at),
+      updatedAt: new Date(row.updated_at),
+    };
   }
 
-  private saveMaterials(materials: Material[]): void {
-    const userId = this.authService.currentUserValue?.id || 'guest';
-    const key = `${this.MATERIALS_KEY}_${userId}`;
-    localStorage.setItem(key, JSON.stringify(materials));
-    this.materialsSubject.next(materials);
+  load(): void {
+    this.api.getMaterials().subscribe({
+      next: (rows: any[]) => this.materialsSubject.next(rows.map(r => this.toMaterial(r))),
+      error: (err: any) => console.error('[Materials] Load error:', err),
+    });
   }
 
   getMaterials(): Material[] {
@@ -103,56 +44,82 @@ export class MaterialService {
     return this.materialsSubject.value.find(m => m.id === id);
   }
 
-  addMaterial(material: Omit<Material, 'id' | 'createdAt' | 'updatedAt'>): Material {
-    // enforce inventory limit
-    const subscription = this.subscriptionService.getCurrentSubscription();
-    if (subscription) {
-      const limit = this.subscriptionService.getInventoryLimit(subscription.currentPlan);
-      if (this.materialsSubject.value.length >= limit) {
-        throw new Error('Inventory slot limit reached for your current plan');
-      }
-    }
-
-    const newMaterial: Material = {
-      ...material,
-      id: Date.now().toString(),
-      createdAt: new Date(),
-      updatedAt: new Date()
+  addMaterialAsync(material: Omit<Material, 'id' | 'createdAt' | 'updatedAt'>): Observable<Material> {
+    const payload = {
+      name: material.name,
+      quantity: material.quantity,
+      cost_per_unit: material.costPerUnit,
+      unit: material.unit,
+      category: material.category || null,
     };
-    
-    const materials = [...this.materialsSubject.value, newMaterial];
-    this.saveMaterials(materials);
-    return newMaterial;
+    return new Observable(observer => {
+      this.api.createMaterial(payload).subscribe({
+        next: (row: any) => {
+          const m = this.toMaterial(row);
+          this.materialsSubject.next([m, ...this.materialsSubject.value]);
+          observer.next(m);
+          observer.complete();
+        },
+        error: (err: any) => observer.error(err),
+      });
+    });
+  }
+
+  addMaterial(material: Omit<Material, 'id' | 'createdAt' | 'updatedAt'>): Material {
+    const temp: Material = { ...material, id: 'pending-' + Date.now(), createdAt: new Date(), updatedAt: new Date() };
+    this.addMaterialAsync(material).subscribe({ error: e => console.error(e) });
+    return temp;
+  }
+
+  updateMaterialAsync(id: string, updates: Partial<Material>): Observable<Material> {
+    const payload: any = {};
+    if (updates.name !== undefined) payload.name = updates.name;
+    if (updates.quantity !== undefined) payload.quantity = updates.quantity;
+    if (updates.costPerUnit !== undefined) payload.cost_per_unit = updates.costPerUnit;
+    if (updates.unit !== undefined) payload.unit = updates.unit;
+    if (updates.category !== undefined) payload.category = updates.category;
+
+    return new Observable(observer => {
+      this.api.updateMaterial(id, payload).subscribe({
+        next: (row: any) => {
+          const updated = this.toMaterial(row);
+          this.materialsSubject.next(this.materialsSubject.value.map(m => m.id === id ? updated : m));
+          observer.next(updated);
+          observer.complete();
+        },
+        error: (err: any) => observer.error(err),
+      });
+    });
   }
 
   updateMaterial(id: string, updates: Partial<Material>): Material | null {
-    // allow update no matter what; inventory count not changed
-    const materials = this.materialsSubject.value;
-    const index = materials.findIndex(m => m.id === id);
-    
-    if (index === -1) return null;
-    
-    materials[index] = {
-      ...materials[index],
-      ...updates,
-      updatedAt: new Date()
-    };
-    
-    this.saveMaterials(materials);
-    return materials[index];
+    const existing = this.getMaterialById(id);
+    if (!existing) return null;
+    this.updateMaterialAsync(id, updates).subscribe({ error: e => console.error(e) });
+    return { ...existing, ...updates, updatedAt: new Date() };
   }
 
   deleteMaterial(id: string): boolean {
-    const materials = this.materialsSubject.value.filter(m => m.id !== id);
-    this.saveMaterials(materials);
+    this.api.deleteMaterial(id).subscribe({
+      next: () => this.materialsSubject.next(this.materialsSubject.value.filter(m => m.id !== id)),
+      error: (err: any) => console.error('[Materials] Delete error:', err),
+    });
     return true;
   }
 
   searchMaterials(query: string): Material[] {
-    const lowerQuery = query.toLowerCase();
+    const q = query.toLowerCase();
     return this.materialsSubject.value.filter(m =>
-      m.name.toLowerCase().includes(lowerQuery) ||
-      m.category?.toLowerCase().includes(lowerQuery)
+      m.name.toLowerCase().includes(q) || m.category?.toLowerCase().includes(q)
     );
+  }
+
+  getMaterialsByCategory(category: string): Material[] {
+    return this.materialsSubject.value.filter(m => m.category === category);
+  }
+
+  getCategories(): string[] {
+    const cats = this.materialsSubject.value.map(m => m.category).filter((c): c is string => !!c);
+    return [...new Set(cats)];
   }
 }

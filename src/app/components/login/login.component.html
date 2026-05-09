@@ -30,69 +30,26 @@
       </div>
     </div>
 
-    <!-- Right form panel -->
+    <!-- Right panel -->
     <div class="login-card">
       <div class="card-heading">
         <h2>Sign in to your account</h2>
         <p>Don't have one? <a routerLink="/signup">Create account</a></p>
       </div>
 
-      @if (errorMessage) {
-        <div class="alert alert-danger mb-3" role="alert">
-          <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ errorMessage }}
-        </div>
-      }
-
-      <form (ngSubmit)="onSubmit()" #loginForm="ngForm" autocomplete="on">
-        <div class="field-group">
-          <label class="field-label" for="login-email">
-            <i class="bi bi-envelope me-1"></i>Email Address
-          </label>
-          <input
-            id="login-email"
-            type="email"
-            class="form-control"
-            name="email"
-            [(ngModel)]="email"
-            placeholder="you@example.com"
-            required
-            email
-            autocomplete="username">
-        </div>
-
-        <div class="field-group">
-          <label class="field-label" for="login-password">
-            <i class="bi bi-lock me-1"></i>Password
-          </label>
-          <div class="password-wrap">
-            <input
-              id="login-password"
-              [type]="showPassword ? 'text' : 'password'"
-              class="form-control"
-              name="password"
-              [(ngModel)]="password"
-              placeholder="••••••••"
-              required
-              autocomplete="current-password">
-            <button type="button" class="pw-toggle" (click)="showPassword = !showPassword" tabindex="-1">
-              <i class="bi" [class.bi-eye]="!showPassword" [class.bi-eye-slash]="showPassword"></i>
-            </button>
-          </div>
-        </div>
-
-        <button type="submit" class="btn btn-primary btn-lg w-100 submit-btn" [disabled]="isLoading || !loginForm.valid">
-          @if (isLoading) {
-            <span class="spinner-border spinner-border-sm me-2"></span>Signing in…
-          } @else {
-            <i class="bi bi-arrow-right-circle me-2"></i>Sign In
-          }
+      <div class="clerk-action-area">
+        <button class="btn btn-primary btn-lg w-100 submit-btn" (click)="openSignIn()">
+          <i class="bi bi-box-arrow-in-right me-2"></i>Sign In with Clerk
         </button>
-      </form>
+        <p class="mt-3 text-center" style="color: var(--text-muted); font-size: 0.85rem;">
+          Secure authentication powered by Clerk
+        </p>
+      </div>
 
-      <p class="switch-link">New here? <a routerLink="/signup">Create a free account</a></p>
+      <p class="switch-link">New here? <a (click)="openSignUp()" style="cursor:pointer">Create a free account</a></p>
 
       <div class="demo-info">
-        <small><strong>Demo mode:</strong> Create an account via Sign Up to get started. Admins use <a routerLink="/bigboss-login">Admin Login</a>.</small>
+        <small>Admins use <a routerLink="/bigboss-login">Admin Login</a>.</small>
       </div>
     </div>
   </div>
