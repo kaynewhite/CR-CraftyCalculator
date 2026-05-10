@@ -55,14 +55,14 @@ async function seed() {
   const admins = [
     {
       email: 'admin@gmail.com',
-      password: 'admin123',
+      password: 'Admin123PasswordYeah',
       firstName: 'Admin',
       lastName: 'User',
       role: 'admin',
     },
     {
       email: 'superadmin@gmail.com',
-      password: 'superadmin123',
+      password: 'Superadmin123PasswordYeah',
       firstName: 'Super',
       lastName: 'Admin',
       role: 'superadmin',
