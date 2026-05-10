@@ -109,13 +109,9 @@
           <i class="bi bi-qr-code nav-icon"></i>
           @if (!isCollapsed) { <span>QR Codes</span> }
         </a>
-        <a [routerLink]="'/admin-inventory'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'Inventory' : ''">
-          <i class="bi bi-box-seam nav-icon"></i>
-          @if (!isCollapsed) { <span>Inventory</span> }
-        </a>
-        <a [routerLink]="'/admin-saved'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'Saved' : ''">
-          <i class="bi bi-bookmark nav-icon"></i>
-          @if (!isCollapsed) { <span>Saved Calcs</span> }
+        <a [routerLink]="'/admin-resets'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'Password Resets' : ''">
+          <i class="bi bi-key nav-icon"></i>
+          @if (!isCollapsed) { <span>Password Resets</span> }
         </a>
       </div>
 

@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -8,14 +9,25 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './landing.component.html',
   styleUrl: './landing.component.css'
 })
-export class LandingComponent {
-  constructor(private authService: AuthService) {}
+export class LandingComponent implements OnInit {
+  constructor(private authService: AuthService, private router: Router) {}
+
+  ngOnInit(): void {
+    if (this.authService.isAuthenticated()) {
+      const user = this.authService.currentUserValue;
+      if (user?.role === 'admin' || user?.role === 'superadmin') {
+        this.router.navigate(['/admin-dashboard']);
+      } else {
+        this.router.navigate(['/dashboard']);
+      }
+    }
+  }
 
   openSignIn(): void {
-    this.authService.openSignIn('/dashboard');
+    this.router.navigate(['/login']);
   }
 
   openSignUp(): void {
-    this.authService.openSignUp('/dashboard');
+    this.router.navigate(['/signup']);
   }
 }

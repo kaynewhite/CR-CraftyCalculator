@@ -1,21 +1,22 @@
 <div class="login-page">
+
   <div class="bg-decoration">
     <div class="blob blob-1"></div>
     <div class="blob blob-2"></div>
   </div>
 
   <div class="login-wrapper">
+
+    <!-- Left branding -->
     <div class="login-left">
       <div class="auth-brand">
         <div class="auth-logo">
           <img src="/CRlogo.png" alt="CR" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-          <div class="logo-fallback" style="display:none">CR</div>
+          <div class="logo-fallback">CR</div>
         </div>
         <span class="auth-brand-name">Crafty Rachel</span>
       </div>
-      <h1 class="login-headline">
-        Welcome<br>back to<br><span class="accent">your craft</span>
-      </h1>
+      <h1 class="login-headline">Welcome<br>back to<br><span class="accent">your craft</span></h1>
       <p class="login-tagline">Track your costs, grow your profits, and build the creative business you deserve.</p>
       <div class="login-stats">
         <div class="stat-item">
@@ -24,32 +25,74 @@
         </div>
         <div class="stat-item">
           <span class="stat-num">3</span>
-          <span class="stat-label">Minutes to setup</span>
+          <span class="stat-label">Plans available</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num">100%</span>
+          <span class="stat-label">Secure</span>
         </div>
       </div>
     </div>
 
+    <!-- Right: real form -->
     <div class="login-card">
       <div class="card-heading">
         <h2>Sign in to your account</h2>
-        <p>Secure authentication — opening now</p>
+        <p>Enter your credentials below</p>
       </div>
 
-      <div class="clerk-action-area">
-        <div class="d-flex justify-content-center mb-3">
-          <div class="spinner-border text-brand" style="width:2rem;height:2rem;" role="status">
-            <span class="visually-hidden">Loading…</span>
+      @if (error) {
+        <div class="alert-error">
+          <i class="bi bi-exclamation-circle-fill me-2"></i>{{ error }}
+        </div>
+      }
+
+      <form (ngSubmit)="onSubmit()" novalidate>
+        <div class="field-group">
+          <label class="field-label" for="login-email">Email Address</label>
+          <input
+            id="login-email"
+            type="email"
+            class="form-control"
+            [(ngModel)]="email"
+            name="email"
+            placeholder="you@example.com"
+            autocomplete="email"
+            required>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="login-password">Password</label>
+          <div class="password-wrap">
+            <input
+              id="login-password"
+              [type]="showPassword ? 'text' : 'password'"
+              class="form-control"
+              [(ngModel)]="password"
+              name="password"
+              placeholder="Enter your password"
+              autocomplete="current-password"
+              required>
+            <button type="button" class="pw-toggle" (click)="togglePassword()" tabindex="-1">
+              <i class="bi" [class.bi-eye]="!showPassword" [class.bi-eye-slash]="showPassword"></i>
+            </button>
+          </div>
+          <div class="forgot-row">
+            <a routerLink="/forgot-password" class="forgot-link">Forgot password?</a>
           </div>
         </div>
-        <p class="text-center" style="color:var(--text-muted);font-size:0.85rem;">
-          The sign in window is opening automatically…
-        </p>
-        <button class="btn btn-primary btn-lg w-100 submit-btn mt-3" (click)="openSignIn()">
-          <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
-        </button>
-      </div>
 
-      <p class="switch-link mt-3">New here? <a routerLink="/signup" style="cursor:pointer">Create a free account</a></p>
+        <button type="submit" class="btn btn-primary w-100 submit-btn" [disabled]="isLoading">
+          @if (!isLoading) {
+            <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+          } @else {
+            <span class="spinner-border spinner-border-sm me-2"></span>Signing in…
+          }
+        </button>
+      </form>
+
+      <p class="switch-link">New here? <a routerLink="/signup">Create a free account</a></p>
     </div>
+
   </div>
 </div>

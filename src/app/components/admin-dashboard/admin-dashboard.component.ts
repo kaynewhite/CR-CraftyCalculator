@@ -68,7 +68,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
       if (!user) return;
       this.isSuperAdmin = user.role === 'superadmin';
       if (user.role !== 'admin' && user.role !== 'superadmin') {
-        this.router.navigate(['/admin-login']);
+        this.router.navigate(['/login']);
         return;
       }
       this.loadDashboardData();
@@ -282,5 +282,5 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   toggleSidebar(): void { this.sidebarOpen = !this.sidebarOpen; }
   onSidebarClose(): void { this.sidebarOpen = false; }
   onCollapseSidebar(): void { this.sidebarCollapsed = !this.sidebarCollapsed; }
-  logout(): void { this.authService.logout(); this.router.navigate(['/admin-login']); }
+  logout(): void { this.authService.logout(); this.router.navigate(['/login']); }
 }

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { SubscriptionService } from '../../services/subscription.service';
+import { ApiService } from '../../services/api.service';
 import { ThemeService } from '../../services/theme.service';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 
@@ -12,10 +12,9 @@ interface UserDetail {
   name: string;
   email: string;
   subscription: string;
-  status: string; // will hold either 'active', subscription status or 'rejected'
+  status: string;
   createdAt: string;
   calculationCount: number;
-  rejectionFeedback?: string;
 }
 
 @Component({
@@ -23,7 +22,7 @@ interface UserDetail {
   standalone: true,
   imports: [CommonModule, FormsModule, SidebarComponent],
   templateUrl: './user-management.component.html',
-  styleUrls: ['./user-management.component.css']
+  styleUrls: ['./user-management.component.css'],
 })
 export class UserManagementComponent implements OnInit {
   users: UserDetail[] = [];
@@ -35,26 +34,20 @@ export class UserManagementComponent implements OnInit {
   sidebarCollapsed = false;
   isDarkMode = false;
 
-  subscriptionOptions = ['all', 'free', 'basic', 'pro'];
-
   constructor(
     private router: Router,
     private authService: AuthService,
-    private subscriptionService: SubscriptionService,
+    private api: ApiService,
     private themeService: ThemeService
   ) {}
 
   ngOnInit(): void {
-    // ensure theme classes are applied
     this.themeService.setTheme(this.themeService.getCurrentTheme());
-    // Initialize theme
-    this.themeService.isDarkMode$.subscribe(isDark => {
-      this.isDarkMode = isDark;
-    });
+    this.themeService.isDarkMode$.subscribe(isDark => (this.isDarkMode = isDark));
 
-    const currentUser = (this.authService as any).currentUserValue;
+    const currentUser = this.authService.currentUserValue;
     if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'superadmin')) {
-      this.router.navigate(['/admin-login']);
+      this.router.navigate(['/login']);
       return;
     }
 
@@ -63,126 +56,76 @@ export class UserManagementComponent implements OnInit {
 
   loadUsers(): void {
     this.isLoading = true;
-    
-    // Get all users from localStorage
-    const usersStr = localStorage.getItem('users');
-    const allStoredUsers = usersStr ? JSON.parse(usersStr) : [];
-    
-    // Filter out admin/superadmin from the user list
-    const regularUsers = allStoredUsers.filter((u: any) => u.role === 'user');
-
-    // Count calculations per user
-    const savedCalcsStr = localStorage.getItem('savedCalculations');
-    const savedCalcs = savedCalcsStr ? JSON.parse(savedCalcsStr) : [];
-    const calcCounts: { [key: string]: number } = {};
-    
-    savedCalcs.forEach((calc: any) => {
-      const userId = calc.userId || 'unknown';
-      calcCounts[userId] = (calcCounts[userId] || 0) + 1;
+    this.api.getAllUsers().subscribe({
+      next: (users: any[]) => {
+        this.users = users
+          .filter((u: any) => u.role === 'user')
+          .map((u: any) => ({
+            id: u.id,
+            name: u.name,
+            email: u.email,
+            subscription: u.plan || 'free',
+            status: u.status || 'active',
+            createdAt: u.created_at
+              ? new Date(u.created_at).toLocaleDateString()
+              : '—',
+            calculationCount: 0,
+          }));
+        this.applyFilters();
+        this.isLoading = false;
+      },
+      error: (err: any) => {
+        console.error('[UserMgmt] Load error:', err);
+        this.isLoading = false;
+      },
     });
-
-    // Map users to detail interface
-    this.users = regularUsers.map((user: any) => ({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      subscription: user.subscriptionPlan || 'free',
-      status: user.status === 'rejected' ? 'rejected' : this.getSubscriptionStatus(user.id),
-      createdAt: new Date(user.createdAt).toLocaleDateString(),
-      calculationCount: calcCounts[user.id] || 0,
-      rejectionFeedback: user.rejectionFeedback
-    }));
-
-    this.applyFilters();
-    this.isLoading = false;
-  }
-
-  getSubscriptionStatus(userId: string): string {
-    const subStr = localStorage.getItem(`subscription_${userId}`);
-    if (!subStr) return 'inactive';
-    
-    const sub = JSON.parse(subStr);
-    return sub.status || 'inactive';
   }
 
   rejectUser(user: UserDetail): void {
-    const feedback = prompt('Provide rejection feedback for user ' + user.name + ':');
-    if (feedback === null) {
-      return; // user cancelled
-    }
-    const stored = JSON.parse(localStorage.getItem('users') || '[]');
-    const idx = stored.findIndex((u: any) => u.id === user.id);
-    if (idx !== -1) {
-      stored[idx].status = 'rejected';
-      stored[idx].rejectionFeedback = feedback;
-      localStorage.setItem('users', JSON.stringify(stored));
-      alert('User has been marked as rejected. They will see a notice on their next login.');
-      this.loadUsers();
-    }
+    const feedback = prompt(`Provide rejection feedback for ${user.name}:`);
+    if (feedback === null) return;
+    this.api.setUserStatus(user.id, 'rejected', feedback || 'No reason provided').subscribe({
+      next: () => {
+        alert('User has been rejected.');
+        this.loadUsers();
+      },
+      error: (err: any) => alert('Failed to reject user: ' + err.message),
+    });
   }
 
   reactivateUser(user: UserDetail): void {
-    if (!confirm(`Are you sure you want to reactivate ${user.name}?`)) {
-      return;
-    }
-    const stored = JSON.parse(localStorage.getItem('users') || '[]');
-    const idx = stored.findIndex((u: any) => u.id === user.id);
-    if (idx !== -1) {
-      stored[idx].status = 'active';
-      delete stored[idx].rejectionFeedback;
-      localStorage.setItem('users', JSON.stringify(stored));
-      this.loadUsers();
-    }
+    if (!confirm(`Reactivate ${user.name}?`)) return;
+    this.api.setUserStatus(user.id, 'active').subscribe({
+      next: () => this.loadUsers(),
+      error: (err: any) => alert('Failed to reactivate: ' + err.message),
+    });
   }
 
   applyFilters(): void {
     let filtered = [...this.users];
-
-    // Filter by subscription plan
     if (this.subscriptionFilter !== 'all') {
       filtered = filtered.filter(u => u.subscription === this.subscriptionFilter);
     }
-
-    // Filter by search term
     if (this.searchTerm) {
       const term = this.searchTerm.toLowerCase();
-      filtered = filtered.filter(u =>
-        u.name.toLowerCase().includes(term) ||
-        u.email.toLowerCase().includes(term) ||
-        u.id.includes(term)
+      filtered = filtered.filter(
+        u =>
+          u.name.toLowerCase().includes(term) ||
+          u.email.toLowerCase().includes(term) ||
+          u.id.includes(term)
       );
     }
-
     this.filteredUsers = filtered;
   }
 
-  onSearchChange(): void {
-    this.applyFilters();
-  }
-
-  onFilterChange(): void {
-    this.applyFilters();
-  }
+  onSearchChange(): void { this.applyFilters(); }
+  onFilterChange(): void { this.applyFilters(); }
 
   getUserSubscriptionName(plan: string): string {
-    const plans = this.subscriptionService.getPlans();
-    const found = plans.find(p => p.id === plan);
-    return found ? found.name : plan.charAt(0).toUpperCase() + plan.slice(1);
+    return plan.charAt(0).toUpperCase() + plan.slice(1);
   }
 
-  goBack(): void {
-    this.router.navigate(['/admin-dashboard']);
-  }
-
-  toggleSidebar(): void {
-    this.sidebarOpen = !this.sidebarOpen;
-  }
-
-  onSidebarClose(): void {
-    this.sidebarOpen = false;
-  }
-
-  onCollapseSidebar(): void {
-    this.sidebarCollapsed = !this.sidebarCollapsed;
-  }
+  toggleSidebar(): void { this.sidebarOpen = !this.sidebarOpen; }
+  onSidebarClose(): void { this.sidebarOpen = false; }
+  onCollapseSidebar(): void { this.sidebarCollapsed = !this.sidebarCollapsed; }
 }

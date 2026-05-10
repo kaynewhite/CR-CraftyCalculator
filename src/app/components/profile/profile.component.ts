@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { AuthService } from '../../services/auth.service';
@@ -11,25 +12,26 @@ import { User } from '../../models/user.model';
   selector: 'app-profile',
   imports: [CommonModule, FormsModule, SidebarComponent],
   templateUrl: './profile.component.html',
-  styleUrl: './profile.component.css'
+  styleUrl: './profile.component.css',
 })
 export class ProfileComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
-  name: string = '';
-  email: string = '';
-  successMessage: string = '';
-  errorMessage: string = '';
-  isEditing: boolean = false;
-  isLoading: boolean = false;
-  sidebarOpen: boolean = false;
-  sidebarCollapsed: boolean = false;
-  private sidebarSubscription: Subscription;
+  name = '';
+  email = '';
+  successMessage = '';
+  errorMessage = '';
+  isEditing = false;
+  isLoading = false;
+  sidebarOpen = false;
+  sidebarCollapsed = false;
+  private sidebarSub: Subscription;
 
   constructor(
     private authService: AuthService,
-    private sidebarService: SidebarService
+    private sidebarService: SidebarService,
+    private router: Router
   ) {
-    this.sidebarSubscription = new Subscription();
+    this.sidebarSub = new Subscription();
   }
 
   ngOnInit(): void {
@@ -40,9 +42,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this.email = user.email;
       }
     });
-    
-    // Subscribe to sidebar collapsed state
-    this.sidebarSubscription = this.sidebarService.isCollapsed$.subscribe(collapsed => {
+    this.sidebarSub = this.sidebarService.isCollapsed$.subscribe(collapsed => {
       this.sidebarCollapsed = collapsed;
     });
   }
@@ -58,46 +58,33 @@ export class ProfileComponent implements OnInit, OnDestroy {
       this.errorMessage = 'Please fill in all fields';
       return;
     }
-
     this.isLoading = true;
     this.errorMessage = '';
     this.successMessage = '';
 
     this.authService.updateProfile(this.name, this.email).subscribe({
-      next: (user) => {
+      next: () => {
         this.isLoading = false;
         this.isEditing = false;
         this.successMessage = 'Profile updated successfully!';
-        setTimeout(() => this.successMessage = '', 3000);
+        setTimeout(() => (this.successMessage = ''), 3000);
       },
-      error: (error) => {
+      error: (err: any) => {
         this.isLoading = false;
-        this.errorMessage = error.message || 'Failed to update profile';
-      }
+        this.errorMessage = err.message || 'Failed to update profile';
+      },
     });
   }
 
-  toggleSidebar(): void {
-    this.sidebarOpen = !this.sidebarOpen;
-  }
-
-  closeSidebar(): void {
-    this.sidebarOpen = false;
-  }
-
-  toggleSidebarCollapse(): void {
-    this.sidebarService.toggleCollapsed();
-  }
-
   openAccountSettings(): void {
-    const clerk = (window as any).Clerk;
-    if (clerk?.openUserProfile) {
-      clerk.openUserProfile();
-    } else {
-      alert('Account settings are loading. Please try again in a moment.');
-    }
+    this.router.navigate(['/forgot-password']);
   }
+
+  toggleSidebar(): void { this.sidebarOpen = !this.sidebarOpen; }
+  closeSidebar(): void { this.sidebarOpen = false; }
+  toggleSidebarCollapse(): void { this.sidebarService.toggleCollapsed(); }
 
   ngOnDestroy(): void {
-    this.sidebarSubscription.unsubscribe();
-  }}
+    this.sidebarSub.unsubscribe();
+  }
+}

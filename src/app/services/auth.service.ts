@@ -1,63 +1,73 @@
 import { Injectable } from '@angular/core';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { User } from '../models/user.model';
-import { BehaviorSubject, Observable, from } from 'rxjs';
 import { ApiService } from './api.service';
+import { environment } from '../../environments/environment';
 
-declare const Clerk: any;
+declare type ClerkInstance = any;
+
+let _clerk: ClerkInstance | null = null;
+let _clerkPromise: Promise<ClerkInstance> | null = null;
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser = this.currentUserSubject.asObservable();
-
-  private clerkReady = false;
   private tokenRefreshTimer: any = null;
+  private initialized = false;
 
   constructor(private api: ApiService) {
-    this.initClerk();
+    this.init();
   }
 
-  private async initClerk(): Promise<void> {
-    const check = setInterval(async () => {
-      if (typeof (window as any).Clerk !== 'undefined') {
-        clearInterval(check);
-        await this.setupClerk();
-      }
-    }, 150);
-    setTimeout(() => clearInterval(check), 12000);
-  }
-
-  private async setupClerk(): Promise<void> {
-    const clerk = (window as any).Clerk;
-    if (!clerk) return;
-    try {
+  async getClerk(): Promise<ClerkInstance> {
+    if (_clerk) return _clerk;
+    if (_clerkPromise) return _clerkPromise;
+    _clerkPromise = (async () => {
+      const mod = await import('@clerk/clerk-js');
+      const ClerkClass = (mod as any).default ?? (mod as any).Clerk;
+      const clerk = new ClerkClass(environment.clerkPublishableKey);
       await clerk.load();
-      this.clerkReady = true;
-      if (clerk.user) {
-        await this.syncUser();
-      }
-      clerk.addListener(async ({ user }: any) => {
-        if (user) {
+      _clerk = clerk;
+      return clerk;
+    })();
+    return _clerkPromise;
+  }
+
+  private async init(): Promise<void> {
+    if (this.initialized) return;
+    this.initialized = true;
+    try {
+      const clerk = await this.getClerk();
+      if (clerk.session && clerk.user) {
+        const token = await clerk.session.getToken();
+        if (token) {
+          this.api.setToken(token);
           await this.syncUser();
+          this.startTokenRefresh(clerk);
+        }
+      }
+      clerk.addListener(async ({ session, user }: any) => {
+        if (session && user) {
+          const token = await session.getToken();
+          if (token) {
+            this.api.setToken(token);
+            await this.syncUser();
+            this.startTokenRefresh(clerk);
+          }
         } else {
           this.currentUserSubject.next(null);
           this.api.setToken(null);
-          if (this.tokenRefreshTimer) clearInterval(this.tokenRefreshTimer);
+          this.stopTokenRefresh();
         }
       });
     } catch (err) {
-      console.error('[Clerk] Setup error:', err);
+      console.error('[Auth] Init error:', err);
     }
   }
 
-  async syncUser(): Promise<void> {
-    const clerk = (window as any).Clerk;
-    if (!clerk?.session) return;
-    try {
-      const token = await clerk.session.getToken();
-      if (!token) return;
-      this.api.setToken(token);
-
+  private async syncUser(): Promise<void> {
+    return new Promise((resolve) => {
       this.api.getMe().subscribe({
         next: (dbUser: any) => {
           const user: User = {
@@ -66,73 +76,106 @@ export class AuthService {
             email: dbUser.email,
             password: '',
             role: dbUser.role || 'user',
-            subscriptionPlan: (dbUser.plan as any) || 'free',
+            subscriptionPlan: dbUser.plan || 'free',
             createdAt: new Date(dbUser.created_at),
             status: dbUser.status || 'active',
           };
           this.currentUserSubject.next(user);
+          resolve();
         },
-        error: (err: any) => console.error('[Auth] Sync error:', err),
+        error: (err: any) => {
+          console.error('[Auth] Sync error:', err);
+          resolve();
+        },
       });
+    });
+  }
 
-      // Refresh token every 50 seconds
-      if (this.tokenRefreshTimer) clearInterval(this.tokenRefreshTimer);
-      this.tokenRefreshTimer = setInterval(async () => {
-        const fresh = await clerk.session?.getToken();
-        if (fresh) this.api.setToken(fresh);
-      }, 50000);
-    } catch (err) {
-      console.error('[Auth] Token error:', err);
+  private startTokenRefresh(clerk: ClerkInstance): void {
+    this.stopTokenRefresh();
+    this.tokenRefreshTimer = setInterval(async () => {
+      const token = await clerk.session?.getToken();
+      if (token) this.api.setToken(token);
+    }, 50000);
+  }
+
+  private stopTokenRefresh(): void {
+    if (this.tokenRefreshTimer) {
+      clearInterval(this.tokenRefreshTimer);
+      this.tokenRefreshTimer = null;
     }
   }
 
-  public get currentUserValue(): User | null {
-    return this.currentUserSubject.value;
+  async signIn(email: string, password: string): Promise<void> {
+    const clerk = await this.getClerk();
+    const result = await clerk.client.signIn.create({
+      identifier: email,
+      password: password,
+    });
+    if (result.status === 'complete') {
+      await clerk.setActive({ session: result.createdSessionId });
+    } else {
+      throw new Error('Sign in could not be completed. Status: ' + result.status);
+    }
   }
 
-  login(email: string, password: string): Observable<User> {
-    return new Observable(observer => {
-      const clerk = (window as any).Clerk;
-      if (!clerk) {
-        observer.error({ message: 'Authentication service not ready' });
-        return;
-      }
-      clerk.openSignIn({
-        afterSignInUrl: window.location.href,
-      });
-      observer.error({ message: 'Use the sign-in modal' });
+  async signUp(name: string, email: string, password: string): Promise<{ needsVerification: boolean }> {
+    const clerk = await this.getClerk();
+    const nameParts = name.trim().split(' ');
+    const firstName = nameParts[0] || name;
+    const lastName = nameParts.slice(1).join(' ') || '';
+
+    const result = await clerk.client.signUp.create({
+      emailAddress: email,
+      password,
+      firstName,
+      lastName,
     });
+
+    if (result.status === 'complete') {
+      await clerk.setActive({ session: result.createdSessionId });
+      return { needsVerification: false };
+    } else if (result.status === 'missing_requirements') {
+      await result.prepareEmailAddressVerification({ strategy: 'email_code' });
+      return { needsVerification: true };
+    } else {
+      throw new Error('Sign up could not be completed. Status: ' + result.status);
+    }
   }
 
-  signup(name: string, email: string, password: string): Observable<User> {
-    return new Observable(observer => {
-      const clerk = (window as any).Clerk;
-      if (!clerk) {
-        observer.error({ message: 'Authentication service not ready' });
-        return;
-      }
-      clerk.openSignUp({
-        afterSignUpUrl: '/dashboard',
-      });
-      observer.error({ message: 'Use the sign-up modal' });
-    });
+  async verifyEmail(code: string): Promise<void> {
+    const clerk = await this.getClerk();
+    const result = await clerk.client.signUp.attemptEmailAddressVerification({ code });
+    if (result.status === 'complete') {
+      await clerk.setActive({ session: result.createdSessionId });
+    } else {
+      throw new Error('Verification failed. Please check your code and try again.');
+    }
   }
 
   logout(): void {
-    const clerk = (window as any).Clerk;
-    if (clerk) {
-      clerk.signOut().then(() => {
-        this.currentUserSubject.next(null);
-        this.api.setToken(null);
-      });
-    } else {
-      this.currentUserSubject.next(null);
-      this.api.setToken(null);
-    }
+    this.getClerk().then(clerk => clerk.signOut());
+  }
+
+  get currentUserValue(): User | null {
+    return this.currentUserSubject.value;
+  }
+
+  isAuthenticated(): boolean {
+    return this.currentUserSubject.value !== null;
+  }
+
+  isAdmin(): boolean {
+    const u = this.currentUserValue;
+    return u?.role === 'admin' || u?.role === 'superadmin';
+  }
+
+  isSuperAdmin(): boolean {
+    return this.currentUserValue?.role === 'superadmin';
   }
 
   updateProfile(name: string, email: string): Observable<User> {
-    return new Observable(observer => {
+    return new Observable<User>((observer) => {
       this.api.updateMe({ name, email }).subscribe({
         next: (dbUser: any) => {
           const updated: User = {
@@ -149,22 +192,6 @@ export class AuthService {
     });
   }
 
-  isAuthenticated(): boolean {
-    return this.currentUserSubject.value !== null;
-  }
-
-  isAdmin(): boolean {
-    const u = this.currentUserValue;
-    return u?.role === 'admin' || u?.role === 'superadmin';
-  }
-
-  openSignIn(redirectUrl?: string): void {
-    const clerk = (window as any).Clerk;
-    if (clerk) clerk.openSignIn({ afterSignInUrl: redirectUrl || '/dashboard' });
-  }
-
-  openSignUp(redirectUrl?: string): void {
-    const clerk = (window as any).Clerk;
-    if (clerk) clerk.openSignUp({ afterSignUpUrl: redirectUrl || '/dashboard' });
-  }
+  openSignIn(_redirect?: string): void {}
+  openSignUp(_redirect?: string): void {}
 }

@@ -1,11 +1,10 @@
 -- Crafty Rachel Database Schema
--- Run this once against your Neon PostgreSQL instance
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Users (synced from Clerk)
 CREATE TABLE IF NOT EXISTS users (
-  id            TEXT PRIMARY KEY,          -- Clerk user_id
+  id            TEXT PRIMARY KEY,
   email         TEXT UNIQUE NOT NULL,
   name          TEXT NOT NULL DEFAULT '',
   role          TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin', 'superadmin')),
@@ -22,7 +21,7 @@ CREATE TABLE IF NOT EXISTS subscription_plans (
   display_name  TEXT NOT NULL,
   price         NUMERIC(10,2) NOT NULL DEFAULT 0,
   max_calculations INT NOT NULL DEFAULT 3,
-  calc_expiry_days INT NOT NULL DEFAULT 30,  -- 0 = never
+  calc_expiry_days INT NOT NULL DEFAULT 30,
   max_materials INT NOT NULL DEFAULT 10,
   features      JSONB NOT NULL DEFAULT '[]',
   limitations   JSONB NOT NULL DEFAULT '[]'
@@ -135,11 +134,24 @@ CREATE TABLE IF NOT EXISTS payment_qr_codes (
 INSERT INTO payment_qr_codes (method) VALUES ('gcash'), ('maya')
 ON CONFLICT (method) DO NOTHING;
 
+-- Password reset tokens (admin-mediated flow)
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id       TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  email         TEXT NOT NULL,
+  token         TEXT NOT NULL UNIQUE,
+  used          BOOLEAN NOT NULL DEFAULT FALSE,
+  expires_at    TIMESTAMPTZ NOT NULL,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- Indexes
-CREATE INDEX IF NOT EXISTS idx_materials_user    ON materials(user_id);
-CREATE INDEX IF NOT EXISTS idx_calculations_user ON calculations(user_id);
-CREATE INDEX IF NOT EXISTS idx_calcs_created     ON calculations(created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_payment_requests_user   ON payment_requests(user_id);
+CREATE INDEX IF NOT EXISTS idx_materials_user        ON materials(user_id);
+CREATE INDEX IF NOT EXISTS idx_calculations_user     ON calculations(user_id);
+CREATE INDEX IF NOT EXISTS idx_calcs_created         ON calculations(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_payment_requests_user ON payment_requests(user_id);
 CREATE INDEX IF NOT EXISTS idx_payment_requests_status ON payment_requests(status);
-CREATE INDEX IF NOT EXISTS idx_sub_logs_user     ON subscription_logs(user_id);
-CREATE INDEX IF NOT EXISTS idx_sys_logs_type     ON system_logs(type);
+CREATE INDEX IF NOT EXISTS idx_sub_logs_user         ON subscription_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_sys_logs_type         ON system_logs(type);
+CREATE INDEX IF NOT EXISTS idx_reset_tokens_token    ON password_reset_tokens(token);
+CREATE INDEX IF NOT EXISTS idx_reset_tokens_user     ON password_reset_tokens(user_id);

@@ -18,7 +18,11 @@ async function clerkRequest(method, path, body) {
 async function findOrCreateClerkUser({ email, password, firstName, lastName }) {
   const existing = await clerkRequest('GET', `/users?email_address=${encodeURIComponent(email)}&limit=5`);
   if (Array.isArray(existing) && existing.length > 0) {
-    console.log(`[Seed] User ${email} already exists in Clerk (${existing[0].id})`);
+    console.log(`[Seed] User ${email} already exists in Clerk (${existing[0].id}), updating password`);
+    await clerkRequest('PATCH', `/users/${existing[0].id}`, {
+      password,
+      skip_password_checks: true,
+    });
     return existing[0].id;
   }
 
@@ -51,16 +55,16 @@ async function seed() {
   const admins = [
     {
       email: 'admin@gmail.com',
-      password: 'Admin@123!',
+      password: 'admin123',
       firstName: 'Admin',
       lastName: 'User',
       role: 'admin',
     },
     {
-      email: 'kaynematsuzuki@gmail.com',
-      password: 'SuperAdmin@123!',
-      firstName: 'Kayne',
-      lastName: 'Matsuzuki',
+      email: 'superadmin@gmail.com',
+      password: 'superadmin123',
+      firstName: 'Super',
+      lastName: 'Admin',
       role: 'superadmin',
     },
   ];
@@ -70,6 +74,10 @@ async function seed() {
       const clerkId = await findOrCreateClerkUser(admin);
 
       await pool.query(
+        `DELETE FROM users WHERE email = $1 AND id != $2`,
+        [admin.email, clerkId]
+      );
+      await pool.query(
         `INSERT INTO users (id, name, email, role, created_at, updated_at)
          VALUES ($1, $2, $3, $4, NOW(), NOW())
          ON CONFLICT (id) DO UPDATE SET
@@ -78,6 +86,13 @@ async function seed() {
            role = EXCLUDED.role,
            updated_at = NOW()`,
         [clerkId, `${admin.firstName} ${admin.lastName}`, admin.email, admin.role]
+      );
+
+      await pool.query(
+        `INSERT INTO user_subscriptions (user_id, plan, is_active, start_date, expiry_date)
+         VALUES ($1, 'free', true, NOW(), NOW() + INTERVAL '30 days')
+         ON CONFLICT (user_id) DO NOTHING`,
+        [clerkId]
       );
 
       console.log(`[Seed] ${admin.role} seeded: ${admin.email}`);

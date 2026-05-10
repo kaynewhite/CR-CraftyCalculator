@@ -12,14 +12,20 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const DIST_DIR = path.join(__dirname, '..', 'dist', 'crafty-rachel', 'browser');
 
-// ── Middleware ──
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+  : ['*'];
+
 app.use(helmet({ contentSecurityPolicy: false }));
-app.use(cors({ origin: '*', credentials: true }));
+app.use(cors({
+  origin: allowedOrigins.includes('*') ? '*' : allowedOrigins,
+  credentials: true,
+}));
 app.use(morgan('dev'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// ── API Routes ──
+app.use('/api/auth',          require('./routes/auth'));
 app.use('/api/users',         require('./routes/users'));
 app.use('/api/materials',     require('./routes/materials'));
 app.use('/api/calculations',  require('./routes/calculations'));
@@ -27,12 +33,10 @@ app.use('/api/subscriptions', require('./routes/subscriptions'));
 app.use('/api/payments',      require('./routes/payments'));
 app.use('/api/admin',         require('./routes/admin'));
 
-// ── Health check ──
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// ── Serve Angular static files ──
 if (fs.existsSync(DIST_DIR)) {
   app.use(express.static(DIST_DIR));
   app.get('/*path', (req, res) => {
@@ -44,13 +48,11 @@ if (fs.existsSync(DIST_DIR)) {
   });
 }
 
-// ── Error handler ──
 app.use((err, req, res, next) => {
   console.error('[Server Error]', err);
   res.status(500).json({ error: err.message || 'Internal server error' });
 });
 
-// ── Bootstrap ──
 async function start() {
   try {
     await migrate();

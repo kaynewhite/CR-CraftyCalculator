@@ -5,35 +5,106 @@
   </div>
 
   <div class="signup-wrapper">
+
     <div class="signup-brand">
       <div class="brand-logo">
         <img src="/CRlogo.png" alt="CR" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-        <div class="logo-fallback" style="display:none">CR</div>
+        <div class="logo-fallback">CR</div>
       </div>
       <span class="brand-name">Crafty Rachel</span>
     </div>
 
     <div class="signup-card">
-      <div class="card-heading">
-        <h2>Create your free account</h2>
-        <p>Sign up window is opening automatically</p>
-      </div>
 
-      <div class="clerk-action-area" style="margin-top: 1.5rem;">
-        <div class="d-flex justify-content-center mb-3">
-          <div class="spinner-border text-brand" style="width:2rem;height:2rem;" role="status">
-            <span class="visually-hidden">Loading…</span>
-          </div>
+      @if (!needsVerification) {
+        <div class="card-heading">
+          <h2>Create your free account</h2>
+          <p>Start crafting smarter in minutes</p>
         </div>
-        <p class="text-center" style="color:var(--text-muted);font-size:0.85rem;">
-          The sign up window is opening automatically…
-        </p>
-        <button class="btn btn-primary btn-lg w-100 submit-btn mt-3" (click)="openSignUp()">
-          <i class="bi bi-rocket-takeoff me-2"></i>Create Free Account
-        </button>
-      </div>
 
-      <p class="switch-link mt-3">Already have an account? <a routerLink="/login" style="cursor:pointer">Sign in</a></p>
+        @if (error) {
+          <div class="alert-error">
+            <i class="bi bi-exclamation-circle-fill me-2"></i>{{ error }}
+          </div>
+        }
+
+        <form (ngSubmit)="onSubmit()" novalidate>
+          <div class="field-group">
+            <label class="field-label" for="su-name">Full Name</label>
+            <input id="su-name" type="text" class="form-control" [(ngModel)]="name" name="name"
+              placeholder="Your full name" autocomplete="name" required>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="su-email">Email Address</label>
+            <input id="su-email" type="email" class="form-control" [(ngModel)]="email" name="email"
+              placeholder="you@example.com" autocomplete="email" required>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="su-password">Password</label>
+            <div class="password-wrap">
+              <input id="su-password" [type]="showPassword ? 'text' : 'password'" class="form-control"
+                [(ngModel)]="password" name="password" placeholder="At least 8 characters"
+                autocomplete="new-password" required>
+              <button type="button" class="pw-toggle" (click)="togglePassword()" tabindex="-1">
+                <i class="bi" [class.bi-eye]="!showPassword" [class.bi-eye-slash]="showPassword"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="su-confirm">Confirm Password</label>
+            <div class="password-wrap">
+              <input id="su-confirm" [type]="showConfirm ? 'text' : 'password'" class="form-control"
+                [(ngModel)]="confirmPassword" name="confirmPassword" placeholder="Re-enter password"
+                autocomplete="new-password" required>
+              <button type="button" class="pw-toggle" (click)="toggleConfirm()" tabindex="-1">
+                <i class="bi" [class.bi-eye]="!showConfirm" [class.bi-eye-slash]="showConfirm"></i>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100 submit-btn" [disabled]="isLoading">
+            @if (!isLoading) {
+              <i class="bi bi-rocket-takeoff me-2"></i>Create Free Account
+            } @else {
+              <span class="spinner-border spinner-border-sm me-2"></span>Creating account…
+            }
+          </button>
+        </form>
+      }
+
+      @if (needsVerification) {
+        <div class="card-heading">
+          <h2>Check your email</h2>
+          <p>We sent a verification code to <strong>{{ email }}</strong></p>
+        </div>
+
+        @if (error) {
+          <div class="alert-error">
+            <i class="bi bi-exclamation-circle-fill me-2"></i>{{ error }}
+          </div>
+        }
+
+        <form (ngSubmit)="onVerify()" novalidate>
+          <div class="field-group">
+            <label class="field-label" for="su-code">Verification Code</label>
+            <input id="su-code" type="text" class="form-control" [(ngModel)]="verificationCode"
+              name="verificationCode" placeholder="6-digit code" autocomplete="one-time-code" required>
+          </div>
+          <button type="submit" class="btn btn-primary w-100 submit-btn" [disabled]="isLoading">
+            @if (!isLoading) {
+              <i class="bi bi-check-circle me-2"></i>Verify Email
+            } @else {
+              <span class="spinner-border spinner-border-sm me-2"></span>Verifying…
+            }
+          </button>
+        </form>
+      }
+
+      <p class="switch-link">Already have an account? <a routerLink="/login">Sign in</a></p>
     </div>
+
   </div>
 </div>

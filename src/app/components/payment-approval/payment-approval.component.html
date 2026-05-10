@@ -83,12 +83,6 @@
             </span>
           </div>
 
-          <!-- QR Code -->
-          <div *ngIf="payment.qrUrl" class="qr-section">
-            <label>Payment QR Code:</label>
-            <img [src]="payment.qrUrl" alt="Payment QR" class="qr-image">
-          </div>
-
           <!-- Screenshot -->
           <div *ngIf="payment.screenshotUrl" class="screenshot-section">
             <label>Transaction Screenshot:</label>

@@ -16,11 +16,9 @@ export class ApiService {
   }
 
   private headers(): HttpHeaders {
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    if (this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`;
-    }
-    return new HttpHeaders(headers);
+    const h: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (this.token) h['Authorization'] = `Bearer ${this.token}`;
+    return new HttpHeaders(h);
   }
 
   private handle(obs: Observable<any>): Observable<any> {
@@ -100,6 +98,20 @@ export class ApiService {
   getSubscriptionLogs(): Observable<any> { return this.get('/admin/logs/subscriptions'); }
   getSystemLogs(): Observable<any> { return this.get('/admin/logs/system'); }
   clearSystemLogs(): Observable<any> { return this.delete('/admin/logs/system'); }
+  getAdminAccounts(): Observable<any> { return this.get('/admin/admins'); }
+
+  // ── Password Reset (admin-mediated) ──
+  forgotPassword(email: string): Observable<any> {
+    return this.post('/auth/forgot-password', { email });
+  }
+  resetPassword(token: string, password: string): Observable<any> {
+    return this.post('/auth/reset-password', { token, password });
+  }
+  validateResetToken(token: string): Observable<any> {
+    return this.get(`/auth/validate-token/${token}`);
+  }
+  getResetRequests(): Observable<any> { return this.get('/admin/reset-requests'); }
+  dismissResetRequest(id: string): Observable<any> { return this.delete(`/admin/reset-requests/${id}`); }
 
   // ── Health ──
   health(): Observable<any> { return this.get('/health'); }

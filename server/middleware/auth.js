@@ -14,7 +14,6 @@ async function requireAuth(req, res, next) {
     const payload = await clerk.verifyToken(token);
     const clerkUserId = payload.sub;
 
-    // Upsert user in our DB
     const clerkUser = await clerk.users.getUser(clerkUserId);
     const email = clerkUser.emailAddresses[0]?.emailAddress || '';
     const name = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ') || email;
@@ -29,7 +28,6 @@ async function requireAuth(req, res, next) {
 
     const dbUser = rows[0];
 
-    // Ensure subscription row exists
     await pool.query(
       `INSERT INTO user_subscriptions (user_id, plan, is_active, start_date, expiry_date)
        VALUES ($1, 'free', true, NOW(), NOW() + INTERVAL '30 days')
@@ -55,4 +53,13 @@ async function requireAdmin(req, res, next) {
   });
 }
 
-module.exports = { requireAuth, requireAdmin };
+async function requireSuperAdmin(req, res, next) {
+  await requireAuth(req, res, async () => {
+    if (req.user.role !== 'superadmin') {
+      return res.status(403).json({ error: 'SuperAdmin access required' });
+    }
+    next();
+  });
+}
+
+module.exports = { requireAuth, requireAdmin, requireSuperAdmin };
