@@ -1,52 +1,60 @@
 <div class="dashboard-layout">
-  <div class="sidebar-wrapper" [class.collapsed]="sidebarCollapsed"><app-sidebar [isOpen]="sidebarOpen" [isCollapsed]="sidebarCollapsed" (closeSidebar)="closeSidebar()" (toggleCollapse)="toggleSidebarCollapse()"></app-sidebar></div>
+  <div class="sidebar-wrapper" [class.collapsed]="sidebarCollapsed">
+    <app-sidebar [isOpen]="sidebarOpen" [isCollapsed]="sidebarCollapsed"
+      (closeSidebar)="closeSidebar()" (toggleCollapse)="toggleSidebarCollapse()">
+    </app-sidebar>
+  </div>
+
   <div class="main-content">
-    <!-- Header -->
-    <div class="content-header p-4">
-      <div class="d-flex align-items-center justify-content-between">
-        <div class="d-flex align-items-center">
-          <button class="btn btn-link d-md-none p-0 me-2 hamburger-btn" (click)="toggleSidebar()">
-            <i class="bi bi-list" style="font-size: 1.8rem;"></i>
-          </button>
-          <div>
-            <h1 class="d-inline">Product Pricing Calculator</h1>
-            <p class="text-muted mb-0">Calculate costs, margins & pricing for your products</p>
-          </div>
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="header-left">
+        <button class="hamburger-btn d-md-none" (click)="toggleSidebar()">
+          <i class="bi bi-list"></i>
+        </button>
+        <div>
+          <h1 class="page-title">Product Pricing Calculator</h1>
+          <p class="page-subtitle">Calculate costs, margins &amp; selling prices for your products</p>
+        </div>
+      </div>
+      <div class="header-right" *ngIf="!hasUnlimitedCalculations">
+        <div class="calc-badge" [class.calc-badge--warning]="calculationsRemaining <= 2" [class.calc-badge--danger]="calculationsRemaining === 0">
+          <i class="bi bi-calculator me-1"></i>
+          <span><strong>{{ calculationsRemaining }}</strong> / {{ subscriptionService.getCalculationLimit(currentPlan) }} calculations left</span>
         </div>
       </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="content-body p-4">
+    <!-- Main Grid -->
+    <div class="content-body">
       <div class="calculator-wrapper">
-        <!-- Left Section: Input Form -->
+
+        <!-- ── LEFT: Input Form ── -->
         <div class="input-section">
-          <!-- Product Info Card -->
-          <div class="card">
-            <div class="card-header">
-              <h5 class="mb-0">Product Information</h5>
+
+          <!-- Product Info -->
+          <div class="calc-card">
+            <div class="calc-card__header">
+              <div class="calc-card__icon">
+                <i class="bi bi-tag-fill"></i>
+              </div>
+              <h5>Product Information</h5>
             </div>
-            <div class="card-body">
-              <div class="input-group">
-                <label class="form-label">Product Name *</label>
-                <input 
-                  type="text" 
-                  class="form-control" 
-                  [(ngModel)]="productName" 
+            <div class="calc-card__body">
+              <div class="field-group">
+                <label class="field-label" for="calc-name">Product Name <span class="required">*</span></label>
+                <input id="calc-name" type="text" class="form-control" [(ngModel)]="productName"
                   placeholder="e.g., Custom Gift Card Set">
               </div>
-              <div class="input-group">
-                <label class="form-label">Category *</label>
+              <div class="field-group">
+                <label class="field-label" for="calc-category">Category <span class="required">*</span></label>
                 <ng-container *ngIf="subscriptionService.allowsCustomCategory(currentPlan); else selectCategory">
-                  <input 
-                    type="text" 
-                    class="form-control" 
-                    [(ngModel)]="category" 
-                    placeholder="e.g., Business Cards, Flyers & Banners, etc.">
+                  <input id="calc-category" type="text" class="form-control" [(ngModel)]="category"
+                    placeholder="e.g., Business Cards, Flyers & Banners…">
                 </ng-container>
                 <ng-template #selectCategory>
-                  <select class="form-select" [(ngModel)]="category">
-                    <option value="" disabled>Select category</option>
+                  <select id="calc-category" class="form-select" [(ngModel)]="category">
+                    <option value="" disabled>Select a category</option>
                     <option *ngFor="let cat of builtInCategories" [value]="cat">{{ cat }}</option>
                   </select>
                 </ng-template>
@@ -54,290 +62,276 @@
             </div>
           </div>
 
-          <!-- Material Costs Card -->
-          <div class="card">
-            <div class="card-header">
-              <h5 class="mb-0">Material Cost</h5>
+          <!-- Material Costs -->
+          <div class="calc-card">
+            <div class="calc-card__header">
+              <div class="calc-card__icon calc-card__icon--orange">
+                <i class="bi bi-box-seam-fill"></i>
+              </div>
+              <h5>Material Costs</h5>
             </div>
-            <div class="card-body">
-              <div class="inventory-selector">
-                <button class="btn btn-outline-secondary w-100 mb-3" (click)="showInventorySelector = !showInventorySelector">
-                  <i class="bi bi-box-seam me-2"></i>
-                  <ng-container *ngIf="!showInventorySelector; else hideInventory">Select from Inventory</ng-container>
-                  <ng-template #hideInventory>Hide Inventory</ng-template>
+            <div class="calc-card__body">
+
+              <div class="inventory-picker" [class.inventory-picker--open]="showInventorySelector">
+                <button class="btn btn-inventory" (click)="showInventorySelector = !showInventorySelector">
+                  <i class="bi" [class.bi-plus-circle]="!showInventorySelector" [class.bi-dash-circle]="showInventorySelector"></i>
+                  <span>{{ showInventorySelector ? 'Close Inventory' : 'Add from Inventory' }}</span>
                 </button>
 
-                <ng-container *ngIf="showInventorySelector">
-                  <div class="inventory-search mb-3">
-                    <input 
-                      type="text" 
-                      class="form-control" 
-                      placeholder="Search materials..." 
-                      [(ngModel)]="searchMaterialsQuery"
-                      (input)="searchMaterials()">
+                <div class="inventory-panel" *ngIf="showInventorySelector">
+                  <input type="text" class="form-control form-control-sm inventory-search"
+                    placeholder="Search your materials…"
+                    [(ngModel)]="searchMaterialsQuery"
+                    (input)="searchMaterials()">
+                  <div class="inventory-list" *ngIf="filteredMaterials.length > 0; else noMats">
+                    <button class="inventory-item" *ngFor="let m of filteredMaterials | slice:0:6"
+                      (click)="selectMaterialFromInventory(m)">
+                      <span class="item-name">{{ m.name }}</span>
+                      <span class="item-meta">₱{{ m.costPerUnit }} / {{ m.unit }}</span>
+                    </button>
                   </div>
-                  <ng-container *ngIf="filteredMaterials.length > 0; else noMaterialsFound">
-                    <div class="inventory-list">
-                      <button 
-                        class="inventory-item" 
-                        *ngFor="let material of filteredMaterials | slice:0:5" 
-                        (click)="selectMaterialFromInventory(material)">
-                        <div class="item-name">{{ material.name }}</div>
-                        <div class="item-price">₱{{ material.costPerUnit }} per {{ material.unit }}</div>
-                      </button>
-                    </div>
-                  </ng-container>
-                  <ng-template #noMaterialsFound>
-                    <p class="text-muted small" *ngIf="searchMaterialsQuery">No materials found</p>
+                  <ng-template #noMats>
+                    <p class="no-mats-msg" *ngIf="searchMaterialsQuery">No materials match your search.</p>
+                    <p class="no-mats-msg" *ngIf="!searchMaterialsQuery">No materials in inventory yet.</p>
                   </ng-template>
-                </ng-container>
+                </div>
               </div>
 
-              <!-- Selected materials list -->
-              <div class="selected-materials mb-3" *ngIf="selectedMaterials.length > 0">
-                <table class="table table-sm">
+              <!-- Selected Materials Table -->
+              <div class="materials-table-wrap" *ngIf="selectedMaterials.length > 0">
+                <table class="materials-table">
                   <thead>
                     <tr>
                       <th>Material</th>
                       <th>Qty</th>
-                      <th>Cost/unit</th>
+                      <th>₱/unit</th>
                       <th>Subtotal</th>
                       <th></th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr *ngFor="let mat of selectedMaterials; let i = index">
-                      <td>{{ mat.materialName }}</td>
+                      <td class="mat-name">{{ mat.materialName }}</td>
                       <td>
-                        <input type="number" class="form-control form-control-sm" [(ngModel)]="mat.quantity" (change)="updateMaterialSubtotal(mat)" min="0" step="0.01">
+                        <input type="number" class="form-control form-control-sm tbl-input"
+                          [(ngModel)]="mat.quantity" (change)="updateMaterialSubtotal(mat)" min="0" step="0.01">
                       </td>
                       <td>
-                        <input type="number" class="form-control form-control-sm" [(ngModel)]="mat.costPerUnit" (change)="updateMaterialSubtotal(mat)" min="0" step="0.01">
+                        <input type="number" class="form-control form-control-sm tbl-input"
+                          [(ngModel)]="mat.costPerUnit" (change)="updateMaterialSubtotal(mat)" min="0" step="0.01">
                       </td>
-                      <td>₱{{ mat.subtotal.toFixed(2) }}</td>
-                      <td><button class="btn btn-sm btn-danger" (click)="removeMaterial(i)"><i class="bi bi-trash"></i></button></td>
+                      <td class="mat-subtotal">₱{{ mat.subtotal.toFixed(2) }}</td>
+                      <td>
+                        <button class="btn-remove" (click)="removeMaterial(i)" title="Remove">
+                          <i class="bi bi-x-lg"></i>
+                        </button>
+                      </td>
                     </tr>
                   </tbody>
                 </table>
               </div>
 
-
-
-              <div class="input-group mt-3">
-                <label class="form-label">Quantity Produced per Batch *</label>
-                <input 
-                  type="number" 
-                  class="form-control" 
-                  [(ngModel)]="quantityProducedPerBatch" 
-                  step="1"
-                  min="1"
-                  placeholder="e.g., 10">
+              <div class="field-group" style="margin-top: 1rem;">
+                <label class="field-label" for="calc-qty">Quantity Produced per Batch <span class="required">*</span></label>
+                <input id="calc-qty" type="number" class="form-control" [(ngModel)]="quantityProducedPerBatch"
+                  step="1" min="1" placeholder="e.g., 10">
               </div>
             </div>
           </div>
 
-          <!-- Additional Costs Card -->
-          <div class="card additional-costs">
-            <div class="card-header">
-              <h5 class="mb-0">Additional Costs per Unit</h5>
+          <!-- Additional Costs -->
+          <div class="calc-card">
+            <div class="calc-card__header">
+              <div class="calc-card__icon calc-card__icon--purple">
+                <i class="bi bi-plus-slash-minus"></i>
+              </div>
+              <h5>Additional Costs per Unit</h5>
             </div>
-            <div class="card-body">
-              <div class="field-row">
-                <label class="form-label">Printing Cost</label>
-                <div class="input-group">
-                  <span class="input-group-text">₱</span>
-                  <input 
-                    type="number" 
-                    class="form-control" 
-                    [(ngModel)]="printingCostPerUnit" 
-                    step="0.01"
-                    min="0"
-                    placeholder="0.00">
+            <div class="calc-card__body">
+              <div class="cost-row">
+                <label class="field-label">Printing Cost</label>
+                <div class="prefix-input">
+                  <span class="prefix">₱</span>
+                  <input type="number" class="form-control" [(ngModel)]="printingCostPerUnit"
+                    step="0.01" min="0" placeholder="0.00">
                 </div>
               </div>
-
-              <div class="field-row">
-                <label class="form-label">Labor Cost</label>
-                <div class="input-group">
-                  <span class="input-group-text">₱</span>
-                  <input 
-                    type="number" 
-                    class="form-control" 
-                    [(ngModel)]="laborCostPerUnit" 
-                    step="0.01"
-                    min="0"
-                    placeholder="0.00">
+              <div class="cost-row">
+                <label class="field-label">Labor Cost</label>
+                <div class="prefix-input">
+                  <span class="prefix">₱</span>
+                  <input type="number" class="form-control" [(ngModel)]="laborCostPerUnit"
+                    step="0.01" min="0" placeholder="0.00">
                 </div>
               </div>
-
-              <div class="field-row waste-row">
-                <label class="form-label">Waste Percentage</label>
-                <div class="input-group">
-                  <input 
-                    type="number" 
-                    class="form-control waste-input" 
-                    [(ngModel)]="wastePercentage" 
-                    step="0.1"
-                    min="0"
-                    max="100"
-                    placeholder="0">
-                  <span class="input-group-text">%</span>
+              <div class="cost-row">
+                <label class="field-label">
+                  Waste Percentage
+                  <small class="hint-text">Applied to total costs</small>
+                </label>
+                <div class="suffix-input">
+                  <input type="number" class="form-control" [(ngModel)]="wastePercentage"
+                    step="0.1" min="0" max="100" placeholder="0">
+                  <span class="suffix">%</span>
                 </div>
-                <small class="text-muted">Added to total costs</small>
               </div>
             </div>
           </div>
 
-          <!-- Margin Card -->
-          <div class="card profit-margin">
-            <div class="card-header">
-              <h5 class="mb-0">Profit Margin</h5>
+          <!-- Profit Margin -->
+          <div class="calc-card calc-card--accent">
+            <div class="calc-card__header">
+              <div class="calc-card__icon calc-card__icon--green">
+                <i class="bi bi-graph-up-arrow"></i>
+              </div>
+              <h5>Profit Margin</h5>
             </div>
-            <div class="card-body">
-              <div class="field-row profit-margin-row">
-                <label class="form-label">Desired Profit Margin (%)</label>
-                <div class="input-group">
-                  <input 
-                    type="number" 
-                    class="form-control" 
-                    [(ngModel)]="profitMarginPercent" 
-                    step="0.1"
-                    min="0"
-                    max="1000"
-                    placeholder="0">
-                  <span class="input-group-text">%</span>
+            <div class="calc-card__body">
+              <div class="cost-row">
+                <label class="field-label">Desired Profit Margin</label>
+                <div class="suffix-input">
+                  <input type="number" class="form-control" [(ngModel)]="profitMarginPercent"
+                    step="0.1" min="0" max="1000" placeholder="0">
+                  <span class="suffix">%</span>
                 </div>
               </div>
             </div>
           </div>
 
           <!-- Action Buttons -->
-          <div class="action-buttons">
-            <div class="calculations-remaining" *ngIf="!hasUnlimitedCalculations" [class.warning]="calculationsRemaining <= 2">
-              <small>Calculations remaining: <strong>{{ calculationsRemaining }}/{{ subscriptionService.getCalculationLimit(currentPlan) }}</strong></small>
-            </div>
-            <button class="btn btn-primary btn-lg w-100" (click)="performCalculation()">
-              <i class="bi bi-calculator me-2"></i>Calculate Pricing
+          <div class="action-group">
+            <button class="btn-calc-primary" (click)="performCalculation()">
+              <i class="bi bi-calculator-fill"></i>
+              Calculate Pricing
             </button>
-            <button class="btn btn-success w-100" (click)="savePricing()" [disabled]="!showResults">
-              <i class="bi bi-save me-2"></i>Save Pricing
+            <button class="btn-calc-save" (click)="savePricing()" [disabled]="!showResults">
+              <i class="bi bi-bookmark-fill"></i>
+              Save Pricing
             </button>
-            <button class="btn btn-outline-secondary w-100" (click)="resetCalculator()">
-              <i class="bi bi-arrow-clockwise me-2"></i>Reset
+            <button class="btn-calc-reset" (click)="resetCalculator()">
+              <i class="bi bi-arrow-counterclockwise"></i>
+              Reset
             </button>
           </div>
+
         </div>
 
-        <!-- Right Section: Summary -->
-        <div class="summary-section">
-          <div class="summary-card">
-            <div class="summary-header">
-              <h5>{{ showResults ? 'Results' : 'Click Calculate to see results' }}</h5>
+        <!-- ── RIGHT: Results Panel ── -->
+        <div class="results-section">
+          <div class="results-card">
+            <div class="results-header">
+              <div class="results-header__title">
+                <i class="bi bi-bar-chart-fill me-2"></i>
+                <span>{{ showResults ? 'Pricing Results' : 'Results' }}</span>
+              </div>
+              <div class="results-header__status" [class.active]="showResults">
+                {{ showResults ? 'Calculated' : 'Pending' }}
+              </div>
             </div>
 
+            <!-- Empty State -->
             <ng-container *ngIf="!showResults; else resultsBlock">
-              <div class="no-results">
-                <div class="icon">
-                  <i class="bi bi-calculator-lg"></i>
+              <div class="empty-state">
+                <div class="empty-state__icon">
+                  <i class="bi bi-calculator"></i>
                 </div>
-                <p>Fill in your costs and click the <strong>Calculate Pricing</strong> button to see results.</p>
+                <p class="empty-state__title">No results yet</p>
+                <p class="empty-state__body">Fill in your costs on the left and click <strong>Calculate Pricing</strong> to see the breakdown here.</p>
               </div>
             </ng-container>
+
             <ng-template #resultsBlock>
-              <!-- PRO Plan: Full Breakdown -->
+              <!-- PRO: Full Breakdown -->
               <ng-container *ngIf="currentPlan === 'pro'; else limitedBreakdown">
-                <div class="breakdown-group">
-                  <div class="breakdown-item">
-                    <div class="label">Materials (per batch)</div>
-                    <div class="value">₱{{ materialCostTotal.toFixed(2) }}</div>
+                <div class="breakdown-list">
+                  <div class="breakdown-row">
+                    <span>Materials (batch)</span>
+                    <span class="breakdown-val">₱{{ materialCostTotal.toFixed(2) }}</span>
                   </div>
-
-                  <div class="breakdown-item">
-                    <div class="label">Printing (all units)</div>
-                    <div class="value">₱{{ (printingCostPerUnit * quantityProducedPerBatch).toFixed(2) }}</div>
+                  <div class="breakdown-row">
+                    <span>Printing (all units)</span>
+                    <span class="breakdown-val">₱{{ (printingCostPerUnit * quantityProducedPerBatch).toFixed(2) }}</span>
                   </div>
-
-                  <div class="breakdown-item">
-                    <div class="label">Labor (all units)</div>
-                    <div class="value">₱{{ (laborCostPerUnit * quantityProducedPerBatch).toFixed(2) }}</div>
+                  <div class="breakdown-row">
+                    <span>Labor (all units)</span>
+                    <span class="breakdown-val">₱{{ (laborCostPerUnit * quantityProducedPerBatch).toFixed(2) }}</span>
                   </div>
-
-                  <div class="breakdown-item divider-top">
-                    <div class="label">Subtotal (before waste)</div>
-                    <div class="value subtotal">₱{{ totalCostsBeforeWaste.toFixed(2) }}</div>
+                  <div class="breakdown-row breakdown-row--divider">
+                    <span>Subtotal (before waste)</span>
+                    <span class="breakdown-val">₱{{ totalCostsBeforeWaste.toFixed(2) }}</span>
                   </div>
-
-                  <div class="breakdown-item">
-                    <div class="label">Waste ({{ wastePercentage }}%)</div>
-                    <div class="value waste-value">₱{{ wasteCost.toFixed(2) }}</div>
+                  <div class="breakdown-row">
+                    <span>Waste ({{ wastePercentage }}%)</span>
+                    <span class="breakdown-val breakdown-val--waste">+₱{{ wasteCost.toFixed(2) }}</span>
                   </div>
-
-                  <div class="breakdown-item divider-both">
-                    <div class="label">Total Batch Cost</div>
-                    <div class="value total-batch">₱{{ (totalCostsBeforeWaste + wasteCost).toFixed(2) }}</div>
+                  <div class="breakdown-row breakdown-row--total">
+                    <span>Total Batch Cost</span>
+                    <span class="breakdown-val breakdown-val--strong">₱{{ (totalCostsBeforeWaste + wasteCost).toFixed(2) }}</span>
                   </div>
-
-                  <div class="breakdown-item">
-                    <div class="label">Units Produced</div>
-                    <div class="value units">{{ quantityProducedPerBatch }}</div>
+                  <div class="breakdown-row">
+                    <span>Units Produced</span>
+                    <span class="breakdown-val">{{ quantityProducedPerBatch }}</span>
                   </div>
-
-                  <div class="breakdown-item divider-top">
-                    <div class="label">Cost Per Unit</div>
-                    <div class="value cost-per-unit">₱{{ costPerUnit.toFixed(2) }}</div>
+                  <div class="breakdown-row breakdown-row--divider">
+                    <span>Cost Per Unit</span>
+                    <span class="breakdown-val breakdown-val--primary">₱{{ costPerUnit.toFixed(2) }}</span>
                   </div>
                 </div>
 
                 <div class="batch-summary">
-                  <div class="summary-row">
+                  <div class="batch-row">
                     <span>Total Revenue ({{ quantityProducedPerBatch }} units)</span>
-                    <span class="amount">₱{{ (finalPrice * quantityProducedPerBatch).toFixed(2) }}</span>
+                    <span>₱{{ (finalPrice * quantityProducedPerBatch).toFixed(2) }}</span>
                   </div>
-                  <div class="summary-row">
-                    <span>Total Costs (batch)</span>
-                    <span class="amount">₱{{ (totalCostsBeforeWaste + wasteCost).toFixed(2) }}</span>
+                  <div class="batch-row">
+                    <span>Total Costs</span>
+                    <span>₱{{ (totalCostsBeforeWaste + wasteCost).toFixed(2) }}</span>
                   </div>
-                  <div class="summary-row total">
-                    <span>Total Profit (batch)</span>
-                    <span class="amount profit">₱{{ ((finalPrice - costPerUnit) * quantityProducedPerBatch).toFixed(2) }}</span>
+                  <div class="batch-row batch-row--profit">
+                    <span>Total Batch Profit</span>
+                    <span class="profit-text">₱{{ ((finalPrice - costPerUnit) * quantityProducedPerBatch).toFixed(2) }}</span>
                   </div>
                 </div>
               </ng-container>
+
               <ng-template #limitedBreakdown>
-                <!-- FREE/BASIC Plan: Limited Breakdown -->
-                <div class="limited-breakdown">
-                  <div class="plan-badge">
-                    <i class="bi bi-lock"></i>
-                    Full breakdown available in PRO plan
-                  </div>
+                <div class="locked-banner">
+                  <i class="bi bi-lock-fill"></i>
+                  <span>Full breakdown available on the <strong>PRO</strong> plan</span>
                 </div>
               </ng-template>
 
-              <!-- Always Show These for All Plans -->
-              <div class="margin-section">
-                <div class="margin-display">
-                  <div class="margin-label">Profit Margin</div>
-                  <div class="margin-value">{{ profitMarginPercent.toFixed(1) }}%</div>
+              <!-- Shared for all plans -->
+              <div class="margin-pill-row">
+                <div class="margin-pill">
+                  <span class="margin-pill__label">Profit Margin</span>
+                  <span class="margin-pill__val">{{ profitMarginPercent.toFixed(1) }}%</span>
                 </div>
               </div>
 
-              <div class="final-price-section">
-                <div class="label">Profit Per Unit</div>
-                <div class="profit-amount">₱{{ profitPerUnit.toFixed(2) }}</div>
-
-                <div class="label mt-3">Final Selling Price</div>
-                <div class="final-price">₱{{ finalPrice.toFixed(2) }}</div>
+              <div class="key-metrics">
+                <div class="metric">
+                  <span class="metric__label">Profit Per Unit</span>
+                  <span class="metric__val metric__val--profit">₱{{ profitPerUnit.toFixed(2) }}</span>
+                </div>
+                <div class="divider-h"></div>
+                <div class="metric">
+                  <span class="metric__label">Suggested Selling Price</span>
+                  <div class="price-badge">₱{{ finalPrice.toFixed(2) }}</div>
+                </div>
               </div>
 
-              <div class="upgrade-prompt" *ngIf="currentPlan !== 'pro'">
-                  <p><strong>Upgrade to PRO</strong> to see the full cost breakdown and detailed analysis!</p>
-                  <a href="/subscription" class="btn btn-sm btn-primary w-100">
-                    <i class="bi bi-star me-2"></i>Upgrade Now
-                  </a>
+              <div class="upgrade-banner" *ngIf="currentPlan !== 'pro'">
+                <i class="bi bi-stars me-2"></i>
+                <div>
+                  <strong>Upgrade to PRO</strong> for the full cost breakdown &amp; batch analysis.
+                </div>
+                <a href="/subscription" class="btn-upgrade">Upgrade</a>
               </div>
             </ng-template>
           </div>
         </div>
+
       </div>
     </div>
   </div>

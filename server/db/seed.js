@@ -8,13 +8,13 @@ async function seed() {
   const admins = [
     {
       email: 'admin@craftyr.com',
-      password: 'Admin@CraftyR2025',
+      password: 'Admin@CraftyR2026',
       name: 'Admin User',
       role: 'admin',
     },
     {
       email: 'superadmin@craftyr.com',
-      password: 'SuperAdmin@CraftyR2025',
+      password: 'SuperAdmin@CraftyR2026',
       name: 'Super Admin',
       role: 'superadmin',
     },
