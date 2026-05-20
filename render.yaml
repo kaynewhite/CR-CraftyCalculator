@@ -1,10 +1,12 @@
 services:
   - type: web
     name: crafty-rachel
-    env: node
+    runtime: node
     plan: free
+    region: singapore
     buildCommand: npm install && npm run build
-    startCommand: npm start
+    startCommand: node server/index.js
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
