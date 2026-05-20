@@ -41,29 +41,11 @@ export class LoginComponent implements OnInit {
     this.error = '';
     try {
       await this.authService.signIn(this.email.trim(), this.password);
-      await this.waitForUser();
       this.redirectByRole();
     } catch (err: any) {
-      const msg =
-        err?.errors?.[0]?.longMessage ||
-        err?.errors?.[0]?.message ||
-        err?.message ||
-        'Invalid email or password.';
-      this.error = msg;
+      this.error = err?.message || 'Invalid email or password.';
       this.isLoading = false;
     }
-  }
-
-  private waitForUser(): Promise<void> {
-    return new Promise(resolve => {
-      const sub = this.authService.currentUser.subscribe(user => {
-        if (user) {
-          sub.unsubscribe();
-          resolve();
-        }
-      });
-      setTimeout(() => { sub.unsubscribe(); resolve(); }, 6000);
-    });
   }
 
   private redirectByRole(): void {

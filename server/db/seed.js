@@ -1,105 +1,70 @@
 const pool = require('./pool');
+const bcrypt = require('bcrypt');
+const { v4: uuidv4 } = require('uuid');
 
-const CLERK_SECRET_KEY = process.env.CLERK_SECRET_KEY;
-const CLERK_API = 'https://api.clerk.com/v1';
-
-async function clerkRequest(method, path, body) {
-  const res = await fetch(`${CLERK_API}${path}`, {
-    method,
-    headers: {
-      'Authorization': `Bearer ${CLERK_SECRET_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  return res.json();
-}
-
-async function findOrCreateClerkUser({ email, password, firstName, lastName }) {
-  const existing = await clerkRequest('GET', `/users?email_address=${encodeURIComponent(email)}&limit=5`);
-  if (Array.isArray(existing) && existing.length > 0) {
-    console.log(`[Seed] User ${email} already exists in Clerk (${existing[0].id}), updating password`);
-    await clerkRequest('PATCH', `/users/${existing[0].id}`, {
-      password,
-      skip_password_checks: true,
-    });
-    return existing[0].id;
-  }
-
-  const created = await clerkRequest('POST', '/users', {
-    email_address: [email],
-    password,
-    first_name: firstName,
-    last_name: lastName,
-    skip_password_checks: true,
-    skip_password_requirement: false,
-  });
-
-  if (created.errors || created.error) {
-    const errMsg = created.errors
-      ? created.errors.map(e => e.long_message || e.message).join(', ')
-      : created.error;
-    throw new Error(errMsg);
-  }
-
-  console.log(`[Seed] Created Clerk user ${email} (${created.id})`);
-  return created.id;
-}
+const SALT_ROUNDS = 12;
 
 async function seed() {
-  if (!CLERK_SECRET_KEY) {
-    console.log('[Seed] No CLERK_SECRET_KEY — skipping admin seed');
-    return;
-  }
-
   const admins = [
     {
-      email: 'admin@gmail.com',
-      password: 'Admin123PasswordYeah',
-      firstName: 'Admin',
-      lastName: 'User',
+      email: 'admin@craftyr.com',
+      password: 'Admin@CraftyR2025',
+      name: 'Admin User',
       role: 'admin',
     },
     {
-      email: 'superadmin@gmail.com',
-      password: 'Superadmin123PasswordYeah',
-      firstName: 'Super',
-      lastName: 'Admin',
+      email: 'superadmin@craftyr.com',
+      password: 'SuperAdmin@CraftyR2025',
+      name: 'Super Admin',
       role: 'superadmin',
     },
   ];
 
   for (const admin of admins) {
     try {
-      const clerkId = await findOrCreateClerkUser(admin);
+      const existing = await pool.query('SELECT id, role FROM users WHERE LOWER(email) = LOWER($1)', [admin.email]);
+
+      if (existing.rows.length > 0) {
+        const existingUser = existing.rows[0];
+        if (existingUser.role !== admin.role) {
+          const passwordHash = await bcrypt.hash(admin.password, SALT_ROUNDS);
+          await pool.query(
+            `UPDATE users SET name = $1, password_hash = $2, role = $3, updated_at = NOW() WHERE id = $4`,
+            [admin.name, passwordHash, admin.role, existingUser.id]
+          );
+          console.log(`[Seed] Updated ${admin.role}: ${admin.email}`);
+        } else {
+          console.log(`[Seed] ${admin.role} already exists: ${admin.email}`);
+        }
+        continue;
+      }
+
+      const passwordHash = await bcrypt.hash(admin.password, SALT_ROUNDS);
+      const userId = uuidv4();
 
       await pool.query(
-        `DELETE FROM users WHERE email = $1 AND id != $2`,
-        [admin.email, clerkId]
-      );
-      await pool.query(
-        `INSERT INTO users (id, name, email, role, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, NOW(), NOW())
-         ON CONFLICT (id) DO UPDATE SET
-           name = EXCLUDED.name,
-           email = EXCLUDED.email,
-           role = EXCLUDED.role,
-           updated_at = NOW()`,
-        [clerkId, `${admin.firstName} ${admin.lastName}`, admin.email, admin.role]
+        `INSERT INTO users (id, email, name, password_hash, role, status)
+         VALUES ($1, $2, $3, $4, $5, 'active')`,
+        [userId, admin.email.toLowerCase(), admin.name, passwordHash, admin.role]
       );
 
       await pool.query(
         `INSERT INTO user_subscriptions (user_id, plan, is_active, start_date, expiry_date)
-         VALUES ($1, 'free', true, NOW(), NOW() + INTERVAL '30 days')
+         VALUES ($1, 'free', true, NOW(), NOW() + INTERVAL '1 year')
          ON CONFLICT (user_id) DO NOTHING`,
-        [clerkId]
+        [userId]
       );
 
-      console.log(`[Seed] ${admin.role} seeded: ${admin.email}`);
+      console.log(`[Seed] Created ${admin.role}: ${admin.email}`);
     } catch (err) {
-      console.error(`[Seed] Failed for ${admin.email}: ${err.message}`);
+      console.error(`[Seed] Failed for ${admin.email}:`, err.message);
     }
   }
+
+  console.log('[Seed] Admin seeding complete');
+  console.log('[Seed] Admin credentials:');
+  console.log('[Seed]   admin@craftyr.com / Admin@CraftyR2025');
+  console.log('[Seed]   superadmin@craftyr.com / SuperAdmin@CraftyR2025');
 }
 
 module.exports = seed;

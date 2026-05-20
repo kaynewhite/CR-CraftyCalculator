@@ -24,7 +24,7 @@ export class ApiService {
   private handle(obs: Observable<any>): Observable<any> {
     return obs.pipe(
       catchError(err => {
-        const msg = err?.error?.error || err?.message || 'Request failed';
+        const msg = err?.error?.error || err?.error?.message || err?.message || 'Request failed';
         return throwError(() => new Error(msg));
       })
     );
@@ -44,6 +44,15 @@ export class ApiService {
 
   delete(path: string): Observable<any> {
     return this.handle(this.http.delete(`${this.baseUrl}${path}`, { headers: this.headers() }));
+  }
+
+  // ── Auth ──
+  login(email: string, password: string): Observable<any> {
+    return this.handle(this.http.post(`${this.baseUrl}/auth/login`, { email, password }));
+  }
+
+  signup(name: string, email: string, password: string): Observable<any> {
+    return this.handle(this.http.post(`${this.baseUrl}/auth/signup`, { name, email, password }));
   }
 
   // ── Users ──

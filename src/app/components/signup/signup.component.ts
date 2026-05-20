@@ -17,13 +17,10 @@ export class SignupComponent implements OnInit {
   email = '';
   password = '';
   confirmPassword = '';
-  verificationCode = '';
-
   showPassword = false;
   showConfirm = false;
   isLoading = false;
   error = '';
-  needsVerification = false;
 
   constructor(
     private authService: AuthService,
@@ -54,54 +51,12 @@ export class SignupComponent implements OnInit {
     this.isLoading = true;
     this.error = '';
     try {
-      const result = await this.authService.signUp(this.name.trim(), this.email.trim(), this.password);
-      if (result.needsVerification) {
-        this.needsVerification = true;
-        this.isLoading = false;
-      } else {
-        await this.waitForUser();
-        this.router.navigate(['/dashboard']);
-      }
-    } catch (err: any) {
-      const msg =
-        err?.errors?.[0]?.longMessage ||
-        err?.errors?.[0]?.message ||
-        err?.message ||
-        'Sign up failed. Please try again.';
-      this.error = msg;
-      this.isLoading = false;
-    }
-  }
-
-  async onVerify(): Promise<void> {
-    if (!this.verificationCode.trim()) {
-      this.error = 'Please enter your verification code.';
-      return;
-    }
-    this.isLoading = true;
-    this.error = '';
-    try {
-      await this.authService.verifyEmail(this.verificationCode.trim());
-      await this.waitForUser();
+      await this.authService.signUp(this.name.trim(), this.email.trim(), this.password);
       this.router.navigate(['/dashboard']);
     } catch (err: any) {
-      const msg =
-        err?.errors?.[0]?.longMessage ||
-        err?.errors?.[0]?.message ||
-        err?.message ||
-        'Invalid verification code. Please try again.';
-      this.error = msg;
+      this.error = err?.message || 'Sign up failed. Please try again.';
       this.isLoading = false;
     }
-  }
-
-  private waitForUser(): Promise<void> {
-    return new Promise(resolve => {
-      const sub = this.authService.currentUser.subscribe(user => {
-        if (user) { sub.unsubscribe(); resolve(); }
-      });
-      setTimeout(() => { sub.unsubscribe(); resolve(); }, 6000);
-    });
   }
 
   togglePassword(): void { this.showPassword = !this.showPassword; }

@@ -2,17 +2,24 @@
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Users (synced from Clerk)
+-- Users
 CREATE TABLE IF NOT EXISTS users (
-  id            TEXT PRIMARY KEY,
+  id            TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::TEXT,
   email         TEXT UNIQUE NOT NULL,
   name          TEXT NOT NULL DEFAULT '',
+  password_hash TEXT,
   role          TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin', 'superadmin')),
   status        TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'rejected')),
   rejection_feedback TEXT,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Add password_hash column if upgrading from old schema
+DO $$ BEGIN
+  ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT;
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
 
 -- Subscription plans (static reference)
 CREATE TABLE IF NOT EXISTS subscription_plans (
@@ -155,3 +162,4 @@ CREATE INDEX IF NOT EXISTS idx_sub_logs_user         ON subscription_logs(user_i
 CREATE INDEX IF NOT EXISTS idx_sys_logs_type         ON system_logs(type);
 CREATE INDEX IF NOT EXISTS idx_reset_tokens_token    ON password_reset_tokens(token);
 CREATE INDEX IF NOT EXISTS idx_reset_tokens_user     ON password_reset_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_users_email           ON users(email);

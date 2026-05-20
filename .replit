@@ -27,7 +27,7 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npx ng build && node server/index.js"
+args = "node server/index.js"
 waitForPort = 5000
 
 [[ports]]
@@ -46,6 +46,6 @@ publicDir = "dist/crafty-rachel/browser"
 [userenv]
 
 [userenv.shared]
-CLERK_PUBLISHABLE_KEY = "pk_test_YWxsb3dpbmctZ29sZGZpc2gtODMuY2xlcmsuYWNjb3VudHMuZGV2JA"
 NODE_ENV = "development"
 PORT = "5000"
+JWT_SECRET = "651a14f72425fa384c9f0982f6942ef25cb0559b557bc5e4d9a5f4b5a4f9f1674fbb2e92c85e8fe3a745d441faf2d4d2"

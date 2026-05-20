@@ -1,7 +1,7 @@
-const { createClerkClient } = require('@clerk/backend');
+const jwt = require('jsonwebtoken');
 const pool = require('../db/pool');
 
-const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
+const JWT_SECRET = process.env.JWT_SECRET || 'crafty-rachel-secret-change-in-production';
 
 async function requireAuth(req, res, next) {
   try {
@@ -11,36 +11,30 @@ async function requireAuth(req, res, next) {
     }
 
     const token = authHeader.slice(7);
-    const payload = await clerk.verifyToken(token);
-    const clerkUserId = payload.sub;
-
-    const clerkUser = await clerk.users.getUser(clerkUserId);
-    const email = clerkUser.emailAddresses[0]?.emailAddress || '';
-    const name = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ') || email;
+    let payload;
+    try {
+      payload = jwt.verify(token, JWT_SECRET);
+    } catch (err) {
+      return res.status(401).json({ error: 'Invalid or expired token' });
+    }
 
     const { rows } = await pool.query(
-      `INSERT INTO users (id, email, name, role, status)
-       VALUES ($1, $2, $3, 'user', 'active')
-       ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email, name = EXCLUDED.name, updated_at = NOW()
-       RETURNING *`,
-      [clerkUserId, email, name]
+      `SELECT u.*, s.plan, s.is_active, s.expiry_date
+       FROM users u
+       LEFT JOIN user_subscriptions s ON s.user_id = u.id
+       WHERE u.id = $1`,
+      [payload.userId]
     );
 
-    const dbUser = rows[0];
+    if (!rows.length) {
+      return res.status(401).json({ error: 'User not found' });
+    }
 
-    await pool.query(
-      `INSERT INTO user_subscriptions (user_id, plan, is_active, start_date, expiry_date)
-       VALUES ($1, 'free', true, NOW(), NOW() + INTERVAL '30 days')
-       ON CONFLICT (user_id) DO NOTHING`,
-      [clerkUserId]
-    );
-
-    req.user = dbUser;
-    req.clerkUserId = clerkUserId;
+    req.user = rows[0];
     next();
   } catch (err) {
     console.error('[Auth] Token verification failed:', err.message);
-    return res.status(401).json({ error: 'Invalid or expired token' });
+    return res.status(401).json({ error: 'Authentication failed' });
   }
 }
 
@@ -62,4 +56,4 @@ async function requireSuperAdmin(req, res, next) {
   });
 }
 
-module.exports = { requireAuth, requireAdmin, requireSuperAdmin };
+module.exports = { requireAuth, requireAdmin, requireSuperAdmin, JWT_SECRET };
