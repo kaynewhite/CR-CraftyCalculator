@@ -19,6 +19,7 @@
     "@angular/platform-browser-dynamic": "^19.2.0",
     "@angular/router": "^19.2.0",
     "@clerk/backend": "^3.4.7",
+    "@clerk/clerk-js": "^5.65.0",
     "@popperjs/core": "^2.11.8",
     "bootstrap": "^5.3.8",
     "chart.js": "^4.5.1",
