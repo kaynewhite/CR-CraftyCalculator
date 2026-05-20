@@ -54,6 +54,37 @@ ng e2e
 
 Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
 
+## Local development
+
+1. Copy `.env.example` to `.env`.
+2. Set your Neon `DATABASE_URL` and optional `JWT_SECRET`.
+3. Run:
+
+```bash
+npm install
+npm start
+```
+
+The backend server listens on port `5000` and serves the Angular app from `dist/crafty-rachel/browser` after build.
+
+## Deployment to Render
+
+This project includes a `render.yaml` for Render free-tier deployment.
+Render should run:
+
+```bash
+npm install && npm run build
+node server/index.js
+```
+
+Set the following environment variables in Render:
+
+- `DATABASE_URL` — your Neon/Postgres connection string
+- `JWT_SECRET` — a secure random secret for JWT signing
+- `NODE_ENV=production`
+
+Do not commit your local `.env` file to Git.
+
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.

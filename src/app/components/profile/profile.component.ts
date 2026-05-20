@@ -20,6 +20,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
   email = '';
   successMessage = '';
   errorMessage = '';
+  currentPassword = '';
+  newPassword = '';
+  confirmPassword = '';
+  passwordSuccess = '';
+  passwordError = '';
+  updatingPassword = false;
   isEditing = false;
   isLoading = false;
   sidebarOpen = false;
@@ -72,6 +78,40 @@ export class ProfileComponent implements OnInit, OnDestroy {
       error: (err: any) => {
         this.isLoading = false;
         this.errorMessage = err.message || 'Failed to update profile';
+      },
+    });
+  }
+
+  savePassword(): void {
+    if (!this.currentPassword || !this.newPassword || !this.confirmPassword) {
+      this.passwordError = 'Please complete all password fields';
+      return;
+    }
+    if (this.newPassword !== this.confirmPassword) {
+      this.passwordError = 'New password and confirmation do not match';
+      return;
+    }
+    if (this.newPassword.length < 8) {
+      this.passwordError = 'Password must be at least 8 characters long';
+      return;
+    }
+
+    this.updatingPassword = true;
+    this.passwordError = '';
+    this.passwordSuccess = '';
+
+    this.authService.updatePassword(this.currentPassword, this.newPassword).subscribe({
+      next: () => {
+        this.updatingPassword = false;
+        this.passwordSuccess = 'Password updated successfully!';
+        this.currentPassword = '';
+        this.newPassword = '';
+        this.confirmPassword = '';
+        setTimeout(() => (this.passwordSuccess = ''), 4000);
+      },
+      error: (err: any) => {
+        this.updatingPassword = false;
+        this.passwordError = err.message || 'Failed to update password';
       },
     });
   }

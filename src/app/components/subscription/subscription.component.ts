@@ -148,22 +148,30 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
   }
 
   onPaymentSubmit(data: Partial<import('../../models/payment.model').PaymentRequest>) {
-    // create request record
-    if (this.pendingPlan && this.currentSubscription) {
-      const payment: any = {
-        id: Date.now().toString(),
-        userId: this.currentSubscription.userId,
-        plan: this.pendingPlan,
-        method: data.method!,
-        status: 'pending', // use pending so admin filter finds it immediately
-        screenshotUrl: data.screenshotUrl,
-        createdAt: new Date()
-      };
-      this.paymentService.add(payment);
+    if (!this.pendingPlan) {
+      return;
     }
 
-    this.showPaymentModal = false;
-    alert('We are scanning your transactions, you will be approved within a day');
+    const payment: any = {
+      plan: this.pendingPlan,
+      method: data.method!,
+      screenshotUrl: data.screenshotUrl,
+    };
+
+    this.paymentService.add(payment).subscribe({
+      next: () => {
+        this.showPaymentModal = false;
+        this.pendingPlan = null;
+        this.upgradeCost = 0;
+        alert('Payment request submitted. Admin review is pending.');
+      },
+      error: (err: any) => {
+        this.showPaymentModal = false;
+        this.pendingPlan = null;
+        this.upgradeCost = 0;
+        alert('Failed to submit payment request: ' + (err?.message || 'Please try again.'));
+      }
+    });
   }
 
   closeSidebar(): void {

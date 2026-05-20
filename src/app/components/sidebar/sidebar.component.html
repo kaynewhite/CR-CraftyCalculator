@@ -50,7 +50,6 @@
   <!-- Navigation -->
   <nav class="sidebar-nav" aria-label="Navigation links">
 
-    @if (!isAdmin) {
       <!-- User Nav -->
       <div class="nav-section">
         @if (!isCollapsed) { <p class="nav-section-label">Main Menu</p> }
@@ -83,20 +82,15 @@
           @if (!isCollapsed) { <span>Subscription</span> }
         </a>
       </div>
-    }
 
     @if (isAdmin) {
       <!-- Admin Nav -->
       <div class="nav-section">
-        @if (!isCollapsed) { <p class="nav-section-label">Overview</p> }
-        <a [routerLink]="'/admin-dashboard'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'Dashboard' : ''">
+        @if (!isCollapsed) { <p class="nav-section-label">Admin Tools</p> }
+        <a [routerLink]="'/admin-dashboard'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'Admin Dashboard' : ''">
           <i class="bi bi-grid-1x2 nav-icon"></i>
-          @if (!isCollapsed) { <span>Dashboard</span> }
+          @if (!isCollapsed) { <span>Admin Dashboard</span> }
         </a>
-      </div>
-
-      <div class="nav-section">
-        @if (!isCollapsed) { <p class="nav-section-label">Management</p> }
         <a [routerLink]="'/admin-payments'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'Payments' : ''">
           <i class="bi bi-credit-card nav-icon"></i>
           @if (!isCollapsed) { <span>Payment Approvals</span> }

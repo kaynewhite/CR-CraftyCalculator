@@ -7,11 +7,6 @@ export const authGuard = () => {
   const router = inject(Router);
   try {
     if (authService.isAuthenticated()) {
-      const user = authService.currentUserValue;
-      if (user && (user.role === 'admin' || user.role === 'superadmin')) {
-        router.navigate(['/admin-dashboard']);
-        return false;
-      }
       return true;
     }
     router.navigate(['/login']);

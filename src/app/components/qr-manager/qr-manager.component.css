@@ -2,6 +2,7 @@
 .admin-layout {
   display: flex;
   min-height: 100vh;
+  background: var(--bg-body);
 }
 
 .admin-main {
@@ -9,6 +10,7 @@
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  background: var(--bg-body);
 }
 
 .admin-header {
@@ -16,14 +18,11 @@
   align-items: center;
   gap: 20px;
   padding: 20px;
-  background: white;
+  background: var(--bg-card);
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-body.dark-mode .admin-header {
-  background: #2a2a2a;
-  color: white;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
 }
 
 .sidebar-toggle {
@@ -67,8 +66,59 @@ body.dark-mode .admin-title h1 {
 }
 
 body.dark-mode .section {
-  background: #2a2a2a;
-  color: white;
+  background: #1f2937;
+  color: #f8fafc;
+}
+
+body.dark-mode .admin-layout,
+body.dark-mode .admin-main {
+  background: var(--bg-body);
+}
+
+body.dark-mode .admin-header {
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+body.dark-mode .section {
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+body.dark-mode .section h2,
+body.dark-mode .section h4,
+body.dark-mode .form-group label,
+body.dark-mode .text-muted {
+  color: var(--text-secondary);
+}
+
+body.dark-mode .form-control,
+body.dark-mode .form-select {
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+body.dark-mode .btn-primary,
+body.dark-mode .btn-danger {
+  border-color: transparent;
+  color: #fff;
+}
+
+body.dark-mode .btn-primary {
+  background: #2563eb;
+}
+
+body.dark-mode .btn-danger {
+  background: #dc2626;
+}
+
+body.dark-mode .qr-preview {
+  max-width: 300px;
+  max-height: 300px;
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-card);
 }
 
 .qr-preview {

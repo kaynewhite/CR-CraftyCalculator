@@ -58,6 +58,9 @@ export class ApiService {
   // ── Users ──
   getMe(): Observable<any> { return this.get('/users/me'); }
   updateMe(data: { name?: string; email?: string }): Observable<any> { return this.put('/users/me', data); }
+  updateMyPassword(currentPassword: string, newPassword: string): Observable<any> {
+    return this.put('/users/me/password', { currentPassword, newPassword });
+  }
   getAllUsers(): Observable<any> { return this.get('/users'); }
   setUserStatus(id: string, status: string, feedback?: string): Observable<any> {
     return this.put(`/users/${id}/status`, { status, rejection_feedback: feedback });

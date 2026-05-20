@@ -11,7 +11,8 @@ export class ThemeService {
 
   constructor() {
     const savedTheme = localStorage.getItem(this.THEME_KEY);
-    const isDark = savedTheme === 'dark';
+    const prefersDark = typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+    const isDark = savedTheme ? savedTheme === 'dark' : prefersDark;
     this.setTheme(isDark);
   }
 
@@ -29,11 +30,15 @@ export class ThemeService {
       document.body.classList.remove('light-mode');
       document.documentElement.classList.add('dark-mode');
       document.documentElement.classList.remove('light-mode');
+      document.body.dataset['theme'] = 'dark';
+      document.documentElement.dataset['theme'] = 'dark';
     } else {
       document.body.classList.add('light-mode');
       document.body.classList.remove('dark-mode');
       document.documentElement.classList.add('light-mode');
       document.documentElement.classList.remove('dark-mode');
+      document.body.dataset['theme'] = 'light';
+      document.documentElement.dataset['theme'] = 'light';
     }
   }
 

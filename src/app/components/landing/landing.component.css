@@ -145,6 +145,9 @@ body.dark-mode .orb { opacity: 0.05; }
 
 .footer-name { font-size: 0.9rem; font-weight: 700; color: var(--text-primary); margin: 0; }
 .footer-tagline { font-size: 0.75rem; color: var(--text-muted); margin: 0; }
+.footer-contact { display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center; }
+.footer-button { display: inline-flex; align-items: center; justify-content: center; padding: 0.7rem 1rem; border-radius: 999px; background: var(--bg-body); color: var(--text-primary); border: 1px solid var(--border-color); text-decoration: none; font-weight: 600; transition: all var(--transition-fast); }
+.footer-button:hover { background: var(--bg-hover); border-color: var(--brand-primary); color: var(--brand-primary); }
 .footer-copy { font-size: 0.8rem; color: var(--text-muted); margin: 0; }
 
 @media (max-width: 900px) {

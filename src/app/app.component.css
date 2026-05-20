@@ -26,6 +26,33 @@
 
 .theme-toggle-global i { font-size: 1.1rem; }
 
+.notification-bar {
+  background: #fff4e5;
+  color: #7a4b1c;
+  border: 1px solid rgba(244, 164, 0, 0.3);
+  padding: 0.9rem 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.95rem;
+  position: sticky;
+  top: 0;
+  z-index: 10000;
+}
+
+.notification-content {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  max-width: 1000px;
+  width: 100%;
+}
+
+.notification-bar i {
+  font-size: 1.1rem;
+}
+
 .rejection-overlay {
   position: fixed;
   inset: 0;

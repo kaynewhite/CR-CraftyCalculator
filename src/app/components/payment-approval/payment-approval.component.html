@@ -24,13 +24,12 @@
 
       <div class="filter-bar">
         <div class="filter-item">
-          <label class="filter-label">Status</label>
+          <label class="filter-label">Subscription State</label>
           <select class="filter-select" [(ngModel)]="filterStatus" (change)="onFilterChange()">
-            <option value="all">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="scanning">Scanning</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
+            <option value="all">All Requests</option>
+            <option value="subscribing">Subscribing</option>
+            <option value="subscribed">Subscribed</option>
+            <option value="rejected">Subscription Rejected</option>
           </select>
         </div>
         <div class="filter-item filter-search">
@@ -74,6 +73,7 @@
                   <div class="user-meta">
                     <p class="user-name">{{ payment.userName }}</p>
                     <p class="user-plan">{{ getPlanName(payment.plan) }} Plan · {{ payment.method }}</p>
+                    <p class="user-state">{{ getSubscriptionState(payment.status) }}</p>
                   </div>
                 </div>
 

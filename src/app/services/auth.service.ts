@@ -137,6 +137,10 @@ export class AuthService {
     });
   }
 
+  updatePassword(currentPassword: string, newPassword: string): Observable<any> {
+    return this.api.updateMyPassword(currentPassword, newPassword);
+  }
+
   openSignIn(_redirect?: string): void {}
   openSignUp(_redirect?: string): void {}
 }

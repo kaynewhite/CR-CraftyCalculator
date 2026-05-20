@@ -90,7 +90,18 @@ export class PaymentApprovalComponent implements OnInit {
   applyFilters(): void {
     let filtered = [...this.payments];
     if (this.filterStatus !== 'all') {
-      filtered = filtered.filter(p => p.status === this.filterStatus);
+      filtered = filtered.filter(p => {
+        if (this.filterStatus === 'subscribing') {
+          return ['pending', 'scanning'].includes(p.status);
+        }
+        if (this.filterStatus === 'subscribed') {
+          return p.status === 'approved';
+        }
+        if (this.filterStatus === 'rejected') {
+          return p.status === 'rejected';
+        }
+        return true;
+      });
     }
     if (this.searchTerm) {
       const term = this.searchTerm.toLowerCase();
@@ -104,6 +115,19 @@ export class PaymentApprovalComponent implements OnInit {
     this.filteredPayments = filtered;
   }
 
+  getSubscriptionState(status: string): string {
+    if (['pending', 'scanning'].includes(status)) {
+      return 'Subscribing';
+    }
+    if (status === 'approved') {
+      return 'Subscribed';
+    }
+    if (status === 'rejected') {
+      return 'Subscription Rejected';
+    }
+    return 'Unknown';
+  }
+
   onFilterChange(): void { this.applyFilters(); }
   onSearchChange(): void { this.applyFilters(); }
 
@@ -115,7 +139,7 @@ export class PaymentApprovalComponent implements OnInit {
     if (!confirm(`Approve payment from ${payment.userName}?`)) return;
     this.api.approvePayment(payment.id).subscribe({
       next: () => {
-        this.subscriptionService.upgradePlanForUser(payment.userId, payment.plan as any).subscribe();
+        // Backend already upgrades the subscription once a payment is approved.
         this.loadPayments();
       },
       error: (err: any) => alert('Failed to approve: ' + err.message),

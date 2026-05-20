@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ThemeService } from './services/theme.service';
 import { AuthService } from './services/auth.service';
+import { SubscriptionService } from './services/subscription.service';
 
 @Component({
   selector: 'app-root',
@@ -18,7 +19,13 @@ export class AppComponent implements OnInit {
   showRejectionBox = false;
   rejectionFeedback = '';
 
-  constructor(public themeService: ThemeService, private authService: AuthService) {}
+  subscriptionWarning = '';
+
+  constructor(
+    public themeService: ThemeService,
+    private authService: AuthService,
+    private subscriptionService: SubscriptionService
+  ) {}
 
   ngOnInit(): void {
     // make sure theme classes are set immediately on load
@@ -27,8 +34,6 @@ export class AppComponent implements OnInit {
     // subscribe so that body class remains in sync when other components toggle theme
     this.themeService.isDarkMode$.subscribe(isDark => {
       this.isDarkMode = isDark;
-      const theme = isDark ? 'dark' : 'light';
-      // ensure body class matches (should normally already be set by service)
       if (isDark) {
         document.body.classList.add('dark-mode');
         document.body.classList.remove('light-mode');
@@ -50,9 +55,26 @@ export class AppComponent implements OnInit {
       }
     });
 
+    this.subscriptionService.subscription$.subscribe(subscription => {
+      if (!subscription || subscription.currentPlan === 'free') {
+        this.subscriptionWarning = '';
+        return;
+      }
+
+      const expiry = new Date(subscription.expiryDate);
+      const now = new Date();
+      const daysLeft = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (daysLeft <= 7 && daysLeft >= 0) {
+        this.subscriptionWarning = `Your ${subscription.currentPlan.toUpperCase()} plan expires in ${daysLeft} day${daysLeft === 1 ? '' : 's'}. Please renew soon to keep access.`;
+      } else {
+        this.subscriptionWarning = '';
+      }
+    });
+
     // listen to storage events so that changes made by admin in another tab/app are noticed
     window.addEventListener('storage', (event) => {
-      if (event.key === 'currentUser') {
+      if (event.key === 'cr_user') {
         try {
           const updated = JSON.parse(event.newValue || '{}');
           if (updated.status === 'rejected' && updated.rejectionFeedback) {

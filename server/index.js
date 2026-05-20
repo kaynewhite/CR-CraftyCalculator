@@ -55,6 +55,13 @@ app.use((err, req, res, next) => {
 
 async function start() {
   try {
+    if (!process.env.DATABASE_URL) {
+      console.error('[Server] Missing DATABASE_URL environment variable.');
+      console.error('[Server] Provide your Neon/Postgres connection string in DATABASE_URL and restart.');
+      console.error('[Server] Example: postgres://user:pass@dbhost:5432/dbname');
+      process.exit(1);
+    }
+
     await migrate();
     await seed();
     app.listen(PORT, '0.0.0.0', () => {

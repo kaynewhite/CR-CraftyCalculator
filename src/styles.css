@@ -87,7 +87,9 @@
 }
 
 /* ── Dark Mode ── */
-body.dark-mode {
+body.dark-mode,
+html[data-theme="dark"],
+body[data-theme="dark"] {
   --bg-body: #0F1117;
   --bg-card: #1A1D27;
   --bg-sidebar: #13151F;

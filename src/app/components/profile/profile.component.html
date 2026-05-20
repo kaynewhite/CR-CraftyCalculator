@@ -128,11 +128,68 @@
           </div>
           <div class="card-body">
             <p style="font-size:0.88rem;color:var(--text-secondary);margin-bottom:1.25rem;line-height:1.6;">
-              Change your password, update your email address, and manage two-factor authentication through the secure account settings panel.
+              Change your password and update your email address from this secure profile page.
             </p>
-            <button class="btn btn-outline-primary" (click)="openAccountSettings()">
-              <i class="bi bi-person-gear me-2"></i>Manage Password &amp; Email
-            </button>
+            <div class="form-section">
+              <div class="field-group">
+                <label for="current-password" class="form-label">Current Password</label>
+                <input
+                  id="current-password"
+                  type="password"
+                  class="form-control"
+                  [(ngModel)]="currentPassword"
+                  name="currentPassword"
+                  placeholder="Enter current password"
+                >
+              </div>
+              <div class="field-group">
+                <label for="new-password" class="form-label">New Password</label>
+                <input
+                  id="new-password"
+                  type="password"
+                  class="form-control"
+                  [(ngModel)]="newPassword"
+                  name="newPassword"
+                  placeholder="Create a new password"
+                >
+              </div>
+              <div class="field-group">
+                <label for="confirm-password" class="form-label">Confirm New Password</label>
+                <input
+                  id="confirm-password"
+                  type="password"
+                  class="form-control"
+                  [(ngModel)]="confirmPassword"
+                  name="confirmPassword"
+                  placeholder="Confirm new password"
+                >
+              </div>
+
+              @if (passwordSuccess) {
+                <div class="alert alert-success mb-3" role="alert">
+                  <i class="bi bi-check-circle-fill me-2"></i>{{ passwordSuccess }}
+                </div>
+              }
+
+              @if (passwordError) {
+                <div class="alert alert-danger mb-3" role="alert">
+                  <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ passwordError }}
+                </div>
+              }
+
+              <div class="d-flex gap-2 mt-2">
+                <button type="button" class="btn btn-success" (click)="savePassword()" [disabled]="updatingPassword">
+                  @if (!updatingPassword) {
+                    <i class="bi bi-key-fill me-1"></i>Update Password
+                  } @else {
+                    <span class="spinner-border spinner-border-sm me-2"></span>Saving…
+                  }
+                </button>
+                <button type="button" class="btn btn-outline-secondary" (click)="openAccountSettings()" [disabled]="updatingPassword">
+                  <i class="bi bi-person-gear me-1"></i>Reset via Email
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
