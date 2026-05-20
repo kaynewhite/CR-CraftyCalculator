@@ -163,3 +163,15 @@ CREATE INDEX IF NOT EXISTS idx_sys_logs_type         ON system_logs(type);
 CREATE INDEX IF NOT EXISTS idx_reset_tokens_token    ON password_reset_tokens(token);
 CREATE INDEX IF NOT EXISTS idx_reset_tokens_user     ON password_reset_tokens(user_id);
 CREATE INDEX IF NOT EXISTS idx_users_email           ON users(email);
+
+-- Manual Payment & Subscription Requests
+CREATE TABLE IF NOT EXISTS subscription_requests (
+  id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::TEXT,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  plan_name TEXT NOT NULL CHECK (plan_name IN ('basic', 'pro')),
+  screenshot_url TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+  rejection_feedback TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

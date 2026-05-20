@@ -63,8 +63,8 @@ async function seed() {
 
   console.log('[Seed] Admin seeding complete');
   console.log('[Seed] Admin credentials:');
-  console.log('[Seed]   admin@craftyr.com / Admin@CraftyR2025');
-  console.log('[Seed]   superadmin@craftyr.com / SuperAdmin@CraftyR2025');
+  console.log('[Seed]   admin@craftyr.com / Admin@CraftyR2026');
+  console.log('[Seed]   superadmin@craftyr.com / SuperAdmin@CraftyR2026');
 }
 
 module.exports = seed;
