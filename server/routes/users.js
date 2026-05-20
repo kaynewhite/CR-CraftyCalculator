@@ -89,4 +89,27 @@ router.put('/:id/role', requireAdmin, async (req, res) => {
   }
 });
 
+// DELETE /api/users/:id — permanently delete a user (superadmin only)
+router.delete('/:id', requireAdmin, async (req, res) => {
+  if (req.user.role !== 'superadmin') {
+    return res.status(403).json({ error: 'Only superadmins can delete users' });
+  }
+  const { id } = req.params;
+  if (String(req.user.id) === String(id)) {
+    return res.status(400).json({ error: 'You cannot delete your own account' });
+  }
+  try {
+    const check = await pool.query('SELECT id, role FROM users WHERE id = $1', [id]);
+    if (!check.rows.length) return res.status(404).json({ error: 'User not found' });
+    if (check.rows[0].role === 'admin' || check.rows[0].role === 'superadmin') {
+      return res.status(400).json({ error: 'Cannot delete admin accounts' });
+    }
+    await pool.query('DELETE FROM users WHERE id = $1', [id]);
+    res.json({ success: true, message: 'User deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to delete user' });
+  }
+});
+
 module.exports = router;

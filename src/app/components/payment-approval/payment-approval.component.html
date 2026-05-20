@@ -1,141 +1,177 @@
-<div class="payment-layout">
-  <!-- Sidebar -->
-  <app-sidebar 
-    [isOpen]="sidebarOpen" 
+<div class="pa-layout">
+  <app-sidebar
+    [isOpen]="sidebarOpen"
     [isCollapsed]="sidebarCollapsed"
     (closeSidebar)="onSidebarClose()"
     (toggleCollapse)="onCollapseSidebar()">
   </app-sidebar>
 
-  <!-- Main Content -->
-  <div class="payment-main">
-    <!-- Header -->
-    <div class="approval-header">
-      <button class="sidebar-toggle" (click)="toggleSidebar()" title="Toggle Sidebar">
+  <div class="pa-main">
+    <header class="pa-header">
+      <button class="sidebar-toggle" (click)="toggleSidebar()" aria-label="Open menu">
         <i class="bi bi-list"></i>
       </button>
-      <div>
+      <div class="pa-header-text">
         <h1>Payment Approvals</h1>
-        <p class="payment-count">{{ filteredPayments.length }} payment(s) found</p>
+        <p class="pa-subtitle">{{ filteredPayments.length }} record{{ filteredPayments.length !== 1 ? 's' : '' }} found</p>
       </div>
-    </div>
+      <button class="btn btn-outline-primary btn-sm ms-auto" (click)="loadPayments()">
+        <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+      </button>
+    </header>
 
-    <div class="approval-container" *ngIf="!isLoading">
-    <!-- Filters -->
-    <div class="filter-section">
-      <div class="filter-group">
-        <label>Status:</label>
-        <select [(ngModel)]="filterStatus" (change)="onFilterChange()">
-          <option value="all">All Status</option>
-          <option value="pending">Pending</option>
-          <option value="scanning">Scanning</option>
-          <option value="approved">Approved</option>
-          <option value="rejected">Rejected</option>
-        </select>
-      </div>
+    <div class="pa-body">
 
-      <div class="filter-group">
-        <label>Search User:</label>
-        <input 
-          type="text" 
-          [(ngModel)]="searchTerm" 
-          (input)="onSearchChange()"
-          placeholder="Enter user ID"
-        >
-      </div>
-    </div>
-
-    <!-- Payments List -->
-    <div *ngIf="filteredPayments.length > 0" class="payments-section">
-      <div class="payment-card" *ngFor="let payment of filteredPayments">
-        <div class="payment-header" (click)="toggleExpanded(payment.id)">
-          <div class="payment-basic">
-            <h3>{{ payment.userId }}</h3>
-            <p class="payment-plan">{{ getPlanName(payment.plan) }} Plan</p>
-          </div>
-          <div class="payment-meta">
-            <span [ngClass]="'badge ' + getStatusBadgeClass(payment.status)">
-              {{ payment.status | uppercase }}
-            </span>
-            <span class="payment-date">{{ payment.createdAt | date: 'short' }}</span>
-          </div>
-          <button class="expand-btn">{{ expandedPaymentId === payment.id ? '−' : '+' }}</button>
+      <div class="filter-bar">
+        <div class="filter-item">
+          <label class="filter-label">Status</label>
+          <select class="filter-select" [(ngModel)]="filterStatus" (change)="onFilterChange()">
+            <option value="all">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="scanning">Scanning</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
         </div>
+        <div class="filter-item filter-search">
+          <label class="filter-label">Search</label>
+          <div class="search-wrap">
+            <i class="bi bi-search search-icon"></i>
+            <input
+              class="filter-input"
+              type="text"
+              [(ngModel)]="searchTerm"
+              (input)="onSearchChange()"
+              placeholder="User name or ID…"
+            >
+          </div>
+        </div>
+      </div>
 
-        <!-- Expanded Details -->
-        <div *ngIf="expandedPaymentId === payment.id" class="payment-details">
-          <div class="detail-row">
-            <label>User ID:</label>
-            <span>{{ payment.userId }}</span>
-          </div>
-          <div class="detail-row">
-            <label>Plan:</label>
-            <span>{{ getPlanName(payment.plan) }} - ₱{{ getPlanPrice(payment.plan).toLocaleString() }}</span>
-          </div>
-          <div class="detail-row">
-            <label>Payment Method:</label>
-            <span>{{ payment.method }}</span>
-          </div>
-          <div class="detail-row">
-            <label>Status:</label>
-            <span [ngClass]="'badge ' + getStatusBadgeClass(payment.status)">
-              {{ payment.status | uppercase }}
-            </span>
-          </div>
+      @if (isLoading) {
+        <div class="loading-state">
+          <div class="spinner-border text-brand" role="status"></div>
+          <p>Loading payments…</p>
+        </div>
+      }
 
-          <!-- Screenshot -->
-          <div *ngIf="payment.screenshotUrl" class="screenshot-section">
-            <label>Transaction Screenshot:</label>
-            <img [src]="payment.screenshotUrl" alt="Transaction Screenshot" class="screenshot-image">
-          </div>
+      @if (!isLoading && filteredPayments.length === 0) {
+        <div class="empty-state">
+          <div class="empty-icon"><i class="bi bi-credit-card"></i></div>
+          <h3>No payments found</h3>
+          <p>Try adjusting your search or filter.</p>
+        </div>
+      }
 
-          <!-- Feedback (if rejected) -->
-          <div *ngIf="payment.feedback" class="feedback-section">
-            <label>Rejection Feedback:</label>
-            <p class="feedback-text">{{ payment.feedback }}</p>
-          </div>
+      @if (!isLoading && filteredPayments.length > 0) {
+        <div class="payments-list">
+          @for (payment of filteredPayments; track payment.id) {
+            <div class="payment-card" [class.expanded]="expandedPaymentId === payment.id">
 
-          <!-- Action Buttons -->
-          <div class="action-buttons" *ngIf="payment.status === 'pending' || payment.status === 'scanning'">
-            <button class="approve-btn" (click)="approvePayment(payment)">
-              ✓ Approve Payment
-            </button>
-            
-            <div class="reject-section">
-              <textarea 
-                [(ngModel)]="payment.feedbackInput"
-                placeholder="Rejection reason..."
-                class="feedback-input"
-              ></textarea>
-              <button class="reject-btn" (click)="rejectPayment(payment)">
-                ✕ Reject Payment
-              </button>
+              <div class="payment-summary" (click)="toggleExpanded(payment.id)">
+                <div class="ps-user">
+                  <div class="user-avatar">{{ (payment.userName || 'U').charAt(0).toUpperCase() }}</div>
+                  <div class="user-meta">
+                    <p class="user-name">{{ payment.userName }}</p>
+                    <p class="user-plan">{{ getPlanName(payment.plan) }} Plan · {{ payment.method }}</p>
+                  </div>
+                </div>
+
+                <div class="ps-right">
+                  <span class="pill pill-status-{{ payment.status }}">
+                    <span class="pill-dot"></span>
+                    {{ payment.status | titlecase }}
+                  </span>
+                  <span class="ps-date">{{ payment.createdAt | date:'MMM d, h:mm a' }}</span>
+                  <div class="expand-icon" [class.rotated]="expandedPaymentId === payment.id">
+                    <i class="bi bi-chevron-down"></i>
+                  </div>
+                </div>
+              </div>
+
+              @if (expandedPaymentId === payment.id) {
+                <div class="payment-detail">
+
+                  <div class="detail-grid">
+                    <div class="detail-row">
+                      <span class="detail-label">User ID</span>
+                      <span class="detail-val mono">{{ payment.userId }}</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="detail-label">Plan</span>
+                      <span class="detail-val">{{ getPlanName(payment.plan) }} — ₱{{ getPlanPrice(payment.plan).toLocaleString() }}/mo</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="detail-label">Method</span>
+                      <span class="detail-val">{{ payment.method }}</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="detail-label">Submitted</span>
+                      <span class="detail-val">{{ payment.createdAt | date:'MMMM d, yyyy · h:mm a' }}</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="detail-label">Status</span>
+                      <span class="pill pill-status-{{ payment.status }}">
+                        <span class="pill-dot"></span>{{ payment.status | titlecase }}
+                      </span>
+                    </div>
+                  </div>
+
+                  @if (payment.screenshotUrl) {
+                    <div class="screenshot-section">
+                      <p class="section-label"><i class="bi bi-image me-1"></i>Transaction Screenshot</p>
+                      <img [src]="payment.screenshotUrl" alt="Transaction screenshot" class="screenshot-img">
+                    </div>
+                  }
+
+                  @if (payment.feedback) {
+                    <div class="feedback-display">
+                      <p class="section-label"><i class="bi bi-chat-left-text me-1"></i>Rejection Reason</p>
+                      <p class="feedback-text">{{ payment.feedback }}</p>
+                    </div>
+                  }
+
+                  @if (payment.status === 'pending' || payment.status === 'scanning') {
+                    <div class="action-section">
+                      <div class="reject-input-wrap">
+                        <label class="filter-label">Rejection Reason (required to reject)</label>
+                        <textarea
+                          class="reject-textarea"
+                          [(ngModel)]="payment.feedbackInput"
+                          placeholder="Describe why this payment is being rejected…"
+                          rows="2">
+                        </textarea>
+                      </div>
+                      <div class="action-btns">
+                        <button class="btn-approve" (click)="approvePayment(payment)">
+                          <i class="bi bi-check-circle-fill me-1"></i>Approve Payment
+                        </button>
+                        <button class="btn-reject" (click)="rejectPayment(payment)">
+                          <i class="bi bi-x-circle-fill me-1"></i>Reject Payment
+                        </button>
+                      </div>
+                    </div>
+                  }
+
+                  @if (payment.status === 'approved') {
+                    <div class="status-banner status-approved">
+                      <i class="bi bi-check-circle-fill me-2"></i>This payment has been approved
+                    </div>
+                  }
+                  @if (payment.status === 'rejected') {
+                    <div class="status-banner status-rejected">
+                      <i class="bi bi-x-circle-fill me-2"></i>This payment has been rejected
+                    </div>
+                  }
+
+                </div>
+              }
+
             </div>
-          </div>
-
-          <!-- Approved/Rejected State -->
-          <div *ngIf="payment.status === 'approved' || payment.status === 'rejected'" class="status-info">
-            <p class="status-message">
-              <span *ngIf="payment.status === 'approved'" class="success">✓ Payment has been approved</span>
-              <span *ngIf="payment.status === 'rejected'" class="danger">✕ Payment has been rejected</span>
-            </p>
-          </div>
+          }
         </div>
-      </div>
-    </div>
+      }
 
-    <!-- Empty State -->
-    <div *ngIf="filteredPayments.length === 0" class="empty-state">
-      <div class="empty-icon">📭</div>
-      <h3>No payments found</h3>
-      <p>No payments match your current filters</p>
     </div>
-  </div>
-
-  <!-- Loading State -->
-  <div *ngIf="isLoading" class="loading-state">
-    <div class="spinner"></div>
-    <p>Loading payments...</p>
-  </div>
   </div>
 </div>

@@ -1,104 +1,224 @@
-<div class="user-layout">
-  <!-- Sidebar -->
-  <app-sidebar 
-    [isOpen]="sidebarOpen" 
+<div class="um-layout">
+  <app-sidebar
+    [isOpen]="sidebarOpen"
     [isCollapsed]="sidebarCollapsed"
     (closeSidebar)="onSidebarClose()"
     (toggleCollapse)="onCollapseSidebar()">
   </app-sidebar>
 
-  <!-- Main Content -->
-  <div class="user-main">
-    <!-- Header -->
-    <div class="management-header">
-      <button class="sidebar-toggle" (click)="toggleSidebar()" title="Toggle Sidebar">
+  <div class="um-main">
+    <header class="um-header">
+      <button class="sidebar-toggle" (click)="toggleSidebar()" aria-label="Open menu">
         <i class="bi bi-list"></i>
       </button>
-      <div>
+      <div class="um-header-text">
         <h1>User Management</h1>
-        <p class="user-count">{{ filteredUsers.length }} user(s) found</p>
+        <p class="um-subtitle">{{ filteredUsers.length }} user{{ filteredUsers.length !== 1 ? 's' : '' }} found</p>
       </div>
-    </div>
+      <button class="btn btn-outline-primary btn-sm ms-auto" (click)="loadUsers()">
+        <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+      </button>
+    </header>
 
-    <div class="management-container" *ngIf="!isLoading">
-    <!-- Filters -->
-    <div class="filter-section">
-      <div class="filter-group">
-        <label>Subscription Plan:</label>
-        <select [(ngModel)]="subscriptionFilter" (change)="onFilterChange()">
-          <option value="all">All Plans</option>
-          <option value="free">Free</option>
-          <option value="basic">Basic</option>
-          <option value="pro">Pro</option>
-        </select>
+    <div class="um-body">
+
+      @if (actionSuccess) {
+        <div class="flash flash-success">
+          <i class="bi bi-check-circle-fill me-2"></i>{{ actionSuccess }}
+        </div>
+      }
+      @if (actionError) {
+        <div class="flash flash-error">
+          <i class="bi bi-exclamation-circle-fill me-2"></i>{{ actionError }}
+        </div>
+      }
+
+      <div class="filter-bar">
+        <div class="filter-item">
+          <label class="filter-label">Plan</label>
+          <select class="filter-select" [(ngModel)]="subscriptionFilter" (change)="onFilterChange()">
+            <option value="all">All Plans</option>
+            <option value="free">Free</option>
+            <option value="basic">Basic</option>
+            <option value="pro">Pro</option>
+          </select>
+        </div>
+        <div class="filter-item filter-search">
+          <label class="filter-label">Search</label>
+          <div class="search-wrap">
+            <i class="bi bi-search search-icon"></i>
+            <input
+              class="filter-input"
+              type="text"
+              [(ngModel)]="searchTerm"
+              (input)="onSearchChange()"
+              placeholder="Name, email, or ID…"
+            >
+          </div>
+        </div>
       </div>
 
-      <div class="filter-group">
-        <label>Search:</label>
-        <input 
-          type="text" 
-          [(ngModel)]="searchTerm" 
-          (input)="onSearchChange()"
-          placeholder="Name, email, or ID"
-        >
-      </div>
-    </div>
+      @if (isLoading) {
+        <div class="loading-state">
+          <div class="spinner-border text-brand" role="status"></div>
+          <p>Loading users…</p>
+        </div>
+      }
 
-    <!-- Users Table -->
-    <div class="users-table-container" *ngIf="filteredUsers.length > 0">
-      <table class="users-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Plan</th>
-            <th>Status</th>
-            <th>Calculations</th>
-            <th>Joined</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let user of filteredUsers" class="user-row">
-            <td class="user-name">{{ user.name }}</td>
-            <td class="user-email">{{ user.email }}</td>
-            <td class="user-plan">
-              <span class="badge" [ngClass]="'badge-' + user.subscription">
-                {{ getUserSubscriptionName(user.subscription) }}
-              </span>
-            </td>
-            <td class="user-status">
-              <span class="status-badge" [ngClass]="'status-' + user.status">
-                {{ user.status | uppercase }}
-              </span>
-            </td>
-            <td class="user-calc">{{ user.calculationCount }}</td>
-            <td class="user-date">{{ user.createdAt }}</td>
-            <td class="user-actions">
-              <button *ngIf="user.status !== 'rejected'" class="btn btn-danger btn-sm" (click)="rejectUser(user)">
-                Reject
-              </button>
-              <button *ngIf="user.status === 'rejected'" class="btn btn-success btn-sm" (click)="reactivateUser(user)">
-                Reactivate
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+      @if (!isLoading && filteredUsers.length === 0) {
+        <div class="empty-state">
+          <div class="empty-icon"><i class="bi bi-people"></i></div>
+          <h3>No users found</h3>
+          <p>Try adjusting your search or filter.</p>
+        </div>
+      }
 
-    <!-- Empty State -->
-    <div *ngIf="filteredUsers.length === 0" class="empty-state">
-      <div class="empty-icon">👥</div>
-      <h3>No users found</h3>
-      <p>No users match your current filters</p>
-    </div>
-  </div>
+      @if (!isLoading && filteredUsers.length > 0) {
+        <div class="table-card">
+          <div class="table-wrap">
+            <table class="um-table">
+              <thead>
+                <tr>
+                  <th class="col-user">User</th>
+                  <th class="col-plan">Plan</th>
+                  <th class="col-status">Status</th>
+                  <th class="col-joined">Joined</th>
+                  <th class="col-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (user of filteredUsers; track user.id) {
+                  <tr class="um-row">
+                    <td class="col-user">
+                      <div class="user-cell">
+                        <div class="user-avatar">{{ user.name.charAt(0).toUpperCase() }}</div>
+                        <div class="user-info">
+                          <p class="user-name">{{ user.name }}</p>
+                          <p class="user-email">{{ user.email }}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="col-plan">
+                      <span class="pill pill-plan-{{ user.subscription }}">
+                        <i class="bi" [class.bi-star-fill]="user.subscription==='pro'" [class.bi-star]="user.subscription==='basic'" [class.bi-person]="user.subscription==='free'"></i>
+                        {{ user.subscription | titlecase }}
+                      </span>
+                    </td>
+                    <td class="col-status">
+                      <span class="pill pill-status-{{ user.status }}">
+                        <span class="pill-dot"></span>
+                        {{ user.status | titlecase }}
+                      </span>
+                    </td>
+                    <td class="col-joined">
+                      <span class="date-text">{{ user.createdAt }}</span>
+                    </td>
+                    <td class="col-actions">
+                      <div class="action-row">
+                        @if (user.status !== 'rejected') {
+                          <button class="action-btn action-warn" (click)="openRejectModal(user)" title="Reject user">
+                            <i class="bi bi-slash-circle me-1"></i>Reject
+                          </button>
+                        }
+                        @if (user.status === 'rejected') {
+                          <button class="action-btn action-success" (click)="reactivateUser(user)" title="Reactivate user">
+                            <i class="bi bi-check-circle me-1"></i>Reactivate
+                          </button>
+                        }
+                        @if (isSuperAdmin) {
+                          <button class="action-btn action-danger" (click)="openDeleteModal(user)" title="Delete user permanently">
+                            <i class="bi bi-trash3"></i>
+                          </button>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
 
-  <!-- Loading State -->
-  <div *ngIf="isLoading" class="loading-state">
-    <div class="spinner"></div>
-    <p>Loading users...</p>
-  </div>
+    </div>
   </div>
 </div>
+
+@if (showRejectModal && userToReject) {
+  <div class="modal-backdrop" (click)="closeRejectModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-icon modal-icon-warn">
+          <i class="bi bi-slash-circle"></i>
+        </div>
+        <div>
+          <h3>Reject User</h3>
+          <p>Provide a reason for rejecting <strong>{{ userToReject.name }}</strong>.</p>
+        </div>
+      </div>
+      <div class="modal-body">
+        <label class="modal-label">Rejection Feedback</label>
+        <textarea
+          class="modal-textarea"
+          [(ngModel)]="rejectFeedback"
+          placeholder="e.g. Duplicate account, suspicious activity…"
+          rows="3">
+        </textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" (click)="closeRejectModal()" [disabled]="isRejecting">Cancel</button>
+        <button class="btn btn-warn" (click)="confirmReject()" [disabled]="isRejecting">
+          @if (isRejecting) {
+            <span class="spinner-border spinner-border-sm me-2"></span>Rejecting…
+          } @else {
+            <i class="bi bi-slash-circle me-1"></i>Confirm Reject
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showDeleteModal && userToDelete) {
+  <div class="modal-backdrop" (click)="closeDeleteModal()">
+    <div class="modal-box modal-box-danger" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-icon modal-icon-danger">
+          <i class="bi bi-trash3"></i>
+        </div>
+        <div>
+          <h3>Delete User</h3>
+          <p>This action is <strong>permanent</strong> and cannot be undone.</p>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="delete-user-preview">
+          <div class="user-avatar user-avatar-lg">{{ userToDelete.name.charAt(0).toUpperCase() }}</div>
+          <div>
+            <p class="user-name">{{ userToDelete.name }}</p>
+            <p class="user-email">{{ userToDelete.email }}</p>
+          </div>
+        </div>
+        <p class="delete-warning">
+          <i class="bi bi-exclamation-triangle-fill me-1"></i>
+          All data associated with this account — calculations, payments, and subscriptions — will be permanently erased.
+        </p>
+        @if (deleteError) {
+          <div class="delete-error">
+            <i class="bi bi-x-circle-fill me-1"></i>{{ deleteError }}
+          </div>
+        }
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" (click)="closeDeleteModal()" [disabled]="isDeleting">Cancel</button>
+        <button class="btn btn-danger" (click)="confirmDelete()" [disabled]="isDeleting">
+          @if (isDeleting) {
+            <span class="spinner-border spinner-border-sm me-2"></span>Deleting…
+          } @else {
+            <i class="bi bi-trash3 me-1"></i>Yes, Delete Permanently
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

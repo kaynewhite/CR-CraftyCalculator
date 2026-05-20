@@ -33,6 +33,20 @@ export class UserManagementComponent implements OnInit {
   sidebarOpen = false;
   sidebarCollapsed = false;
   isDarkMode = false;
+  isSuperAdmin = false;
+
+  showDeleteModal = false;
+  userToDelete: UserDetail | null = null;
+  isDeleting = false;
+  deleteError = '';
+
+  showRejectModal = false;
+  userToReject: UserDetail | null = null;
+  rejectFeedback = '';
+  isRejecting = false;
+
+  actionError = '';
+  actionSuccess = '';
 
   constructor(
     private router: Router,
@@ -50,7 +64,7 @@ export class UserManagementComponent implements OnInit {
       this.router.navigate(['/login']);
       return;
     }
-
+    this.isSuperAdmin = currentUser.role === 'superadmin';
     this.loadUsers();
   }
 
@@ -67,7 +81,7 @@ export class UserManagementComponent implements OnInit {
             subscription: u.plan || 'free',
             status: u.status || 'active',
             createdAt: u.created_at
-              ? new Date(u.created_at).toLocaleDateString()
+              ? new Date(u.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
               : '—',
             calculationCount: 0,
           }));
@@ -81,23 +95,72 @@ export class UserManagementComponent implements OnInit {
     });
   }
 
-  rejectUser(user: UserDetail): void {
-    const feedback = prompt(`Provide rejection feedback for ${user.name}:`);
-    if (feedback === null) return;
-    this.api.setUserStatus(user.id, 'rejected', feedback || 'No reason provided').subscribe({
+  openRejectModal(user: UserDetail): void {
+    this.userToReject = user;
+    this.rejectFeedback = '';
+    this.showRejectModal = true;
+  }
+
+  closeRejectModal(): void {
+    this.showRejectModal = false;
+    this.userToReject = null;
+    this.rejectFeedback = '';
+    this.isRejecting = false;
+  }
+
+  confirmReject(): void {
+    if (!this.userToReject) return;
+    this.isRejecting = true;
+    this.api.setUserStatus(this.userToReject.id, 'rejected', this.rejectFeedback || 'No reason provided').subscribe({
       next: () => {
-        alert('User has been rejected.');
+        this.showFlash('success', `${this.userToReject!.name} has been rejected.`);
+        this.closeRejectModal();
         this.loadUsers();
       },
-      error: (err: any) => alert('Failed to reject user: ' + err.message),
+      error: (err: any) => {
+        this.isRejecting = false;
+        this.showFlash('error', 'Failed to reject user: ' + err.message);
+      },
     });
   }
 
   reactivateUser(user: UserDetail): void {
-    if (!confirm(`Reactivate ${user.name}?`)) return;
     this.api.setUserStatus(user.id, 'active').subscribe({
-      next: () => this.loadUsers(),
-      error: (err: any) => alert('Failed to reactivate: ' + err.message),
+      next: () => {
+        this.showFlash('success', `${user.name} has been reactivated.`);
+        this.loadUsers();
+      },
+      error: (err: any) => this.showFlash('error', 'Failed to reactivate: ' + err.message),
+    });
+  }
+
+  openDeleteModal(user: UserDetail): void {
+    this.userToDelete = user;
+    this.deleteError = '';
+    this.showDeleteModal = true;
+  }
+
+  closeDeleteModal(): void {
+    this.showDeleteModal = false;
+    this.userToDelete = null;
+    this.deleteError = '';
+    this.isDeleting = false;
+  }
+
+  confirmDelete(): void {
+    if (!this.userToDelete) return;
+    this.isDeleting = true;
+    this.deleteError = '';
+    this.api.deleteUser(this.userToDelete.id).subscribe({
+      next: () => {
+        this.showFlash('success', `${this.userToDelete!.name} has been permanently deleted.`);
+        this.closeDeleteModal();
+        this.loadUsers();
+      },
+      error: (err: any) => {
+        this.isDeleting = false;
+        this.deleteError = err.message || 'Failed to delete user.';
+      },
     });
   }
 
@@ -112,19 +175,20 @@ export class UserManagementComponent implements OnInit {
         u =>
           u.name.toLowerCase().includes(term) ||
           u.email.toLowerCase().includes(term) ||
-          u.id.includes(term)
+          u.id.toLowerCase().includes(term)
       );
     }
     this.filteredUsers = filtered;
   }
 
-  onSearchChange(): void { this.applyFilters(); }
-  onFilterChange(): void { this.applyFilters(); }
-
-  getUserSubscriptionName(plan: string): string {
-    return plan.charAt(0).toUpperCase() + plan.slice(1);
+  showFlash(type: 'success' | 'error', msg: string): void {
+    if (type === 'success') { this.actionSuccess = msg; this.actionError = ''; }
+    else { this.actionError = msg; this.actionSuccess = ''; }
+    setTimeout(() => { this.actionSuccess = ''; this.actionError = ''; }, 4000);
   }
 
+  onSearchChange(): void { this.applyFilters(); }
+  onFilterChange(): void { this.applyFilters(); }
   toggleSidebar(): void { this.sidebarOpen = !this.sidebarOpen; }
   onSidebarClose(): void { this.sidebarOpen = false; }
   onCollapseSidebar(): void { this.sidebarCollapsed = !this.sidebarCollapsed; }

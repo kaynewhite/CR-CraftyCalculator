@@ -65,6 +65,7 @@ export class ApiService {
   setUserRole(id: string, role: string): Observable<any> {
     return this.put(`/users/${id}/role`, { role });
   }
+  deleteUser(id: string): Observable<any> { return this.delete(`/users/${id}`); }
 
   // ── Materials ──
   getMaterials(): Observable<any> { return this.get('/materials'); }
