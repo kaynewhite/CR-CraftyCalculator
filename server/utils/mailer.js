@@ -10,9 +10,11 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+const SMTP_FROM = process.env.SMTP_FROM || process.env.SMTP_USER;
+
 async function sendOtpEmail(toEmail, toName, otp) {
   await transporter.sendMail({
-    from: `"Crafty Rachel" <${process.env.SMTP_USER}>`,
+    from: `"Crafty Rachel" <${SMTP_FROM}>`,
     to: toEmail,
     subject: 'Your Crafty Rachel Verification Code',
     html: `
@@ -33,7 +35,7 @@ async function sendOtpEmail(toEmail, toName, otp) {
 
 async function sendResetEmail(toEmail, toName, resetLink) {
   await transporter.sendMail({
-    from: `"Crafty Rachel" <${process.env.SMTP_USER}>`,
+    from: `"Crafty Rachel" <${SMTP_FROM}>`,
     to: toEmail,
     subject: 'Reset Your Crafty Rachel Password',
     html: `
