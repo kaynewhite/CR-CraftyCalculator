@@ -12,7 +12,7 @@ import { SubscriptionService } from '../../services/subscription.service';
   selector: 'app-inventory',
   imports: [CommonModule, FormsModule, SidebarComponent],
   templateUrl: './inventory.component.html',
-  styleUrl: './inventory.component.css'
+  styleUrls: ['./inventory.component.css']
 })
 export class InventoryComponent implements OnInit, OnDestroy {
   materials: Material[] = [];

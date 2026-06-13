@@ -12,7 +12,7 @@ import { User } from '../../models/user.model';
   selector: 'app-profile',
   imports: [CommonModule, FormsModule, SidebarComponent],
   templateUrl: './profile.component.html',
-  styleUrl: './profile.component.css',
+  styleUrls: ['./profile.component.css'],
 })
 export class ProfileComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;

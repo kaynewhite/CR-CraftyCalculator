@@ -7,7 +7,7 @@ import { AuthService } from '../../services/auth.service';
   selector: 'app-landing',
   imports: [CommonModule],
   templateUrl: './landing.component.html',
-  styleUrl: './landing.component.css'
+  styleUrls: ['./landing.component.css']
 })
 export class LandingComponent implements OnInit {
   constructor(private authService: AuthService, private router: Router) {}

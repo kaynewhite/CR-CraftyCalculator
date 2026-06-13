@@ -11,7 +11,6 @@
   </div>
 
   <div class="main-content">
-    <!-- Header -->
     <header class="content-header">
       <button class="hamburger-btn" (click)="toggleSidebar()" aria-label="Open menu">
         <i class="bi bi-list"></i>
@@ -22,141 +21,133 @@
       </div>
     </header>
 
-    @if (isLoading) {
-      <div class="page-loading">
-        <div class="spinner-border" style="color:var(--brand-primary);width:2.5rem;height:2.5rem;" role="status">
-          <span class="visually-hidden">Loading...</span>
-        </div>
-        <p>Loading your dashboard…</p>
+    <div *ngIf="isLoading" class="page-loading">
+      <div class="spinner-border" style="color:var(--brand-primary);width:2.5rem;height:2.5rem;" role="status">
+        <span class="visually-hidden">Loading...</span>
       </div>
-    }
+      <p>Loading your dashboard…</p>
+    </div>
 
-    @if (!isLoading && summary) {
-      <div class="content-body fade-in">
-
-        <!-- KPI Cards -->
-        <div class="kpi-grid">
-          <div class="kpi-card">
-            <div class="kpi-icon kpi-calc">
-              <i class="bi bi-calculator-fill"></i>
-            </div>
-            <div class="kpi-body">
-              <p class="kpi-label">Total Calculations</p>
-              <h2 class="kpi-value">{{ summary.totalCalculations }}</h2>
-              <span class="kpi-sub">Saved pricings</span>
-            </div>
+    <div *ngIf="!isLoading && summary" class="content-body fade-in">
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-calc">
+            <i class="bi bi-calculator-fill"></i>
           </div>
-
-          <div class="kpi-card">
-            <div class="kpi-icon kpi-profit">
-              <i class="bi bi-currency-exchange"></i>
-            </div>
-            <div class="kpi-body">
-              <p class="kpi-label">Avg Profit/Unit</p>
-              <h2 class="kpi-value">₱{{ summary.averageProfit.toFixed(2) }}</h2>
-              <span class="kpi-sub">Across all products</span>
-            </div>
-          </div>
-
-          <div class="kpi-card">
-            <div class="kpi-icon kpi-materials">
-              <i class="bi bi-box-seam-fill"></i>
-            </div>
-            <div class="kpi-body">
-              <p class="kpi-label">Materials</p>
-              <h2 class="kpi-value">{{ summary.totalMaterialsUsed }}</h2>
-              <span class="kpi-sub">In inventory</span>
-            </div>
+          <div class="kpi-body">
+            <p class="kpi-label">Total Calculations</p>
+            <h2 class="kpi-value">{{ summary.totalCalculations }}</h2>
+            <span class="kpi-sub">Saved pricings</span>
           </div>
         </div>
 
-        <!-- Recent Saves + Quick Links -->
-        <div class="row g-3">
-          <div class="col-12 col-lg-7">
-            <div class="card saves-card">
-              <div class="card-header">
-                <div class="saves-header">
-                  <h3>Recent Saves</h3>
-                  <a routerLink="/saved" class="btn btn-outline-primary btn-sm">
-                    <i class="bi bi-arrow-right me-1"></i>View all
-                  </a>
-                </div>
-              </div>
-              <div class="card-body">
-                <p class="hint-text">
-                  Showing latest 3 — your plan allows
-                  {{ savedLimit === Infinity ? 'unlimited' : savedLimit }} saves,
-                  expiring {{ calculationService.getExpiryDays() === Infinity ? 'never' : 'after ' + calculationService.getExpiryDays() + ' days' }}.
-                </p>
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-profit">
+            <i class="bi bi-currency-exchange"></i>
+          </div>
+          <div class="kpi-body">
+            <p class="kpi-label">Avg Profit/Unit</p>
+            <h2 class="kpi-value">₱{{ summary.averageProfit.toFixed(2) }}</h2>
+            <span class="kpi-sub">Across all products</span>
+          </div>
+        </div>
 
-                @if (recentSaved.length > 0) {
-                  @for (s of recentSaved; track s.id) {
-                    <div class="save-row">
-                      <div class="save-icon">
-                        <i class="bi bi-bookmark-fill"></i>
-                      </div>
-                      <div class="save-info">
-                        <p class="save-name">{{ s.name }}</p>
-                        <p class="save-meta">{{ s.category }} · {{ s.materials.length }} material{{ s.materials.length !== 1 ? 's' : '' }}</p>
-                      </div>
-                      <div class="save-right">
-                        <span class="save-price">₱{{ s.suggestedPrice.toFixed(2) }}</span>
-                        <span class="save-date">{{ s.createdAt | date:'MMM d' }}</span>
-                      </div>
-                    </div>
-                  }
-                } @else {
-                  <div class="empty-state">
-                    <i class="bi bi-bookmark"></i>
-                    <p>No saved calculations yet. Use the calculator to create and save your first pricing!</p>
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-materials">
+            <i class="bi bi-box-seam-fill"></i>
+          </div>
+          <div class="kpi-body">
+            <p class="kpi-label">Materials</p>
+            <h2 class="kpi-value">{{ summary.totalMaterialsUsed }}</h2>
+            <span class="kpi-sub">In inventory</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-12 col-lg-7">
+          <div class="card saves-card">
+            <div class="card-header">
+              <div class="saves-header">
+                <h3>Recent Saves</h3>
+                <a routerLink="/saved" class="btn btn-outline-primary btn-sm">
+                  <i class="bi bi-arrow-right me-1"></i>View all
+                </a>
+              </div>
+            </div>
+            <div class="card-body">
+              <p class="hint-text">
+                Showing latest 3 — your plan allows
+                {{ savedLimit === Infinity ? 'unlimited' : savedLimit }} saves,
+                expiring {{ calculationService.getExpiryDays() === Infinity ? 'never' : 'after ' + calculationService.getExpiryDays() + ' days' }}.
+              </p>
+
+              <ng-container *ngIf="recentSaved.length > 0; else emptyState">
+                <div *ngFor="let s of recentSaved" class="save-row">
+                  <div class="save-icon">
+                    <i class="bi bi-bookmark-fill"></i>
                   </div>
-                }
-              </div>
-            </div>
-          </div>
-
-          <div class="col-12 col-lg-5">
-            <div class="card">
-              <div class="card-header">
-                <h3 style="font-size:0.95rem;font-weight:700;margin:0;color:var(--text-primary)">Quick Actions</h3>
-              </div>
-              <div class="card-body">
-                <div class="quick-links">
-                  <a routerLink="/calculator" class="quick-link-btn">
-                    <div class="ql-icon ql-calc"><i class="bi bi-calculator-fill"></i></div>
-                    <div>
-                      <span class="ql-title">Calculator</span>
-                      <span class="ql-desc">Price a product</span>
-                    </div>
-                  </a>
-                  <a routerLink="/inventory" class="quick-link-btn">
-                    <div class="ql-icon ql-inv"><i class="bi bi-box-seam-fill"></i></div>
-                    <div>
-                      <span class="ql-title">Inventory</span>
-                      <span class="ql-desc">Manage materials</span>
-                    </div>
-                  </a>
-                  <a routerLink="/saved" class="quick-link-btn">
-                    <div class="ql-icon ql-hist"><i class="bi bi-bookmark-fill"></i></div>
-                    <div>
-                      <span class="ql-title">Saved</span>
-                      <span class="ql-desc">View history</span>
-                    </div>
-                  </a>
-                  <a routerLink="/subscription" class="quick-link-btn">
-                    <div class="ql-icon ql-sub"><i class="bi bi-stars"></i></div>
-                    <div>
-                      <span class="ql-title">Upgrade</span>
-                      <span class="ql-desc">View plans</span>
-                    </div>
-                  </a>
+                  <div class="save-info">
+                    <p class="save-name">{{ s.name }}</p>
+                    <p class="save-meta">{{ s.category }} · {{ s.materials.length }} material{{ s.materials.length !== 1 ? 's' : '' }}</p>
+                  </div>
+                  <div class="save-right">
+                    <span class="save-price">₱{{ s.suggestedPrice.toFixed(2) }}</span>
+                    <span class="save-date">{{ s.createdAt | date:'MMM d' }}</span>
+                  </div>
                 </div>
-              </div>
+              </ng-container>
+
+              <ng-template #emptyState>
+                <div class="empty-state">
+                  <i class="bi bi-bookmark"></i>
+                  <p>No saved calculations yet. Use the calculator to create and save your first pricing!</p>
+                </div>
+              </ng-template>
             </div>
           </div>
         </div>
 
+        <div class="col-12 col-lg-5">
+          <div class="card">
+            <div class="card-header">
+              <h3 style="font-size:0.95rem;font-weight:700;margin:0;color:var(--text-primary)">Quick Actions</h3>
+            </div>
+            <div class="card-body">
+              <div class="quick-links">
+                <a routerLink="/calculator" class="quick-link-btn">
+                  <div class="ql-icon ql-calc"><i class="bi bi-calculator-fill"></i></div>
+                  <div>
+                    <span class="ql-title">Calculator</span>
+                    <span class="ql-desc">Price a product</span>
+                  </div>
+                </a>
+                <a routerLink="/inventory" class="quick-link-btn">
+                  <div class="ql-icon ql-inv"><i class="bi bi-box-seam-fill"></i></div>
+                  <div>
+                    <span class="ql-title">Inventory</span>
+                    <span class="ql-desc">Manage materials</span>
+                  </div>
+                </a>
+                <a routerLink="/saved" class="quick-link-btn">
+                  <div class="ql-icon ql-hist"><i class="bi bi-bookmark-fill"></i></div>
+                  <div>
+                    <span class="ql-title">Saved</span>
+                    <span class="ql-desc">View history</span>
+                  </div>
+                </a>
+                <a routerLink="/subscription" class="quick-link-btn">
+                  <div class="ql-icon ql-sub"><i class="bi bi-stars"></i></div>
+                  <div>
+                    <span class="ql-title">Upgrade</span>
+                    <span class="ql-desc">View plans</span>
+                  </div>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    }
+    </div>
   </div>
 </div>

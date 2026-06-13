@@ -1,7 +1,7 @@
 <div class="admin-layout">
 
   <!-- QR Setup Modal (blocking overlay) -->
-  @if (showQrSetup) {
+<ng-container *ngIf="showQrSetup">
     <div class="qr-setup-overlay">
       <div class="qr-setup-modal">
         <div class="qr-setup-header">
@@ -12,11 +12,11 @@
           <p>Before users can make subscription payments, please upload your GCash and PayMaya QR codes. This is a one-time setup.</p>
         </div>
 
-        @if (setupError) {
+<ng-container *ngIf="setupError">
           <div class="alert alert-danger mb-4" role="alert">
             <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ setupError }}
           </div>
-        }
+</ng-container>
 
         <div class="qr-setup-cards">
           <!-- GCash Card -->
@@ -28,30 +28,30 @@
               <div>
                 <h4>GCash QR Code</h4>
                 <span class="qr-status-badge" [class.status-done]="setupGcashQr" [class.status-pending]="!setupGcashQr">
-                  @if (setupGcashQr) {
+<ng-container *ngIf="setupGcashQr">
                     <i class="bi bi-check-circle-fill me-1"></i>Uploaded
-                  } @else {
+                  </ng-container>                  <ng-container *ngIf="!(setupGcashQr)">
                     <i class="bi bi-clock me-1"></i>Required
-                  }
+</ng-container>
                 </span>
               </div>
             </div>
 
-            @if (setupGcashQr) {
+<ng-container *ngIf="setupGcashQr">
               <div class="qr-preview-wrap">
                 <img [src]="setupGcashQr" alt="GCash QR" class="qr-preview-img">
                 <button class="btn btn-outline-danger btn-sm mt-2 w-100" (click)="removeSetupQr('gcash')">
                   <i class="bi bi-trash me-1"></i>Remove & Re-upload
                 </button>
               </div>
-            } @else {
+            </ng-container>            <ng-container *ngIf="!(setupGcashQr)">
               <label class="qr-upload-area">
                 <input type="file" accept="image/*" (change)="onSetupQrFile($event, 'gcash')" style="display:none">
                 <i class="bi bi-cloud-upload-fill"></i>
                 <span>Click to upload GCash QR</span>
                 <small>PNG, JPG, or GIF accepted</small>
               </label>
-            }
+</ng-container>
           </div>
 
           <!-- PayMaya Card -->
@@ -63,30 +63,30 @@
               <div>
                 <h4>PayMaya QR Code</h4>
                 <span class="qr-status-badge" [class.status-done]="setupMayaQr" [class.status-pending]="!setupMayaQr">
-                  @if (setupMayaQr) {
+<ng-container *ngIf="setupMayaQr">
                     <i class="bi bi-check-circle-fill me-1"></i>Uploaded
-                  } @else {
+                  </ng-container>                  <ng-container *ngIf="!(setupMayaQr)">
                     <i class="bi bi-clock me-1"></i>Required
-                  }
+</ng-container>
                 </span>
               </div>
             </div>
 
-            @if (setupMayaQr) {
+<ng-container *ngIf="setupMayaQr">
               <div class="qr-preview-wrap">
                 <img [src]="setupMayaQr" alt="PayMaya QR" class="qr-preview-img">
                 <button class="btn btn-outline-danger btn-sm mt-2 w-100" (click)="removeSetupQr('maya')">
                   <i class="bi bi-trash me-1"></i>Remove & Re-upload
                 </button>
               </div>
-            } @else {
+            </ng-container>            <ng-container *ngIf="!(setupMayaQr)">
               <label class="qr-upload-area">
                 <input type="file" accept="image/*" (change)="onSetupQrFile($event, 'maya')" style="display:none">
                 <i class="bi bi-cloud-upload-fill"></i>
                 <span>Click to upload PayMaya QR</span>
                 <small>PNG, JPG, or GIF accepted</small>
               </label>
-            }
+</ng-container>
           </div>
         </div>
 
@@ -107,11 +107,11 @@
             class="btn btn-primary btn-lg qr-complete-btn"
             (click)="saveSetupQrs()"
             [disabled]="!setupGcashQr || !setupMayaQr || setupSaving">
-            @if (setupSaving) {
+<ng-container *ngIf="setupSaving">
               <span class="spinner-border spinner-border-sm me-2"></span>Saving…
-            } @else {
+            </ng-container>            <ng-container *ngIf="!(setupSaving)">
               <i class="bi bi-check-lg me-2"></i>Complete Setup &amp; Continue
-            }
+</ng-container>
           </button>
 
           <p class="qr-setup-note">
@@ -121,7 +121,7 @@
         </div>
       </div>
     </div>
-  }
+</ng-container>
 
   <div class="sidebar-wrapper" [class.collapsed]="sidebarCollapsed">
     <app-sidebar
@@ -150,17 +150,17 @@
     </header>
 
     <!-- Loading -->
-    @if (isLoading) {
+<ng-container *ngIf="isLoading">
       <div class="page-loading">
         <div class="spinner-border text-brand" style="width:2.5rem;height:2.5rem;" role="status">
           <span class="visually-hidden">Loading...</span>
         </div>
         <p>Loading dashboard…</p>
       </div>
-    }
+</ng-container>
 
     <!-- Main Content -->
-    @if (!isLoading) {
+<ng-container *ngIf="!isLoading">
       <div class="admin-container fade-in">
 
         <!-- KPI Row -->
@@ -264,9 +264,9 @@
                 <i class="bi bi-arrow-right me-1"></i>Manage
               </button>
             </div>
-            @if (topUsers.length > 0) {
+<ng-container *ngIf="topUsers.length > 0">
               <div class="top-users-list">
-                @for (user of topUsers; track user.id; let i = $index) {
+<ng-container *ngFor="let user of topUsers; let i = index">
                   <div class="top-user-row">
                     <div class="rank-badge" [class.rank-1]="i===0" [class.rank-2]="i===1" [class.rank-3]="i===2">
                       {{ i + 1 }}
@@ -283,14 +283,15 @@
                       <p class="calc-count">{{ user.calculationCount }} calcs</p>
                     </div>
                   </div>
-                }
+</ng-container>
               </div>
-            } @else {
+            </ng-container>
+            <ng-container *ngIf="!isLoading">
               <div class="empty-state">
                 <i class="bi bi-people"></i>
                 <p>No user data available</p>
               </div>
-            }
+</ng-container>
           </div>
 
           <div class="section-card">
@@ -328,7 +329,7 @@
                 <i class="bi bi-chevron-right qa-arrow"></i>
               </button>
 
-              @if (isSuperAdmin) {
+<ng-container *ngIf="isSuperAdmin">
                 <button class="quick-action-btn" (click)="viewSystemLogs()">
                   <div class="qa-icon qa-logs"><i class="bi bi-journal-text"></i></div>
                   <div class="qa-text">
@@ -337,12 +338,12 @@
                   </div>
                   <i class="bi bi-chevron-right qa-arrow"></i>
                 </button>
-              }
+</ng-container>
             </div>
           </div>
         </div>
-
       </div>
-    }
+      </ng-container>
+
+    </div>
   </div>
-</div>

@@ -23,7 +23,7 @@
       <div class="profile-card">
 
         <!-- Avatar + Plan Display -->
-        @if (currentUser) {
+<ng-container *ngIf="currentUser">
           <div class="avatar-section mb-4">
             <div class="avatar-large">{{ currentUser.name.charAt(0).toUpperCase() }}</div>
             <div class="avatar-info">
@@ -44,7 +44,7 @@
               </span>
             </div>
           </div>
-        }
+</ng-container>
 
         <!-- Personal Information -->
         <div class="card mb-4">
@@ -52,25 +52,25 @@
             <span style="font-size:0.95rem;font-weight:700;color:var(--text-primary)">
               <i class="bi bi-person-lines-fill me-2" style="color:var(--brand-primary)"></i>Personal Information
             </span>
-            @if (!isEditing) {
+<ng-container *ngIf="!isEditing">
               <button type="button" class="btn btn-outline-primary btn-sm" (click)="toggleEdit()">
                 <i class="bi bi-pencil me-1"></i>Edit
               </button>
-            }
+</ng-container>
           </div>
           <div class="card-body">
 
-            @if (successMessage) {
+<ng-container *ngIf="successMessage">
               <div class="alert alert-success mb-3" role="alert">
                 <i class="bi bi-check-circle-fill me-2"></i>{{ successMessage }}
               </div>
-            }
+</ng-container>
 
-            @if (errorMessage) {
+<ng-container *ngIf="errorMessage">
               <div class="alert alert-danger mb-3" role="alert">
                 <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ errorMessage }}
               </div>
-            }
+</ng-container>
 
             <form (ngSubmit)="saveProfile()" class="form-section">
               <div class="field-group">
@@ -101,20 +101,20 @@
                   required>
               </div>
 
-              @if (isEditing) {
+<ng-container *ngIf="isEditing">
                 <div class="d-flex gap-2 mt-2">
                   <button type="submit" class="btn btn-success" [disabled]="isLoading">
-                    @if (!isLoading) {
+<ng-container *ngIf="!isLoading">
                       <i class="bi bi-check-lg me-2"></i>Save Changes
-                    } @else {
+                    </ng-container>                    <ng-container *ngIf="!(!isLoading)">
                       <span class="spinner-border spinner-border-sm me-2"></span>Saving…
-                    }
+</ng-container>
                   </button>
                   <button type="button" class="btn btn-outline-secondary" (click)="toggleEdit()" [disabled]="isLoading">
                     <i class="bi bi-x-lg me-1"></i>Cancel
                   </button>
                 </div>
-              }
+</ng-container>
             </form>
           </div>
         </div>
@@ -165,25 +165,25 @@
                 >
               </div>
 
-              @if (passwordSuccess) {
+<ng-container *ngIf="passwordSuccess">
                 <div class="alert alert-success mb-3" role="alert">
                   <i class="bi bi-check-circle-fill me-2"></i>{{ passwordSuccess }}
                 </div>
-              }
+</ng-container>
 
-              @if (passwordError) {
+<ng-container *ngIf="passwordError">
                 <div class="alert alert-danger mb-3" role="alert">
                   <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ passwordError }}
                 </div>
-              }
+</ng-container>
 
               <div class="d-flex gap-2 mt-2">
                 <button type="button" class="btn btn-success" (click)="savePassword()" [disabled]="updatingPassword">
-                  @if (!updatingPassword) {
+<ng-container *ngIf="!updatingPassword">
                     <i class="bi bi-key-fill me-1"></i>Update Password
-                  } @else {
+                  </ng-container>                  <ng-container *ngIf="!(!updatingPassword)">
                     <span class="spinner-border spinner-border-sm me-2"></span>Saving…
-                  }
+</ng-container>
                 </button>
                 <button type="button" class="btn btn-outline-secondary" (click)="openAccountSettings()" [disabled]="updatingPassword">
                   <i class="bi bi-person-gear me-1"></i>Reset via Email

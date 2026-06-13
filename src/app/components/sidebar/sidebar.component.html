@@ -1,7 +1,7 @@
 <!-- Mobile Overlay -->
-@if (isOpen) {
+<ng-container *ngIf="isOpen">
   <div class="sidebar-overlay" (click)="onOverlayClick()"></div>
-}
+</ng-container>
 
 <aside class="sidebar-container" [class.sidebar-open]="isOpen" [class.sidebar-collapsed]="isCollapsed" role="navigation" aria-label="Main navigation">
 
@@ -12,14 +12,14 @@
         <img src="/CRlogo.png" alt="Crafty Rachel" class="logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
         <div class="logo-fallback" style="display:none">CR</div>
       </div>
-      @if (!isCollapsed) {
+<ng-container *ngIf="!isCollapsed">
         <div class="brand-text-wrap">
           <span class="brand-name">{{ isAdmin ? 'Admin Panel' : 'Crafty Rachel' }}</span>
-          @if (isSuperAdmin) {
+<ng-container *ngIf="isSuperAdmin">
             <span class="superadmin-chip">SuperAdmin</span>
-          }
+</ng-container>
         </div>
-      }
+</ng-container>
     </div>
 
     <button
@@ -32,93 +32,97 @@
   </div>
 
   <!-- User Profile -->
-  @if (currentUser) {
+<ng-container *ngIf="currentUser">
     <div class="user-section" [class.collapsed-user]="isCollapsed">
       <div class="user-avatar-wrap" [title]="isCollapsed ? currentUser.name : ''">
         <div class="user-avatar">{{ currentUser.name.charAt(0).toUpperCase() }}</div>
         <span class="status-dot"></span>
       </div>
-      @if (!isCollapsed) {
+<ng-container *ngIf="!isCollapsed">
         <div class="user-details">
           <p class="user-name">{{ currentUser.name }}</p>
           <p class="user-email">{{ currentUser.email }}</p>
         </div>
-      }
+</ng-container>
     </div>
-  }
+</ng-container>
 
   <!-- Navigation -->
   <nav class="sidebar-nav" aria-label="Navigation links">
 
       <!-- User Nav -->
       <div class="nav-section">
-        @if (!isCollapsed) { <p class="nav-section-label">Main Menu</p> }
-        <a [routerLink]="'/dashboard'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'Dashboard' : ''">
-          <i class="bi bi-speedometer2 nav-icon"></i>
-          @if (!isCollapsed) { <span>Dashboard</span> }
-        </a>
+        <ng-container *ngIf="!isCollapsed"><p class="nav-section-label">Main Menu</p></ng-container>
+<ng-container *ngIf="!isAdmin">
+          <a [routerLink]="'/dashboard'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'Dashboard' : ''">
+            <i class="bi bi-speedometer2 nav-icon"></i>
+            <ng-container *ngIf="!isCollapsed"><span>Dashboard</span></ng-container>
+          </a>
+</ng-container>
         <a [routerLink]="'/calculator'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'Calculator' : ''">
           <i class="bi bi-calculator nav-icon"></i>
-          @if (!isCollapsed) { <span>Calculator</span> }
+          <ng-container *ngIf="!isCollapsed"><span>Calculator</span></ng-container>
         </a>
         <a [routerLink]="'/saved'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'Saved' : ''">
           <i class="bi bi-bookmark nav-icon"></i>
-          @if (!isCollapsed) { <span>Saved</span> }
+          <ng-container *ngIf="!isCollapsed"><span>Saved</span></ng-container>
         </a>
         <a [routerLink]="'/inventory'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'Inventory' : ''">
           <i class="bi bi-box-seam nav-icon"></i>
-          @if (!isCollapsed) { <span>Inventory</span> }
+          <ng-container *ngIf="!isCollapsed"><span>Inventory</span></ng-container>
         </a>
       </div>
 
       <div class="nav-section">
-        @if (!isCollapsed) { <p class="nav-section-label">Account</p> }
+        <ng-container *ngIf="!isCollapsed"><p class="nav-section-label">Account</p></ng-container>
         <a [routerLink]="'/profile'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'Profile' : ''">
           <i class="bi bi-person nav-icon"></i>
-          @if (!isCollapsed) { <span>Profile</span> }
+          <ng-container *ngIf="!isCollapsed"><span>Profile</span></ng-container>
         </a>
-        <a [routerLink]="'/subscription'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'Subscription' : ''">
-          <i class="bi bi-stars nav-icon"></i>
-          @if (!isCollapsed) { <span>Subscription</span> }
-        </a>
+<ng-container *ngIf="!isAdmin">
+          <a [routerLink]="'/subscription'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'Subscription' : ''">
+            <i class="bi bi-stars nav-icon"></i>
+            <ng-container *ngIf="!isCollapsed"><span>Subscription</span></ng-container>
+          </a>
+</ng-container>
       </div>
 
-    @if (isAdmin) {
+<ng-container *ngIf="isAdmin">
       <!-- Admin Nav -->
       <div class="nav-section">
-        @if (!isCollapsed) { <p class="nav-section-label">Admin Tools</p> }
+        <ng-container *ngIf="!isCollapsed"><p class="nav-section-label">Admin Tools</p></ng-container>
         <a [routerLink]="'/admin-dashboard'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'Admin Dashboard' : ''">
           <i class="bi bi-grid-1x2 nav-icon"></i>
-          @if (!isCollapsed) { <span>Admin Dashboard</span> }
+          <ng-container *ngIf="!isCollapsed"><span>Admin Dashboard</span></ng-container>
         </a>
         <a [routerLink]="'/admin-payments'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'Payments' : ''">
           <i class="bi bi-credit-card nav-icon"></i>
-          @if (!isCollapsed) { <span>Payment Approvals</span> }
+          <ng-container *ngIf="!isCollapsed"><span>Payment Approvals</span></ng-container>
         </a>
         <a [routerLink]="'/admin-users'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'Users' : ''">
           <i class="bi bi-people nav-icon"></i>
-          @if (!isCollapsed) { <span>User Management</span> }
+          <ng-container *ngIf="!isCollapsed"><span>User Management</span></ng-container>
         </a>
         <a [routerLink]="'/admin-qr'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'QR Codes' : ''">
           <i class="bi bi-qr-code nav-icon"></i>
-          @if (!isCollapsed) { <span>QR Codes</span> }
+          <ng-container *ngIf="!isCollapsed"><span>QR Codes</span></ng-container>
         </a>
         <a [routerLink]="'/admin-resets'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'Password Resets' : ''">
           <i class="bi bi-key nav-icon"></i>
-          @if (!isCollapsed) { <span>Password Resets</span> }
+          <ng-container *ngIf="!isCollapsed"><span>Password Resets</span></ng-container>
         </a>
       </div>
 
-      @if (isSuperAdmin) {
+<ng-container *ngIf="isSuperAdmin">
         <div class="nav-section">
-          @if (!isCollapsed) { <p class="nav-section-label">System</p> }
+          <ng-container *ngIf="!isCollapsed"><p class="nav-section-label">System</p></ng-container>
           <a [routerLink]="'/admin-logs'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'System Logs' : ''">
             <i class="bi bi-journal-text nav-icon"></i>
-            @if (!isCollapsed) { <span>System Logs</span> }
+            <ng-container *ngIf="!isCollapsed"><span>System Logs</span></ng-container>
           </a>
         </div>
-      }
-    }
+</ng-container>
+</ng-container>
 
   </nav>
 
@@ -126,15 +130,15 @@
   <div class="sidebar-footer">
     <button class="footer-btn theme-btn" (click)="toggleTheme()" [title]="isCollapsed ? (isDarkMode ? 'Light Mode' : 'Dark Mode') : ''">
       <i class="bi nav-icon" [class.bi-sun]="isDarkMode" [class.bi-moon-stars]="!isDarkMode"></i>
-      @if (!isCollapsed) {
+<ng-container *ngIf="!isCollapsed">
         <span>{{ isDarkMode ? 'Light Mode' : 'Dark Mode' }}</span>
-      }
+</ng-container>
     </button>
     <button class="footer-btn logout-btn" (click)="logout()" [title]="isCollapsed ? 'Logout' : ''">
       <i class="bi bi-box-arrow-right nav-icon"></i>
-      @if (!isCollapsed) {
+<ng-container *ngIf="!isCollapsed">
         <span>Sign Out</span>
-      }
+</ng-container>
     </button>
   </div>
 

@@ -72,7 +72,8 @@ router.post('/login', async (req, res) => {
 
   try {
     const { rows } = await pool.query(
-      `SELECT u.*, s.plan FROM users u
+      `SELECT u.*, COALESCE(s.plan, CASE WHEN u.role IN ('admin','superadmin') THEN 'pro' ELSE 'free' END) AS plan
+       FROM users u
        LEFT JOIN user_subscriptions s ON s.user_id = u.id
        WHERE LOWER(u.email) = LOWER($1)`,
       [email.trim()]

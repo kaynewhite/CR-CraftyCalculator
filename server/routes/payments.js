@@ -77,6 +77,14 @@ router.post('/', requireAuth, async (req, res) => {
   }
 
   try {
+    // Prevent users from submitting multiple pending requests
+    const existingRes = await pool.query(
+      `SELECT COUNT(*) AS cnt FROM payment_requests WHERE user_id = $1 AND status IN ('pending','scanning')`,
+      [req.user.id]
+    );
+    if (parseInt(existingRes.rows[0].cnt) > 0) {
+      return res.status(409).json({ error: 'You already have a pending payment request' });
+    }
     const { rows } = await pool.query(
       `INSERT INTO payment_requests (user_id, plan, method, screenshot_url, status)
        VALUES ($1, $2, $3, $4, 'pending') RETURNING *`,

@@ -9,7 +9,7 @@ import { User } from '../../models/user.model';
   selector: 'app-sidebar',
   imports: [CommonModule, RouterLink, RouterLinkActive],
   templateUrl: './sidebar.component.html',
-  styleUrl: './sidebar.component.css'
+  styleUrls: ['./sidebar.component.css']
 })
 export class SidebarComponent implements OnInit {
   @Input() isOpen: boolean = false;

@@ -1,9 +1,11 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { SubscriptionService } from '../../services/subscription.service';
 import { SidebarService } from '../../services/sidebar.service';
+import { AuthService } from '../../services/auth.service';
 import { SubscriptionPlan, UserSubscription } from '../../models/subscription.model';
 import { PaymentModalComponent } from '../payment-modal/payment-modal.component';
 import { PaymentService } from '../../services/payment.service';
@@ -13,36 +15,40 @@ import { ThemeService } from '../../services/theme.service';
   selector: 'app-subscription',
   imports: [CommonModule, SidebarComponent, PaymentModalComponent],
   templateUrl: './subscription.component.html',
-  styleUrl: './subscription.component.css'
+  styleUrls: ['./subscription.component.css']
 })
 export class SubscriptionComponent implements OnInit, OnDestroy {
   plans: SubscriptionPlan[] = [];
   currentSubscription: UserSubscription | null = null;
-  isLoading: boolean = false;
-  sidebarOpen: boolean = false;
-  sidebarCollapsed: boolean = false;
-  private sidebarSubscription: Subscription;
+  isLoading = false;
+  sidebarOpen = false;
+  sidebarCollapsed = false;
+  private sidebarSubscription = new Subscription();
 
   // payment modal state
   showPaymentModal = false;
   pendingPlan: 'basic' | 'pro' | null = null;
-  // no longer store QR here; payment modal handles method-specific QR
-  upgradeCost: number = 0; // Cost for upgrading from basic to pro
+  upgradeCost = 0;
 
   // theme tracking for dark mode
   isDarkMode = false;
 
   constructor(
+    private authService: AuthService,
+    private router: Router,
     private subscriptionService: SubscriptionService,
     private sidebarService: SidebarService,
     private paymentService: PaymentService,
     private themeService: ThemeService
-  ) {
-    this.sidebarSubscription = new Subscription();
-  }
+  ) {}
 
   ngOnInit(): void {
-    // ensure theme classes are applied for dark mode toggling
+    const currentUser = this.authService.currentUserValue;
+    if (currentUser && (currentUser.role === 'admin' || currentUser.role === 'superadmin')) {
+      this.router.navigate(['/admin-dashboard']);
+      return;
+    }
+
     this.themeService.setTheme(this.themeService.getCurrentTheme());
     this.themeService.isDarkMode$.subscribe(isDark => {
       this.isDarkMode = isDark;
@@ -50,15 +56,15 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
 
     this.plans = this.subscriptionService.getPlans();
     this.currentSubscription = this.subscriptionService.getCurrentSubscription();
-
-    // listen for QR updates just so we can re-open modal if needed, though
-    // PaymentModalComponent will fetch qr itself.
     this.subscriptionService.qr$.subscribe();
-    
-    // Subscribe to sidebar collapsed state
+
     this.sidebarSubscription = this.sidebarService.isCollapsed$.subscribe(collapsed => {
       this.sidebarCollapsed = collapsed;
     });
+  }
+
+  ngOnDestroy(): void {
+    this.sidebarSubscription.unsubscribe();
   }
 
   changePlan(planName: 'free' | 'basic' | 'pro'): void {
@@ -66,44 +72,45 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // start payment flow for plan selection
-    if (planName === 'basic' || planName === 'pro') {
-      this.pendingPlan = planName;
-      // Calculate upgrade cost if applicable
-      this.upgradeCost = this.calculateUpgradeCost(planName);
-      // show modal; component will pick up correct QR once method selected
-      this.showPaymentModal = true;
-    } else {
-      // free plan change can be immediate
-      this.performPlanUpgrade(planName as any);
-    }
+    // Check if user has pending payment request
+    this.paymentService.getAll().subscribe(requests => {
+      const hasPendingPayment = requests.some(r => ['pending', 'scanning'].includes(r.status));
+      if (hasPendingPayment) {
+        alert('You already have a pending payment request. Please wait for admin approval before submitting another.');
+        return;
+      }
+
+      if (planName === 'basic' || planName === 'pro') {
+        this.pendingPlan = planName;
+        this.upgradeCost = this.calculateUpgradeCost(planName);
+        this.showPaymentModal = true;
+      } else {
+        this.performPlanUpgrade(planName);
+      }
+    });
   }
 
   calculateUpgradeCost(targetPlan: 'basic' | 'pro'): number {
     const current = this.currentSubscription?.currentPlan;
-    
     if (current === 'basic' && targetPlan === 'pro') {
-      // Upgrade from basic (100) to pro (250) = 150 extra
       return 150;
     } else if (current === 'free' && targetPlan === 'basic') {
-      // New subscription to basic = 100
       return 100;
     } else if (current === 'free' && targetPlan === 'pro') {
-      // New subscription to pro = 250
       return 250;
     }
     return 0;
   }
 
-  performPlanUpgrade(planName: 'free' | 'basic' | 'pro') {
+  performPlanUpgrade(planName: 'free' | 'basic' | 'pro'): void {
     this.isLoading = true;
     this.subscriptionService.upgradePlan(planName).subscribe({
-      next: (subscription) => {
+      next: subscription => {
         this.currentSubscription = subscription;
         this.isLoading = false;
         alert(`Successfully changed to ${planName.toUpperCase()} plan!`);
       },
-      error: (error) => {
+      error: () => {
         this.isLoading = false;
         alert('Failed to change plan. Please try again.');
       }
@@ -119,20 +126,13 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
     return plan ? plan.price : 0;
   }
 
-  /**
-   * Text shown on the plan button.  – never show raw cost, use friendly labels.
-   */
   getUpgradePriceDisplay(planName: 'free' | 'basic' | 'pro'): string {
     if (this.isCurrentPlan(planName)) {
       return 'Current Plan';
     }
-
-    // upgrade path from basic to pro should be labeled specially
     if (this.currentSubscription?.currentPlan === 'basic' && planName === 'pro') {
       return 'Upgrade';
     }
-
-    // otherwise offer to select plan (free/basic/pro) without cost
     return 'Select Plan';
   }
 
@@ -140,21 +140,20 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
     this.sidebarOpen = !this.sidebarOpen;
   }
 
-  // payment modal callbacks
-  onPaymentCancel() {
+  onPaymentCancel(): void {
     this.showPaymentModal = false;
     this.pendingPlan = null;
     this.upgradeCost = 0;
   }
 
-  onPaymentSubmit(data: Partial<import('../../models/payment.model').PaymentRequest>) {
+  onPaymentSubmit(data: Partial<import('../../models/payment.model').PaymentRequest>): void {
     if (!this.pendingPlan) {
       return;
     }
 
     const payment: any = {
       plan: this.pendingPlan,
-      method: data.method!,
+      method: data.method,
       screenshotUrl: data.screenshotUrl,
     };
 
@@ -180,9 +179,5 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
 
   toggleSidebarCollapse(): void {
     this.sidebarService.toggleCollapsed();
-  }
-
-  ngOnDestroy(): void {
-    this.sidebarSubscription.unsubscribe();
   }
 }

@@ -14,7 +14,7 @@ import { Material, MaterialInput } from '../../models/material.model';
   selector: 'app-calculator',
   imports: [CommonModule, FormsModule, SidebarComponent],
   templateUrl: './calculator.component.html',
-  styleUrl: './calculator.component.css'
+  styleUrls: ['./calculator.component.css']
 })
 export class CalculatorComponent implements OnInit, OnDestroy {
   // Product Info

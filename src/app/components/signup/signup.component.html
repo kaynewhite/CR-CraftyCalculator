@@ -20,11 +20,11 @@
         <p>Start crafting smarter — no credit card needed</p>
       </div>
 
-      @if (error) {
+<ng-container *ngIf="error">
         <div class="alert-error">
           <i class="bi bi-exclamation-circle-fill me-2"></i>{{ error }}
         </div>
-      }
+</ng-container>
 
       <form (ngSubmit)="onSubmit()" novalidate>
         <div class="field-group">
@@ -64,11 +64,11 @@
         </div>
 
         <button type="submit" class="btn btn-primary w-100 submit-btn" [disabled]="isLoading">
-          @if (!isLoading) {
+<ng-container *ngIf="!isLoading">
             <i class="bi bi-rocket-takeoff me-2"></i>Create Free Account
-          } @else {
+          </ng-container>          <ng-container *ngIf="!(!isLoading)">
             <span class="spinner-border spinner-border-sm me-2"></span>Creating account…
-          }
+</ng-container>
         </button>
       </form>
 

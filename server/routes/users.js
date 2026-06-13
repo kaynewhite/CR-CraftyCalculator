@@ -8,7 +8,8 @@ const SALT_ROUNDS = 12;
 router.get('/me', requireAuth, async (req, res) => {
   try {
     const { rows } = await pool.query(
-      `SELECT u.*, s.plan, s.is_active, s.start_date, s.expiry_date
+      `SELECT u.*, COALESCE(s.plan, CASE WHEN u.role IN ('admin','superadmin') THEN 'pro' ELSE 'free' END) AS plan,
+              s.is_active, s.start_date, s.expiry_date
        FROM users u
        LEFT JOIN user_subscriptions s ON s.user_id = u.id
        WHERE u.id = $1`,
@@ -77,6 +78,7 @@ router.get('/', requireAdmin, async (req, res) => {
       `SELECT u.*, s.plan, s.is_active, s.expiry_date
        FROM users u
        LEFT JOIN user_subscriptions s ON s.user_id = u.id
+       WHERE u.role = 'user'
        ORDER BY u.created_at DESC`
     );
     res.json(rows);

@@ -1,10 +1,12 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { SubscriptionExpiryBannerComponent } from '../subscription-expiry-banner/subscription-expiry-banner.component';
 import { CalculationService } from '../../services/calculation.service';
 import { MaterialService } from '../../services/material.service';
 import { SidebarService } from '../../services/sidebar.service';
+import { AuthService } from '../../services/auth.service';
 import { CalculationSummary, Calculation } from '../../models/calculation.model';
 import { Subscription } from 'rxjs';
 
@@ -12,27 +14,33 @@ import { Subscription } from 'rxjs';
   selector: 'app-dashboard',
   imports: [CommonModule, SidebarComponent, SubscriptionExpiryBannerComponent],
   templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.css'
+  styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   summary: CalculationSummary | null = null;
-  isLoading: boolean = true;
-  sidebarOpen: boolean = false;
-  sidebarCollapsed: boolean = false;
+  isLoading = true;
+  sidebarOpen = false;
+  sidebarCollapsed = false;
   recentSaved: Calculation[] = [];
   savedLimit: number = Infinity;
   Infinity = Infinity;
-  private sidebarSubscription: Subscription;
+  private sidebarSubscription = new Subscription();
 
   constructor(
     public calculationService: CalculationService,
     private materialService: MaterialService,
-    private sidebarService: SidebarService
-  ) {
-    this.sidebarSubscription = new Subscription();
-  }
+    private sidebarService: SidebarService,
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
+    const currentUser = this.authService.currentUserValue;
+    if (currentUser && (currentUser.role === 'admin' || currentUser.role === 'superadmin')) {
+      this.router.navigate(['/admin-dashboard']);
+      return;
+    }
+
     this.loadDashboard();
     this.sidebarSubscription = this.sidebarService.isCollapsed$.subscribe(collapsed => {
       this.sidebarCollapsed = collapsed;
@@ -46,12 +54,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   loadDashboard(): void {
     setTimeout(() => {
       this.summary = this.calculationService.getCalculationSummary();
-      // Show number of material types from inventory (each material type counts as 1)
       const materials = this.materialService.getMaterials();
       if (this.summary) {
         this.summary.totalMaterialsUsed = materials.length;
       }
-      // Load recent saved calculations (max 3 on dashboard for preview)
       const allSaved = this.calculationService.getCalculations()
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       this.savedLimit = this.calculationService.getSavedLimit();

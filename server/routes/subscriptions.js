@@ -17,10 +17,18 @@ router.get('/plans', async (req, res) => {
 router.get('/me', requireAuth, async (req, res) => {
   try {
     const { rows } = await pool.query(
-      `SELECT s.*, p.display_name, p.price, p.max_calculations, p.calc_expiry_days, p.max_materials, p.features, p.limitations
-       FROM user_subscriptions s
-       JOIN subscription_plans p ON p.name = s.plan
-       WHERE s.user_id = $1`,
+      `SELECT COALESCE(s.id, uuid_generate_v4()) AS id,
+              COALESCE(s.user_id, u.id) AS user_id,
+              COALESCE(s.plan, CASE WHEN u.role IN ('admin','superadmin') THEN 'pro' ELSE 'free' END) AS plan,
+              COALESCE(s.is_active, true) AS is_active,
+              COALESCE(s.start_date, NOW()) AS start_date,
+              COALESCE(s.expiry_date, CASE WHEN u.role IN ('admin','superadmin') THEN NOW() + INTERVAL '10 years' ELSE NOW() + INTERVAL '30 days' END) AS expiry_date,
+              COALESCE(s.duration_months, CASE WHEN u.role IN ('admin','superadmin') THEN 120 ELSE 1 END) AS duration_months,
+              p.display_name, p.price, p.max_calculations, p.calc_expiry_days, p.max_materials, p.features, p.limitations
+       FROM users u
+       LEFT JOIN user_subscriptions s ON s.user_id = u.id
+       LEFT JOIN subscription_plans p ON p.name = COALESCE(s.plan, CASE WHEN u.role IN ('admin','superadmin') THEN 'pro' ELSE 'free' END)
+       WHERE u.id = $1`,
       [req.user.id]
     );
     if (!rows.length) return res.status(404).json({ error: 'Subscription not found' });

@@ -20,22 +20,30 @@ async function seed() {
     },
   ];
 
+  if (process.env.CLEAN_DB === 'true') {
+    console.log('[Seed] Cleaning database: removing regular users and related data.');
+    await pool.query("DELETE FROM users WHERE role = 'user'");
+  }
+
   for (const admin of admins) {
     try {
       const existing = await pool.query('SELECT id, role FROM users WHERE LOWER(email) = LOWER($1)', [admin.email]);
 
       if (existing.rows.length > 0) {
         const existingUser = existing.rows[0];
-        if (existingUser.role !== admin.role) {
-          const passwordHash = await bcrypt.hash(admin.password, SALT_ROUNDS);
-          await pool.query(
-            `UPDATE users SET name = $1, password_hash = $2, role = $3, updated_at = NOW() WHERE id = $4`,
-            [admin.name, passwordHash, admin.role, existingUser.id]
-          );
-          console.log(`[Seed] Updated ${admin.role}: ${admin.email}`);
-        } else {
-          console.log(`[Seed] ${admin.role} already exists: ${admin.email}`);
-        }
+        const passwordHash = await bcrypt.hash(admin.password, SALT_ROUNDS);
+        await pool.query(
+          `UPDATE users SET name = $1, password_hash = $2, role = $3, updated_at = NOW() WHERE id = $4`,
+          [admin.name, passwordHash, admin.role, existingUser.id]
+        );
+        await pool.query(
+          `INSERT INTO user_subscriptions (user_id, plan, is_active, start_date, expiry_date, duration_months)
+           VALUES ($1, 'pro', true, NOW(), NOW() + INTERVAL '10 years', 120)
+           ON CONFLICT (user_id) DO UPDATE
+           SET plan = 'pro', is_active = true, start_date = NOW(), expiry_date = NOW() + INTERVAL '10 years', duration_months = 120, updated_at = NOW()`,
+          [existingUser.id]
+        );
+        console.log(`[Seed] Ensured ${admin.role} exists: ${admin.email}`);
         continue;
       }
 
@@ -49,9 +57,10 @@ async function seed() {
       );
 
       await pool.query(
-        `INSERT INTO user_subscriptions (user_id, plan, is_active, start_date, expiry_date)
-         VALUES ($1, 'free', true, NOW(), NOW() + INTERVAL '1 year')
-         ON CONFLICT (user_id) DO NOTHING`,
+        `INSERT INTO user_subscriptions (user_id, plan, is_active, start_date, expiry_date, duration_months)
+         VALUES ($1, 'pro', true, NOW(), NOW() + INTERVAL '10 years', 120)
+         ON CONFLICT (user_id) DO UPDATE
+         SET plan = 'pro', is_active = true, start_date = NOW(), expiry_date = NOW() + INTERVAL '10 years', duration_months = 120, updated_at = NOW()`,
         [userId]
       );
 
@@ -65,6 +74,13 @@ async function seed() {
   console.log('[Seed] Admin credentials:');
   console.log('[Seed]   admin@craftyr.com / Admin@CraftyR2026');
   console.log('[Seed]   superadmin@craftyr.com / SuperAdmin@CraftyR2026');
+}
+
+if (require.main === module) {
+  seed().then(() => process.exit(0)).catch(err => {
+    console.error('[Seed] Error:', err);
+    process.exit(1);
+  });
 }
 
 module.exports = seed;

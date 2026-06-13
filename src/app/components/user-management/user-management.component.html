@@ -22,16 +22,16 @@
 
     <div class="um-body">
 
-      @if (actionSuccess) {
+<ng-container *ngIf="actionSuccess">
         <div class="flash flash-success">
           <i class="bi bi-check-circle-fill me-2"></i>{{ actionSuccess }}
         </div>
-      }
-      @if (actionError) {
+</ng-container>
+<ng-container *ngIf="actionError">
         <div class="flash flash-error">
           <i class="bi bi-exclamation-circle-fill me-2"></i>{{ actionError }}
         </div>
-      }
+</ng-container>
 
       <div class="filter-bar">
         <div class="filter-item">
@@ -58,22 +58,22 @@
         </div>
       </div>
 
-      @if (isLoading) {
+<ng-container *ngIf="isLoading">
         <div class="loading-state">
           <div class="spinner-border text-brand" role="status"></div>
           <p>Loading users…</p>
         </div>
-      }
+</ng-container>
 
-      @if (!isLoading && filteredUsers.length === 0) {
+<ng-container *ngIf="!isLoading && filteredUsers.length === 0">
         <div class="empty-state">
           <div class="empty-icon"><i class="bi bi-people"></i></div>
           <h3>No users found</h3>
           <p>Try adjusting your search or filter.</p>
         </div>
-      }
+</ng-container>
 
-      @if (!isLoading && filteredUsers.length > 0) {
+<ng-container *ngIf="!isLoading && filteredUsers.length > 0">
         <div class="table-card">
           <div class="table-wrap">
             <table class="um-table">
@@ -87,7 +87,7 @@
                 </tr>
               </thead>
               <tbody>
-                @for (user of filteredUsers; track user.id) {
+<ng-container *ngFor="let user of filteredUsers">
                   <tr class="um-row">
                     <td class="col-user">
                       <div class="user-cell">
@@ -115,71 +115,77 @@
                     </td>
                     <td class="col-actions">
                       <div class="action-row">
-                        @if (user.status !== 'rejected') {
-                          <button class="action-btn action-warn" (click)="openRejectModal(user)" title="Reject user">
-                            <i class="bi bi-slash-circle me-1"></i>Reject
+<ng-container>
+                          <button class="action-btn action-info" (click)="openViewModal(user)" title="View user details">
+                            <i class="bi bi-eye me-1"></i>View
                           </button>
-                        }
-                        @if (user.status === 'rejected') {
+</ng-container>
+<ng-container *ngIf="user.status !== 'rejected'">
+                          <button class="action-btn action-warn" (click)="openRestrictModal(user)" title="Restrict user">
+                            <i class="bi bi-lock me-1"></i>Restrict
+                          </button>
+</ng-container>
+<ng-container *ngIf="user.status === 'rejected'">
                           <button class="action-btn action-success" (click)="reactivateUser(user)" title="Reactivate user">
-                            <i class="bi bi-check-circle me-1"></i>Reactivate
+                            <i class="bi bi-unlock me-1"></i>Unrestrict
                           </button>
-                        }
-                        @if (isSuperAdmin) {
+</ng-container>
+<ng-container *ngIf="isSuperAdmin">
                           <button class="action-btn action-danger" (click)="openDeleteModal(user)" title="Delete user permanently">
                             <i class="bi bi-trash3"></i>
                           </button>
-                        }
+</ng-container>
                       </div>
                     </td>
                   </tr>
-                }
+</ng-container>
               </tbody>
             </table>
           </div>
         </div>
-      }
+      </ng-container>
 
     </div>
   </div>
 </div>
 
-@if (showRejectModal && userToReject) {
-  <div class="modal-backdrop" (click)="closeRejectModal()">
+<ng-container *ngIf="showRestrictModal && userToRestrict">
+  <div class="modal-backdrop" (click)="closeRestrictModal()">
     <div class="modal-box" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div class="modal-icon modal-icon-warn">
-          <i class="bi bi-slash-circle"></i>
+          <i class="bi bi-lock"></i>
         </div>
         <div>
-          <h3>Reject User</h3>
-          <p>Provide a reason for rejecting <strong>{{ userToReject.name }}</strong>.</p>
+          <h3>Restrict User</h3>
+          <p>Temporarily disable <strong>{{ userToRestrict.name }}</strong>'s account.</p>
         </div>
       </div>
       <div class="modal-body">
-        <label class="modal-label">Rejection Feedback</label>
+        <label class="modal-label">Restriction Reason</label>
         <textarea
           class="modal-textarea"
-          [(ngModel)]="rejectFeedback"
-          placeholder="e.g. Duplicate account, suspicious activity…"
+          [(ngModel)]="restrictFeedback"
+          placeholder="e.g. Suspicious activity, policy violation…"
           rows="3">
         </textarea>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-ghost" (click)="closeRejectModal()" [disabled]="isRejecting">Cancel</button>
-        <button class="btn btn-warn" (click)="confirmReject()" [disabled]="isRejecting">
-          @if (isRejecting) {
-            <span class="spinner-border spinner-border-sm me-2"></span>Rejecting…
-          } @else {
-            <i class="bi bi-slash-circle me-1"></i>Confirm Reject
-          }
+        <button class="btn btn-ghost" (click)="closeRestrictModal()" [disabled]="isRestricting">Cancel</button>
+        <button class="btn btn-warn" (click)="confirmRestrict()" [disabled]="isRestricting">
+<ng-container *ngIf="isRestricting">
+            <span class="spinner-border spinner-border-sm me-2"></span>Restricting…
+            </ng-container>
+          <ng-container *ngIf="!(isRestricting)">
+            <i class="bi bi-lock me-1"></i>Confirm Restrict
+</ng-container>
         </button>
       </div>
     </div>
   </div>
-}
+</ng-container>
 
-@if (showDeleteModal && userToDelete) {
+<ng-container *ngIf="showDeleteModal && userToDelete">
   <div class="modal-backdrop" (click)="closeDeleteModal()">
     <div class="modal-box modal-box-danger" (click)="$event.stopPropagation()">
       <div class="modal-header">
@@ -203,22 +209,110 @@
           <i class="bi bi-exclamation-triangle-fill me-1"></i>
           All data associated with this account — calculations, payments, and subscriptions — will be permanently erased.
         </p>
-        @if (deleteError) {
+<ng-container *ngIf="deleteError">
           <div class="delete-error">
             <i class="bi bi-x-circle-fill me-1"></i>{{ deleteError }}
           </div>
-        }
+</ng-container>
       </div>
       <div class="modal-footer">
         <button class="btn btn-ghost" (click)="closeDeleteModal()" [disabled]="isDeleting">Cancel</button>
         <button class="btn btn-danger" (click)="confirmDelete()" [disabled]="isDeleting">
-          @if (isDeleting) {
+<ng-container *ngIf="isDeleting">
             <span class="spinner-border spinner-border-sm me-2"></span>Deleting…
-          } @else {
+          </ng-container>
+          <ng-container *ngIf="!(isDeleting)">
             <i class="bi bi-trash3 me-1"></i>Yes, Delete Permanently
-          }
+          </ng-container>
         </button>
       </div>
     </div>
   </div>
-}
+</ng-container>
+
+<ng-container *ngIf="showViewModal && userToView">
+  <div class="modal-backdrop" (click)="closeViewModal()">
+    <div class="modal-box modal-box-large" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-icon modal-icon-info">
+          <i class="bi bi-person-circle"></i>
+        </div>
+        <div>
+          <h3>User Details</h3>
+          <p>Account information and activity logs for <strong>{{ userToView.name }}</strong></p>
+        </div>
+      </div>
+      <div class="modal-body view-modal-body">
+        <div class="view-section">
+          <h4>Account Information</h4>
+          <div class="info-grid">
+            <div class="info-row">
+              <span class="info-label">Name:</span>
+              <span class="info-value">{{ userToView.name }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Email:</span>
+              <span class="info-value">{{ userToView.email }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">User ID:</span>
+              <span class="info-value mono">{{ userToView.id }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Joined:</span>
+              <span class="info-value">{{ userToView.createdAt }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Current Plan:</span>
+              <span class="pill pill-plan-{{ userToView.subscription }}">
+                <i class="bi" [class.bi-star-fill]="userToView.subscription==='pro'" [class.bi-star]="userToView.subscription==='basic'" [class.bi-person]="userToView.subscription==='free'"></i>
+                {{ userToView.subscription | titlecase }}
+              </span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Account Status:</span>
+              <span class="pill pill-status-{{ userToView.status }}">
+                <span class="pill-dot"></span>
+                {{ userToView.status | titlecase }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="view-section" *ngIf="!isLoadingUserDetails && userSubscriptionLogs.length > 0">
+          <h4>Subscription & Transaction History</h4>
+          <div class="logs-list">
+            <div class="log-item" *ngFor="let log of userSubscriptionLogs">
+              <div class="log-header">
+                <span class="log-action" [class.action-approved]="log.action === 'approved'" [class.action-rejected]="log.action === 'rejected'">
+                  <i class="bi" [class.bi-check-circle-fill]="log.action === 'approved'" [class.bi-x-circle-fill]="log.action === 'rejected'"></i>
+                  {{ log.action | titlecase }}
+                </span>
+                <span class="log-date">{{ log.created_at | date:'MMM d, yyyy · h:mm a' }}</span>
+              </div>
+              <div class="log-details">
+                <span>Plan: <strong>{{ log.plan | titlecase }}</strong></span>
+                <span *ngIf="log.cost > 0"> · Amount: <strong>₱{{ log.cost | number:'1.2-2' }}</strong></span>
+                <span *ngIf="log.feedback"> · <em>{{ log.feedback }}</em></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="view-section" *ngIf="!isLoadingUserDetails && userSubscriptionLogs.length === 0">
+          <p class="text-muted">No subscription or transaction history found.</p>
+        </div>
+
+        <div class="view-section" *ngIf="isLoadingUserDetails">
+          <div class="loading-state">
+            <div class="spinner-border spinner-border-sm" role="status"></div>
+            <p>Loading details…</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" (click)="closeViewModal()">Close</button>
+      </div>
+    </div>
+  </div>
+</ng-container>

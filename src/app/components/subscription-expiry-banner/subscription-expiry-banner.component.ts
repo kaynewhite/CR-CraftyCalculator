@@ -9,7 +9,7 @@ import { SubscriptionService } from '../../services/subscription.service';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './subscription-expiry-banner.component.html',
-  styleUrl: './subscription-expiry-banner.component.css'
+  styleUrls: ['./subscription-expiry-banner.component.css']
 })
 export class SubscriptionExpiryBannerComponent implements OnInit {
   showBanner = false;

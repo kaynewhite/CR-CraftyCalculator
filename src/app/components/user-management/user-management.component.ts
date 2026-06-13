@@ -40,10 +40,16 @@ export class UserManagementComponent implements OnInit {
   isDeleting = false;
   deleteError = '';
 
-  showRejectModal = false;
-  userToReject: UserDetail | null = null;
-  rejectFeedback = '';
-  isRejecting = false;
+  showRestrictModal = false;
+  userToRestrict: UserDetail | null = null;
+  restrictFeedback = '';
+  isRestricting = false;
+
+  showViewModal = false;
+  userToView: UserDetail | null = null;
+  userLogs: any[] = [];
+  userSubscriptionLogs: any[] = [];
+  isLoadingUserDetails = false;
 
   actionError = '';
   actionSuccess = '';
@@ -95,33 +101,59 @@ export class UserManagementComponent implements OnInit {
     });
   }
 
-  openRejectModal(user: UserDetail): void {
-    this.userToReject = user;
-    this.rejectFeedback = '';
-    this.showRejectModal = true;
+  openRestrictModal(user: UserDetail): void {
+    this.userToRestrict = user;
+    this.restrictFeedback = '';
+    this.showRestrictModal = true;
   }
 
-  closeRejectModal(): void {
-    this.showRejectModal = false;
-    this.userToReject = null;
-    this.rejectFeedback = '';
-    this.isRejecting = false;
+  closeRestrictModal(): void {
+    this.showRestrictModal = false;
+    this.userToRestrict = null;
+    this.restrictFeedback = '';
+    this.isRestricting = false;
   }
 
-  confirmReject(): void {
-    if (!this.userToReject) return;
-    this.isRejecting = true;
-    this.api.setUserStatus(this.userToReject.id, 'rejected', this.rejectFeedback || 'No reason provided').subscribe({
+  confirmRestrict(): void {
+    if (!this.userToRestrict) return;
+    this.isRestricting = true;
+    this.api.setUserStatus(this.userToRestrict.id, 'rejected', this.restrictFeedback || 'Account restricted').subscribe({
       next: () => {
-        this.showFlash('success', `${this.userToReject!.name} has been rejected.`);
-        this.closeRejectModal();
+        this.showFlash('success', `${this.userToRestrict!.name} account has been restricted.`);
+        this.closeRestrictModal();
         this.loadUsers();
       },
       error: (err: any) => {
-        this.isRejecting = false;
-        this.showFlash('error', 'Failed to reject user: ' + err.message);
+        this.isRestricting = false;
+        this.showFlash('error', 'Failed to restrict user: ' + err.message);
       },
     });
+  }
+
+  openViewModal(user: UserDetail): void {
+    this.userToView = user;
+    this.userLogs = [];
+    this.userSubscriptionLogs = [];
+    this.isLoadingUserDetails = true;
+    this.showViewModal = true;
+    
+    // Load subscription logs for this user
+    this.api.getSubscriptionLogs().subscribe({
+      next: (logs: any[]) => {
+        this.userSubscriptionLogs = logs.filter(log => log.user_id === user.id).slice(0, 10);
+        this.isLoadingUserDetails = false;
+      },
+      error: () => {
+        this.isLoadingUserDetails = false;
+      }
+    });
+  }
+
+  closeViewModal(): void {
+    this.showViewModal = false;
+    this.userToView = null;
+    this.userLogs = [];
+    this.userSubscriptionLogs = [];
   }
 
   reactivateUser(user: UserDetail): void {

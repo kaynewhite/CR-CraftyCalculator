@@ -8,7 +8,7 @@ import { SubscriptionService } from '../../services/subscription.service';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './payment-modal.component.html',
-  styleUrl: './payment-modal.component.css'
+  styleUrls: ['./payment-modal.component.css']
 })
 export class PaymentModalComponent {
   @Input() plan: 'basic' | 'pro' | null = null;

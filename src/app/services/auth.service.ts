@@ -44,13 +44,15 @@ export class AuthService {
   }
 
   private mapUser(data: any): User {
+    const role = data.role || 'user';
+    const subscriptionPlan = role === 'admin' || role === 'superadmin' ? 'pro' : (data.plan || 'free');
     return {
       id: data.id,
       name: data.name,
       email: data.email,
       password: '',
-      role: data.role || 'user',
-      subscriptionPlan: data.plan || 'free',
+      role,
+      subscriptionPlan,
       createdAt: new Date(data.created_at),
       status: data.status || 'active',
       rejectionFeedback: data.rejection_feedback,

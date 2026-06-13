@@ -12,7 +12,7 @@ import { SubscriptionService } from '../../services/subscription.service';
   selector: 'app-history',
   imports: [CommonModule, FormsModule, SidebarComponent],
   templateUrl: './history.component.html',
-  styleUrl: './history.component.css'
+  styleUrls: ['./history.component.css']
 })
 export class HistoryComponent implements OnInit, OnDestroy {
   calculations: Calculation[] = [];

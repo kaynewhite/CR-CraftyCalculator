@@ -1,3 +1,4 @@
+require('dotenv').config();
 const { Pool } = require('pg');
 
 const isLocal = !process.env.DATABASE_URL || process.env.DATABASE_URL.includes('localhost');

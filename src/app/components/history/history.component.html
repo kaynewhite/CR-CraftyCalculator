@@ -29,7 +29,7 @@
       <div class="card">
         <div class="card-body">
           <!-- show saved list for all plans; service already applies limits/expiry -->
-          @if (calculations.length > 0) {
+<ng-container *ngIf="calculations.length > 0">
             <div class="mb-2 text-muted">
               Plan: <strong>{{ currentPlan.toUpperCase() }}</strong> &ndash;
               Saved <strong>{{ savedCount }}</strong>
@@ -52,7 +52,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  @for (calc of filteredCalculations; track calc.id) {
+<ng-container *ngFor="let calc of filteredCalculations">
                     <tr>
                       <td><strong>{{ calc.name }}</strong></td>
                       <td><span class="badge bg-info">{{ calc.category }}</span></td>
@@ -63,13 +63,12 @@
                       <td>{{ calc.createdAt | date:'short' }}</td>
                       <td><button class="btn btn-sm btn-danger" (click)="deleteCalculation(calc.id)"><i class="bi bi-trash"></i></button></td>
                     </tr>
-                  }
+</ng-container>
                 </tbody>
               </table>
             </div>
-          } @else {
-            <div class="empty-state text-center py-5"><i class="bi bi-inbox"></i><p>No saved calculations yet. Start calculating to save your first calculation!</p></div>
-          }
+          </ng-container>
+          <div *ngIf="calculations.length === 0" class="empty-state text-center py-5"><i class="bi bi-inbox"></i><p>No saved calculations yet. Start calculating to save your first calculation!</p></div>
         </div>
       </div>
     </div>

@@ -7,12 +7,12 @@ router.get('/stats', requireAdmin, async (req, res) => {
   try {
     const [usersRes, subsRes, paymentsRes, revenueRes, recentUsersRes, recentPaymentsRes, calcsRes] = await Promise.all([
       pool.query(`SELECT COUNT(*) AS total, COUNT(*) FILTER (WHERE status='active') AS active FROM users WHERE role='user'`),
-      pool.query(`SELECT plan, COUNT(*) AS count FROM user_subscriptions GROUP BY plan`),
-      pool.query(`SELECT COUNT(*) AS total, COUNT(*) FILTER (WHERE status='pending') AS pending FROM payment_requests`),
-      pool.query(`SELECT COALESCE(SUM(cost),0) AS total FROM subscription_logs WHERE action='approved'`),
+      pool.query(`SELECT s.plan, COUNT(*) AS count FROM user_subscriptions s JOIN users u ON u.id = s.user_id WHERE u.role = 'user' GROUP BY s.plan`),
+      pool.query(`SELECT COUNT(*) AS total, COUNT(*) FILTER (WHERE pr.status='pending') AS pending FROM payment_requests pr JOIN users u ON u.id = pr.user_id WHERE u.role = 'user'`),
+      pool.query(`SELECT COALESCE(SUM(sl.cost),0) AS total FROM subscription_logs sl JOIN users u ON u.id = sl.user_id WHERE sl.action='approved' AND u.role = 'user'`),
       pool.query(`SELECT u.id, u.name, u.email, u.created_at, s.plan FROM users u LEFT JOIN user_subscriptions s ON s.user_id=u.id WHERE u.role='user' ORDER BY u.created_at DESC LIMIT 5`),
-      pool.query(`SELECT pr.*, u.name AS user_name FROM payment_requests pr JOIN users u ON u.id=pr.user_id ORDER BY pr.created_at DESC LIMIT 5`),
-      pool.query(`SELECT COUNT(*) AS total FROM calculations`),
+      pool.query(`SELECT pr.*, u.name AS user_name FROM payment_requests pr JOIN users u ON u.id=pr.user_id WHERE u.role='user' ORDER BY pr.created_at DESC LIMIT 5`),
+      pool.query(`SELECT COUNT(*) AS total FROM calculations c JOIN users u ON u.id = c.user_id WHERE u.role = 'user'`),
     ]);
 
     const planDist = { free: 0, basic: 0, pro: 0 };
@@ -48,13 +48,15 @@ router.get('/stats/revenue', requireAdmin, async (req, res) => {
   try {
     const { rows } = await pool.query(
       `SELECT
-         TO_CHAR(DATE_TRUNC('month', created_at), 'Mon YYYY') AS month,
-         DATE_TRUNC('month', created_at) AS month_date,
-         COALESCE(SUM(cost), 0) AS revenue
-       FROM subscription_logs
-       WHERE action = 'approved'
-         AND created_at >= NOW() - INTERVAL '6 months'
-       GROUP BY DATE_TRUNC('month', created_at)
+         TO_CHAR(DATE_TRUNC('month', sl.created_at), 'Mon YYYY') AS month,
+         DATE_TRUNC('month', sl.created_at) AS month_date,
+         COALESCE(SUM(sl.cost), 0) AS revenue
+       FROM subscription_logs sl
+       JOIN users u ON u.id = sl.user_id
+       WHERE sl.action = 'approved'
+         AND u.role = 'user'
+         AND sl.created_at >= NOW() - INTERVAL '6 months'
+       GROUP BY DATE_TRUNC('month', sl.created_at)
        ORDER BY month_date ASC`
     );
     res.json(rows);

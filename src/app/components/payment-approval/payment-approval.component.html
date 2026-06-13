@@ -47,24 +47,24 @@
         </div>
       </div>
 
-      @if (isLoading) {
+<ng-container *ngIf="isLoading">
         <div class="loading-state">
           <div class="spinner-border text-brand" role="status"></div>
           <p>Loading payments…</p>
         </div>
-      }
+</ng-container>
 
-      @if (!isLoading && filteredPayments.length === 0) {
+<ng-container *ngIf="!isLoading && filteredPayments.length === 0">
         <div class="empty-state">
           <div class="empty-icon"><i class="bi bi-credit-card"></i></div>
           <h3>No payments found</h3>
           <p>Try adjusting your search or filter.</p>
         </div>
-      }
+</ng-container>
 
-      @if (!isLoading && filteredPayments.length > 0) {
+<ng-container *ngIf="!isLoading && filteredPayments.length > 0">
         <div class="payments-list">
-          @for (payment of filteredPayments; track payment.id) {
+<ng-container *ngFor="let payment of filteredPayments">
             <div class="payment-card" [class.expanded]="expandedPaymentId === payment.id">
 
               <div class="payment-summary" (click)="toggleExpanded(payment.id)">
@@ -89,7 +89,7 @@
                 </div>
               </div>
 
-              @if (expandedPaymentId === payment.id) {
+<ng-container *ngIf="expandedPaymentId === payment.id">
                 <div class="payment-detail">
 
                   <div class="detail-grid">
@@ -117,21 +117,21 @@
                     </div>
                   </div>
 
-                  @if (payment.screenshotUrl) {
+<ng-container *ngIf="payment.screenshotUrl">
                     <div class="screenshot-section">
                       <p class="section-label"><i class="bi bi-image me-1"></i>Transaction Screenshot</p>
                       <img [src]="payment.screenshotUrl" alt="Transaction screenshot" class="screenshot-img">
                     </div>
-                  }
+</ng-container>
 
-                  @if (payment.feedback) {
+<ng-container *ngIf="payment.feedback">
                     <div class="feedback-display">
                       <p class="section-label"><i class="bi bi-chat-left-text me-1"></i>Rejection Reason</p>
                       <p class="feedback-text">{{ payment.feedback }}</p>
                     </div>
-                  }
+</ng-container>
 
-                  @if (payment.status === 'pending' || payment.status === 'scanning') {
+<ng-container *ngIf="payment.status === 'pending' || payment.status === 'scanning'">
                     <div class="action-section">
                       <div class="reject-input-wrap">
                         <label class="filter-label">Rejection Reason (required to reject)</label>
@@ -151,27 +151,25 @@
                         </button>
                       </div>
                     </div>
-                  }
+</ng-container>
 
-                  @if (payment.status === 'approved') {
+<ng-container *ngIf="payment.status === 'approved'">
                     <div class="status-banner status-approved">
                       <i class="bi bi-check-circle-fill me-2"></i>This payment has been approved
                     </div>
-                  }
-                  @if (payment.status === 'rejected') {
+</ng-container>
+<ng-container *ngIf="payment.status === 'rejected'">
                     <div class="status-banner status-rejected">
                       <i class="bi bi-x-circle-fill me-2"></i>This payment has been rejected
                     </div>
-                  }
+</ng-container>
 
                 </div>
-              }
-
-            </div>
-          }
-        </div>
-      }
-
+            </ng-container>
+          </div>
+        </ng-container>
+      </div>
+    </ng-container>
+      </div>
     </div>
   </div>
-</div>

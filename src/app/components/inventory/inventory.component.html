@@ -28,11 +28,11 @@
           </button>
         </div>
       </div>
-      @if (showAddModal) {
+<ng-container *ngIf="showAddModal">
         <div class="modal-overlay" (click)="closeModal()">
           <div class="modal-content" (click)="$event.stopPropagation()">
             <div class="modal-header">
-              <h5>@if (isEditing) { Edit Material } @else { Add New Material }</h5>
+              <h5><ng-container *ngIf="isEditing">Edit Material</ng-container><ng-container *ngIf="!isEditing">Add New Material</ng-container></h5>
               <button class="btn-close" (click)="closeModal()"></button>
             </div>
             <div class="modal-body">
@@ -42,35 +42,35 @@
               <div class="mb-3"><label class="form-label">Unit</label><select class="form-select" [(ngModel)]="newMaterial.unit"><option value="piece">Piece</option><option value="pack">Pack</option><option value="roll">Roll</option><option value="sheet">Sheet</option><option value="ream">Ream</option><option value="meter">Meter</option></select></div>
               <div class="mb-3">
                 <label class="form-label">Category</label>
-                @if (subscriptionService.allowsCustomCategory(currentPlan)) {
+<ng-container *ngIf="subscriptionService.allowsCustomCategory(currentPlan)">
                   <input type="text" class="form-control" [(ngModel)]="newMaterial.category" placeholder="e.g. Custom" />
-                } @else {
+                </ng-container>                <ng-container *ngIf="!(subscriptionService.allowsCustomCategory(currentPlan))">
                   <select class="form-select" [(ngModel)]="newMaterial.category">
                     <option value="" disabled>Select a category</option>
-                    @for (cat of builtInCategories; track cat) {
+<ng-container *ngFor="let cat of builtInCategories">
                       <option [value]="cat">{{ cat }}</option>
-                    }
+</ng-container>
                   </select>
-                }
+</ng-container>
               </div>
             </div>
             <div class="modal-footer">
               <button class="btn btn-secondary" (click)="closeModal()">Cancel</button>
               <button class="btn btn-primary" (click)="addMaterial()">
-                @if (isEditing) { Update Material } @else { Add Material }
+                <ng-container *ngIf="isEditing">Update Material</ng-container><ng-container *ngIf="!isEditing">Add Material</ng-container>
               </button>
             </div>
           </div>
         </div>
-      }
+      </ng-container>
       <div class="card">
         <div class="card-body">
-          @if (filteredMaterials.length > 0) {
+<ng-container *ngIf="filteredMaterials.length > 0">
             <div class="table-responsive">
               <table class="table table-hover">
                 <thead><tr><th>Name</th><th>Quantity</th><th>Cost/Unit</th><th>Unit</th><th>Category</th><th>Actions</th></tr></thead>
                 <tbody>
-                  @for (material of filteredMaterials; track material.id) {
+<ng-container *ngFor="let material of filteredMaterials">
                     <tr>
                       <td>{{ material.name }}</td>
                       <td>
@@ -96,13 +96,12 @@
                         </button>
                       </td>
                     </tr>
-                  }
+</ng-container>
                 </tbody>
               </table>
             </div>
-          } @else {
-            <div class="empty-state text-center py-5"><i class="bi bi-inbox"></i><p>No materials found. Add your first material to get started!</p></div>
-          }
+          </ng-container>
+          <div *ngIf="filteredMaterials.length === 0" class="empty-state text-center py-5"><i class="bi bi-inbox"></i><p>No materials found. Add your first material to get started!</p></div>
         </div>
       </div>
     </div>
