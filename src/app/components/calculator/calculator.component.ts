@@ -28,12 +28,14 @@ export class CalculatorComponent implements OnInit, OnDestroy {
 
   selectedMaterials: MaterialInput[] = [];
 
+  // Calculation results
   materialCostTotal: number = 0;
   totalCostsBeforeWaste: number = 0;
   wasteCost: number = 0;
-  costPerUnit: number = 0;
-  finalPrice: number = 0;
-  profitPerUnit: number = 0;
+  batchCostTotal: number = 0;   // full batch cost (materials + printing + labor + waste)
+  costPerUnit: number = 0;      // batchCostTotal / quantity
+  finalPrice: number = 0;       // suggested price per unit (margin-based)
+  profitPerUnit: number = 0;    // finalPrice - costPerUnit
   totalPrinting: number = 0;
   totalLabor: number = 0;
 
@@ -174,31 +176,33 @@ export class CalculatorComponent implements OnInit, OnDestroy {
   }
 
   calculate(): void {
+    // Step 1 — sum material costs
     this.materialCostTotal = this.selectedMaterials.reduce((sum, m) => {
       const subtotal = m.quantity * m.costPerUnit;
       m.subtotal = subtotal;
       return sum + subtotal;
     }, 0);
 
-    // Printing & labor are flat batch fees — no multiplication by quantity
+    // Step 2 — flat batch fees for printing & labor
     this.totalPrinting = this.printingCostPerUnit;
     this.totalLabor = this.laborCostPerUnit;
 
     this.totalCostsBeforeWaste = this.materialCostTotal + this.totalPrinting + this.totalLabor;
 
+    // Step 3 — waste
     this.wasteCost = this.totalCostsBeforeWaste * (this.wastePercentage / 100);
 
-    const totalBatchCost = this.totalCostsBeforeWaste + this.wasteCost;
+    // Step 4 — total batch cost & cost per unit
+    this.batchCostTotal = this.totalCostsBeforeWaste + this.wasteCost;
     this.costPerUnit = this.quantityProducedPerBatch > 0
-      ? totalBatchCost / this.quantityProducedPerBatch
+      ? this.batchCostTotal / this.quantityProducedPerBatch
       : 0;
 
-    // Margin-based pricing: cost / (1 - margin%)
+    // Step 5 — margin-based pricing: price = cost / (1 - margin%)
     const margin = Math.min(Math.max(this.profitMarginPercent, 0), 99.99);
-    this.finalPrice = margin < 100
-      ? this.costPerUnit / (1 - margin / 100)
-      : this.costPerUnit * 2;
+    this.finalPrice = this.costPerUnit / (1 - margin / 100);
 
+    // Step 6 — profit per unit
     this.profitPerUnit = this.finalPrice - this.costPerUnit;
   }
 
@@ -223,9 +227,12 @@ export class CalculatorComponent implements OnInit, OnDestroy {
         costPerUnit: m.costPerUnit,
         subtotal: m.subtotal
       })),
-      totalCost: parseFloat(this.costPerUnit.toFixed(2)),
+      // totalCost = full batch cost (e.g. ₱441)
+      totalCost: parseFloat(this.batchCostTotal.toFixed(2)),
+      // suggestedPrice = price per unit (e.g. ₱58.80)
       suggestedPrice: parseFloat(this.finalPrice.toFixed(2)),
       profitMargin: this.profitMarginPercent,
+      // profitAmount = profit per unit (e.g. ₱29.40)
       profitAmount: parseFloat(this.profitPerUnit.toFixed(2)),
       userId: ''
     });
@@ -249,6 +256,7 @@ export class CalculatorComponent implements OnInit, OnDestroy {
     this.materialCostTotal = 0;
     this.totalCostsBeforeWaste = 0;
     this.wasteCost = 0;
+    this.batchCostTotal = 0;
     this.costPerUnit = 0;
     this.finalPrice = 0;
     this.profitPerUnit = 0;
