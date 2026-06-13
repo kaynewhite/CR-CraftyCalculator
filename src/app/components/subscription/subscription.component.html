@@ -69,11 +69,16 @@
               <i class="bi bi-check2 me-2"></i>Active Plan
             </button>
             <button *ngIf="!isCurrentPlan(plan.name)"
-                    class="btn btn-primary w-100"
+                    class="btn w-100"
+                    [class.btn-primary]="!hasPendingRequest"
+                    [class.btn-warning]="hasPendingRequest && plan.name !== 'free'"
                     (click)="changePlan(plan.name)"
-                    [disabled]="isLoading || (plan.name === 'free' && currentSubscription?.currentPlan && currentSubscription?.currentPlan !== 'free')">
+                    [disabled]="isLoading || hasPendingRequest || (plan.name === 'free' && currentSubscription?.currentPlan && currentSubscription?.currentPlan !== 'free')">
               <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
-              {{ getUpgradePriceDisplay(plan.name) }}
+              <ng-container *ngIf="hasPendingRequest && plan.name !== 'free'">
+                <i class="bi bi-clock me-1"></i>Pending Review
+              </ng-container>
+              <ng-container *ngIf="!hasPendingRequest || plan.name === 'free'">{{ getUpgradePriceDisplay(plan.name) }}</ng-container>
             </button>
           </div>
         </div>

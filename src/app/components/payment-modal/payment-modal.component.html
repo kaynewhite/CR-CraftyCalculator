@@ -12,7 +12,10 @@
         <img [src]="qrUrl" class="qr-image" alt="QR Code" />
       </div>
       <ng-template #noQr>
-        <p class="text-muted">QR code not available for selected method.</p>
+        <div class="alert alert-warning" style="font-size:0.84rem;padding:0.6rem 0.9rem;">
+          <i class="bi bi-exclamation-triangle me-2"></i>
+          No QR code is set up for <strong>{{ method?.toUpperCase() }}</strong> yet. You can still submit — upload your proof of payment below and the admin will review it manually.
+        </div>
       </ng-template>
 
       <div class="mt-3">

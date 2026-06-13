@@ -145,7 +145,7 @@
               <div class="calc-card__icon calc-card__icon--purple">
                 <i class="bi bi-plus-slash-minus"></i>
               </div>
-              <h5>Additional Costs per Unit</h5>
+              <h5>Additional Costs (Per Batch)</h5>
             </div>
             <div class="calc-card__body">
               <div class="cost-row">
@@ -250,11 +250,11 @@
                   </div>
                   <div class="breakdown-row">
                     <span>Printing (all units)</span>
-                    <span class="breakdown-val">₱{{ (printingCostPerUnit * quantityProducedPerBatch).toFixed(2) }}</span>
+                    <span class="breakdown-val">₱{{ totalPrinting.toFixed(2) }}</span>
                   </div>
                   <div class="breakdown-row">
                     <span>Labor (all units)</span>
-                    <span class="breakdown-val">₱{{ (laborCostPerUnit * quantityProducedPerBatch).toFixed(2) }}</span>
+                    <span class="breakdown-val">₱{{ totalLabor.toFixed(2) }}</span>
                   </div>
                   <div class="breakdown-row breakdown-row--divider">
                     <span>Subtotal (before waste)</span>

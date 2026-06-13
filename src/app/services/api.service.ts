@@ -126,6 +126,9 @@ export class ApiService {
   getResetRequests(): Observable<any> { return this.get('/admin/reset-requests'); }
   dismissResetRequest(id: string): Observable<any> { return this.delete(`/admin/reset-requests/${id}`); }
 
+  // ── Notifications ──
+  getNotifications(): Observable<any> { return this.get('/notifications'); }
+
   // ── Health ──
   health(): Observable<any> { return this.get('/health'); }
 }

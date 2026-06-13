@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ThemeService } from '../../services/theme.service';
+import { NotificationService } from '../../services/notification.service';
 import { User } from '../../models/user.model';
 
 @Component({
@@ -16,17 +17,21 @@ export class SidebarComponent implements OnInit {
   @Input() isCollapsed: boolean = false;
   @Output() closeSidebar = new EventEmitter<void>();
   @Output() toggleCollapse = new EventEmitter<void>();
-  
+
   currentUser: User | null = null;
   isDarkMode: boolean = false;
+  showNotifPanel: boolean = false;
 
-  // convenience getters
   get isAdmin(): boolean {
     return this.currentUser?.role === 'admin' || this.currentUser?.role === 'superadmin';
   }
 
   get isSuperAdmin(): boolean {
     return this.currentUser?.role === 'superadmin';
+  }
+
+  get unreadCount(): number {
+    return this.notificationService.unreadCount;
   }
 
   generateLink(base: string): string {
@@ -42,7 +47,8 @@ export class SidebarComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private themeService: ThemeService,
-    private router: Router
+    private router: Router,
+    public notificationService: NotificationService
   ) {}
 
   ngOnInit(): void {
@@ -72,6 +78,15 @@ export class SidebarComponent implements OnInit {
   toggleCollapseSidebar(): void {
     this.toggleCollapse.emit();
   }
+
+  toggleNotifPanel(): void {
+    this.showNotifPanel = !this.showNotifPanel;
+  }
+
+  markAllRead(): void {
+    this.notificationService.markAllRead();
+  }
+
   onOverlayClick(): void {
     this.closeSidebar.emit();
   }

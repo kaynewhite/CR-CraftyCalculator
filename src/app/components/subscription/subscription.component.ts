@@ -24,13 +24,13 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
   sidebarOpen = false;
   sidebarCollapsed = false;
   private sidebarSubscription = new Subscription();
+  private paymentSub = new Subscription();
 
-  // payment modal state
   showPaymentModal = false;
   pendingPlan: 'basic' | 'pro' | null = null;
   upgradeCost = 0;
+  hasPendingRequest = false;
 
-  // theme tracking for dark mode
   isDarkMode = false;
 
   constructor(
@@ -58,6 +58,11 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
     this.currentSubscription = this.subscriptionService.getCurrentSubscription();
     this.subscriptionService.qr$.subscribe();
 
+    this.paymentService.loadMyRequests();
+    this.paymentSub = this.paymentService.requests$.subscribe(requests => {
+      this.hasPendingRequest = requests.some(r => ['pending', 'scanning'].includes(r.status));
+    });
+
     this.sidebarSubscription = this.sidebarService.isCollapsed$.subscribe(collapsed => {
       this.sidebarCollapsed = collapsed;
     });
@@ -65,6 +70,7 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.sidebarSubscription.unsubscribe();
+    this.paymentSub.unsubscribe();
   }
 
   changePlan(planName: 'free' | 'basic' | 'pro'): void {
@@ -72,22 +78,17 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Check if user has pending payment request
-    this.paymentService.getAll().subscribe(requests => {
-      const hasPendingPayment = requests.some(r => ['pending', 'scanning'].includes(r.status));
-      if (hasPendingPayment) {
-        alert('You already have a pending payment request. Please wait for admin approval before submitting another.');
-        return;
-      }
+    if (this.hasPendingRequest) {
+      return;
+    }
 
-      if (planName === 'basic' || planName === 'pro') {
-        this.pendingPlan = planName;
-        this.upgradeCost = this.calculateUpgradeCost(planName);
-        this.showPaymentModal = true;
-      } else {
-        this.performPlanUpgrade(planName);
-      }
-    });
+    if (planName === 'basic' || planName === 'pro') {
+      this.pendingPlan = planName;
+      this.upgradeCost = this.calculateUpgradeCost(planName);
+      this.showPaymentModal = true;
+    } else {
+      this.performPlanUpgrade(planName);
+    }
   }
 
   calculateUpgradeCost(targetPlan: 'basic' | 'pro'): number {

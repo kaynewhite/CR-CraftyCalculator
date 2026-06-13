@@ -21,6 +21,7 @@ export class QrManagerComponent implements OnInit {
   saving = false;
   successMsg = '';
   errorMsg = '';
+  promptDismissed = false;
 
   sidebarOpen = false;
   sidebarCollapsed = false;

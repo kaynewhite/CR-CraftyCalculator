@@ -17,6 +17,20 @@
     </div>
 
     <div class="admin-container">
+
+      <div class="alert alert-warning d-flex align-items-start justify-content-between gap-3"
+           *ngIf="!promptDismissed && (!currentMayaQr || !currentGcashQr)"
+           style="border-radius:var(--radius-md);font-size:0.86rem;">
+        <span>
+          <i class="bi bi-qr-code me-2"></i>
+          <strong>Payment QR codes not set up.</strong>
+          {{ !currentMayaQr && !currentGcashQr ? 'Neither Maya nor GCash' : (!currentMayaQr ? 'Maya' : 'GCash') }} {{ !currentMayaQr && !currentGcashQr ? 'have' : 'has' }} a QR code uploaded yet. Customers won't be able to scan to pay until you add one.
+        </span>
+        <button class="btn btn-sm btn-outline-secondary flex-shrink-0" (click)="promptDismissed = true">
+          Skip for now
+        </button>
+      </div>
+
       <div class="section">
         <h2>Existing QR Codes</h2>
         <div class="row">
