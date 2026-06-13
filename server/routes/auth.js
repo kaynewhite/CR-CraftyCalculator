@@ -40,6 +40,17 @@ router.post('/signup', async (req, res) => {
       return res.status(409).json({ error: 'An account with this email already exists' });
     }
 
+    // Rate limit: max 3 OTP requests per email per hour
+    const { rows: attempts } = await pool.query(
+      `SELECT COUNT(*) FROM otp_attempts WHERE email = LOWER($1) AND created_at > NOW() - INTERVAL '1 hour'`,
+      [email]
+    );
+    if (parseInt(attempts[0].count) >= 3) {
+      return res.status(429).json({ error: 'Too many verification attempts. Please try again in 1 hour.' });
+    }
+
+    await pool.query('INSERT INTO otp_attempts (email) VALUES (LOWER($1))', [email]);
+
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
     const otp = generateOtp();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
@@ -114,7 +125,7 @@ router.post('/verify-otp', async (req, res) => {
     await pool.query('DELETE FROM email_otps WHERE email = LOWER($1)', [email]);
 
     const token = signToken(user);
-    res.status(201).json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+    res.status(201).json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, created_at: user.created_at } });
   } catch (err) {
     console.error('[Auth] Verify OTP error:', err);
     res.status(500).json({ error: 'Verification failed. Please try again.' });
@@ -137,6 +148,18 @@ router.post('/resend-otp', async (req, res) => {
     }
 
     const record = rows[0];
+
+    // Rate limit: max 3 attempts per email per hour (shared with signup attempts)
+    const { rows: attempts } = await pool.query(
+      `SELECT COUNT(*) FROM otp_attempts WHERE email = LOWER($1) AND created_at > NOW() - INTERVAL '1 hour'`,
+      [email]
+    );
+    if (parseInt(attempts[0].count) >= 3) {
+      return res.status(429).json({ error: 'Too many verification attempts. Please try again in 1 hour.' });
+    }
+
+    await pool.query('INSERT INTO otp_attempts (email) VALUES (LOWER($1))', [email]);
+
     const otp = generateOtp();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
@@ -199,6 +222,7 @@ router.post('/login', async (req, res) => {
         role: user.role,
         status: user.status,
         plan: user.plan || 'free',
+        created_at: user.created_at,
       }
     });
   } catch (err) {

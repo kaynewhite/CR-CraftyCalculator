@@ -108,10 +108,6 @@
           <i class="bi bi-qr-code nav-icon"></i>
           <ng-container *ngIf="!isCollapsed"><span>QR Codes</span></ng-container>
         </a>
-        <a [routerLink]="'/admin-resets'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'Password Resets' : ''">
-          <i class="bi bi-key nav-icon"></i>
-          <ng-container *ngIf="!isCollapsed"><span>Password Resets</span></ng-container>
-        </a>
       </div>
 
 <ng-container *ngIf="isSuperAdmin">
