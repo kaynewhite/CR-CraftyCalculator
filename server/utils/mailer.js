@@ -1,12 +1,18 @@
-const { Resend } = require('resend');
+const nodemailer = require('nodemailer');
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-const FROM_ADDRESS = 'Crafty Rachel <noreply@craftyrachel.calc.com>';
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
+  port: parseInt(process.env.SMTP_PORT || '587'),
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
 
 async function sendOtpEmail(toEmail, toName, otp) {
-  await resend.emails.send({
-    from: FROM_ADDRESS,
+  await transporter.sendMail({
+    from: `"Crafty Rachel" <${process.env.SMTP_USER}>`,
     to: toEmail,
     subject: 'Your Crafty Rachel Verification Code',
     html: `
@@ -26,8 +32,8 @@ async function sendOtpEmail(toEmail, toName, otp) {
 }
 
 async function sendResetEmail(toEmail, toName, resetLink) {
-  await resend.emails.send({
-    from: FROM_ADDRESS,
+  await transporter.sendMail({
+    from: `"Crafty Rachel" <${process.env.SMTP_USER}>`,
     to: toEmail,
     subject: 'Reset Your Crafty Rachel Password',
     html: `
