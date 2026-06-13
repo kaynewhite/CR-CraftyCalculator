@@ -23,20 +23,23 @@
           </p>
         </div>
       </div>
-      <div class="header-right" *ngIf="!hasUnlimitedCalculations">
-        <div
-          class="calc-badge"
-          [class.calc-badge--warning]="calculationsRemaining <= 2"
-          [class.calc-badge--danger]="calculationsRemaining === 0"
-        >
-          <i class="bi bi-calculator me-1"></i>
-          <span
-            ><strong>{{ calculationsRemaining }}</strong> /
-            {{
-              subscriptionService.getCalculationLimit(currentPlan)
-            }}
-            calculations left</span
+      <div class="header-right" style="display:flex;align-items:center;gap:0.75rem;">
+        <app-notification-bell></app-notification-bell>
+        <div *ngIf="!hasUnlimitedCalculations">
+          <div
+            class="calc-badge"
+            [class.calc-badge--warning]="calculationsRemaining <= 2"
+            [class.calc-badge--danger]="calculationsRemaining === 0"
           >
+            <i class="bi bi-calculator me-1"></i>
+            <span
+              ><strong>{{ calculationsRemaining }}</strong> /
+              {{
+                subscriptionService.getCalculationLimit(currentPlan)
+              }}
+              calculations left</span
+            >
+          </div>
         </div>
       </div>
     </div>

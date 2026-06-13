@@ -8,10 +8,11 @@ import { SidebarService } from '../../services/sidebar.service';
 import { Calculation } from '../../models/calculation.model';
 import { MaterialInput } from '../../models/material.model';
 import { SubscriptionService } from '../../services/subscription.service';
+import { NotificationBellComponent } from '../notification-bell/notification-bell.component';
 
 @Component({
   selector: 'app-history',
-  imports: [CommonModule, FormsModule, SidebarComponent],
+  imports: [CommonModule, FormsModule, SidebarComponent, NotificationBellComponent],
   templateUrl: './history.component.html',
   styleUrls: ['./history.component.css']
 })

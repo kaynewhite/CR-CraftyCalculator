@@ -10,10 +10,11 @@ import { SubscriptionPlan, UserSubscription } from '../../models/subscription.mo
 import { PaymentModalComponent } from '../payment-modal/payment-modal.component';
 import { PaymentService } from '../../services/payment.service';
 import { ThemeService } from '../../services/theme.service';
+import { NotificationBellComponent } from '../notification-bell/notification-bell.component';
 
 @Component({
   selector: 'app-subscription',
-  imports: [CommonModule, SidebarComponent, PaymentModalComponent],
+  imports: [CommonModule, SidebarComponent, PaymentModalComponent, NotificationBellComponent],
   templateUrl: './subscription.component.html',
   styleUrls: ['./subscription.component.css']
 })

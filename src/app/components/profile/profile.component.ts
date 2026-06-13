@@ -7,10 +7,11 @@ import { SidebarComponent } from '../sidebar/sidebar.component';
 import { AuthService } from '../../services/auth.service';
 import { SidebarService } from '../../services/sidebar.service';
 import { User } from '../../models/user.model';
+import { NotificationBellComponent } from '../notification-bell/notification-bell.component';
 
 @Component({
   selector: 'app-profile',
-  imports: [CommonModule, FormsModule, SidebarComponent],
+  imports: [CommonModule, FormsModule, SidebarComponent, NotificationBellComponent],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css'],
 })

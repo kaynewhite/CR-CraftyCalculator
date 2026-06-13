@@ -9,10 +9,11 @@ import { SidebarService } from '../../services/sidebar.service';
 import { AuthService } from '../../services/auth.service';
 import { CalculationSummary, Calculation } from '../../models/calculation.model';
 import { Subscription } from 'rxjs';
+import { NotificationBellComponent } from '../notification-bell/notification-bell.component';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [CommonModule, SidebarComponent, SubscriptionExpiryBannerComponent],
+  imports: [CommonModule, SidebarComponent, SubscriptionExpiryBannerComponent, NotificationBellComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })

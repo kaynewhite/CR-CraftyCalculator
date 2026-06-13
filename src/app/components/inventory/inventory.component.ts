@@ -7,10 +7,11 @@ import { MaterialService } from '../../services/material.service';
 import { SidebarService } from '../../services/sidebar.service';
 import { Material } from '../../models/material.model';
 import { SubscriptionService } from '../../services/subscription.service';
+import { NotificationBellComponent } from '../notification-bell/notification-bell.component';
 
 @Component({
   selector: 'app-inventory',
-  imports: [CommonModule, FormsModule, SidebarComponent],
+  imports: [CommonModule, FormsModule, SidebarComponent, NotificationBellComponent],
   templateUrl: './inventory.component.html',
   styleUrls: ['./inventory.component.css']
 })

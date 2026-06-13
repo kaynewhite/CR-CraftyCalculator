@@ -9,10 +9,11 @@ import { MaterialService } from '../../services/material.service';
 import { SubscriptionService } from '../../services/subscription.service';
 import { SidebarService } from '../../services/sidebar.service';
 import { Material, MaterialInput } from '../../models/material.model';
+import { NotificationBellComponent } from '../notification-bell/notification-bell.component';
 
 @Component({
   selector: 'app-calculator',
-  imports: [CommonModule, FormsModule, SidebarComponent],
+  imports: [CommonModule, FormsModule, SidebarComponent, NotificationBellComponent],
   templateUrl: './calculator.component.html',
   styleUrls: ['./calculator.component.css']
 })

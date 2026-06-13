@@ -1,0 +1,39 @@
+<div class="notif-bell-wrap">
+  <button class="notif-bell-btn" (click)="toggle()" [class.notif-bell-btn--active]="isOpen" title="Notifications" aria-label="Notifications">
+    <i class="bi bi-bell-fill"></i>
+    <span *ngIf="unreadCount > 0" class="notif-badge">{{ unreadCount }}</span>
+  </button>
+
+  <div *ngIf="isOpen" class="notif-dropdown">
+    <div class="notif-dropdown__header">
+      <span class="notif-dropdown__title">Notifications</span>
+      <button *ngIf="unreadCount > 0" class="notif-mark-read" (click)="markAllRead()">
+        <i class="bi bi-check2-all me-1"></i>Mark all read
+      </button>
+    </div>
+
+    <div class="notif-dropdown__body">
+      <ng-container *ngIf="notificationService.notifications.length > 0; else empty">
+        <div *ngFor="let n of notificationService.notifications"
+             class="notif-item"
+             [class.notif-item--unread]="!n.read">
+          <i class="bi notif-item__icon"
+             [class.bi-check-circle-fill]="n.type === 'payment_approved'"
+             [class.bi-x-circle-fill]="n.type === 'payment_rejected'"
+             [class.bi-clock-fill]="n.type === 'subscription_expiring'"
+             [style.color]="n.type === 'payment_approved' ? '#059669' : n.type === 'payment_rejected' ? '#E74C6C' : '#D97706'"></i>
+          <div class="notif-item__content">
+            <p class="notif-item__msg">{{ n.message }}</p>
+            <span class="notif-item__time">{{ n.created_at | date:'short' }}</span>
+          </div>
+        </div>
+      </ng-container>
+      <ng-template #empty>
+        <div class="notif-empty">
+          <i class="bi bi-bell-slash"></i>
+          <p>No notifications yet</p>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+</div>
