@@ -26,3 +26,17 @@
   .calc-card-body { grid-template-columns: repeat(2, 1fr); }
   .filter-bar { flex-direction: column; align-items: stretch; }
 }
+
+.modal-backdrop-custom { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1050; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+.modal-box-custom { background: var(--bg-card); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg, 0 8px 32px rgba(0,0,0,0.18)); width: 100%; max-width: 560px; max-height: 85vh; display: flex; flex-direction: column; }
+.modal-box-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 1.1rem 1.25rem 0.75rem; border-bottom: 1px solid var(--border-color); gap: 0.75rem; }
+.modal-box-title { font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.25rem; }
+.modal-box-close { background: none; border: none; font-size: 1rem; color: var(--text-muted); cursor: pointer; padding: 0.25rem; flex-shrink: 0; }
+.modal-box-close:hover { color: var(--text-primary); }
+.modal-box-body { padding: 1.1rem 1.25rem; overflow-y: auto; flex: 1; }
+.modal-box-footer { padding: 0.75rem 1.25rem; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; }
+.modal-section-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin: 0 0 0.5rem; }
+.modal-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.modal-summary-item { background: var(--bg-stripe); border-radius: var(--radius-md, 8px); padding: 0.65rem 0.9rem; }
+.modal-summary-label { display: block; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.2rem; }
+.modal-summary-value { display: block; font-size: 1rem; font-weight: 700; color: var(--text-primary); }

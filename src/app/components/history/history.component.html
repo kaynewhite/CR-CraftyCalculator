@@ -61,7 +61,10 @@
                       <td>₱{{ calc.suggestedPrice.toFixed(2) }}</td>
                       <td class="text-success"><strong>₱{{ calc.profitAmount.toFixed(2) }}</strong><br><small>({{ calc.profitMargin.toFixed(1) }}%)</small></td>
                       <td>{{ calc.createdAt | date:'short' }}</td>
-                      <td><button class="btn btn-sm btn-danger" (click)="deleteCalculation(calc.id)"><i class="bi bi-trash"></i></button></td>
+                      <td>
+                        <button class="btn btn-sm btn-outline-primary me-1" (click)="viewCalculation(calc)" title="View breakdown"><i class="bi bi-eye"></i></button>
+                        <button class="btn btn-sm btn-danger" (click)="deleteCalculation(calc.id)"><i class="bi bi-trash"></i></button>
+                      </td>
                     </tr>
 </ng-container>
                 </tbody>
@@ -71,6 +74,73 @@
           <div *ngIf="calculations.length === 0" class="empty-state text-center py-5"><i class="bi bi-inbox"></i><p>No saved calculations yet. Start calculating to save your first calculation!</p></div>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- View Breakdown Modal -->
+<div *ngIf="selectedCalc" class="modal-backdrop-custom" (click)="closeView()">
+  <div class="modal-box-custom" (click)="$event.stopPropagation()">
+    <div class="modal-box-header">
+      <div>
+        <h5 class="modal-box-title">{{ selectedCalc.name }}</h5>
+        <span class="badge bg-info">{{ selectedCalc.category }}</span>
+        <span class="ms-2 text-muted" style="font-size:0.78rem;">{{ selectedCalc.createdAt | date:'MMM dd, yyyy, h:mm a' }}</span>
+      </div>
+      <button class="modal-box-close" (click)="closeView()"><i class="bi bi-x-lg"></i></button>
+    </div>
+
+    <div class="modal-box-body">
+      <!-- Materials Breakdown -->
+      <p class="modal-section-label">Materials Used</p>
+      <div *ngIf="selectedCalc.materials.length > 0; else noMats" class="table-responsive mb-3">
+        <table class="table table-sm table-bordered mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Material</th>
+              <th class="text-end">Qty</th>
+              <th class="text-end">₱/unit</th>
+              <th class="text-end">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let m of selectedCalc.materials">
+              <td>{{ m.materialName }}</td>
+              <td class="text-end">{{ m.quantity }}</td>
+              <td class="text-end">₱{{ m.costPerUnit.toFixed(2) }}</td>
+              <td class="text-end">₱{{ m.subtotal.toFixed(2) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <ng-template #noMats>
+        <p class="text-muted small mb-3">No materials recorded.</p>
+      </ng-template>
+
+      <!-- Summary -->
+      <p class="modal-section-label">Pricing Summary</p>
+      <div class="modal-summary-grid">
+        <div class="modal-summary-item">
+          <span class="modal-summary-label">Total Batch Cost</span>
+          <span class="modal-summary-value">₱{{ selectedCalc.totalCost.toFixed(2) }}</span>
+        </div>
+        <div class="modal-summary-item">
+          <span class="modal-summary-label">Suggested Price / unit</span>
+          <span class="modal-summary-value text-primary">₱{{ selectedCalc.suggestedPrice.toFixed(2) }}</span>
+        </div>
+        <div class="modal-summary-item">
+          <span class="modal-summary-label">Profit / unit</span>
+          <span class="modal-summary-value text-success">₱{{ selectedCalc.profitAmount.toFixed(2) }}</span>
+        </div>
+        <div class="modal-summary-item">
+          <span class="modal-summary-label">Markup %</span>
+          <span class="modal-summary-value">{{ selectedCalc.profitMargin.toFixed(1) }}%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-box-footer">
+      <button class="btn btn-secondary btn-sm" (click)="closeView()">Close</button>
     </div>
   </div>
 </div>

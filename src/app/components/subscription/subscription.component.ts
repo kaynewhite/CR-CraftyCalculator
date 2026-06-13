@@ -29,7 +29,7 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
   showPaymentModal = false;
   pendingPlan: 'basic' | 'pro' | null = null;
   upgradeCost = 0;
-  hasPendingRequest = false;
+  hasPendingRequest = true;
 
   isDarkMode = false;
 

@@ -87,7 +87,7 @@
 </ng-container>
       </div>
 
-<ng-container *ngIf="!isAdmin && notificationService.notifications.length > 0">
+<ng-container *ngIf="!isAdmin">
       <div class="nav-section">
         <ng-container *ngIf="!isCollapsed"><p class="nav-section-label">Notifications</p></ng-container>
         <a class="nav-item" style="cursor:pointer;" (click)="toggleNotifPanel()" [title]="isCollapsed ? 'Notifications' : ''">
@@ -101,23 +101,31 @@
           </ng-container>
         </a>
         <div *ngIf="showNotifPanel && !isCollapsed" style="border:1px solid var(--border-color);border-radius:var(--radius-md);overflow:hidden;margin-top:0.375rem;max-height:260px;overflow-y:auto;">
-          <div *ngFor="let n of notificationService.notifications"
-               style="display:flex;align-items:flex-start;gap:0.5rem;padding:0.6rem 0.75rem;border-bottom:1px solid var(--border-color);"
-               [style.background]="!n.read ? 'var(--brand-primary-light)' : 'var(--bg-stripe)'">
-            <i class="bi flex-shrink-0"
-               style="font-size:0.85rem;margin-top:2px;"
-               [class.bi-check-circle-fill]="n.type === 'payment_approved'"
-               [class.bi-x-circle-fill]="n.type === 'payment_rejected'"
-               [class.bi-clock-fill]="n.type === 'subscription_expiring'"
-               [style.color]="n.type === 'payment_approved' ? '#059669' : n.type === 'payment_rejected' ? '#E74C6C' : '#D97706'"></i>
-            <div>
-              <p style="margin:0;font-size:0.75rem;color:var(--text-primary);line-height:1.4;">{{ n.message }}</p>
-              <span style="font-size:0.68rem;color:var(--text-muted);">{{ n.created_at | date:'short' }}</span>
+          <ng-container *ngIf="notificationService.notifications.length > 0; else noNotifs">
+            <div *ngFor="let n of notificationService.notifications"
+                 style="display:flex;align-items:flex-start;gap:0.5rem;padding:0.6rem 0.75rem;border-bottom:1px solid var(--border-color);"
+                 [style.background]="!n.read ? 'var(--brand-primary-light)' : 'var(--bg-stripe)'">
+              <i class="bi flex-shrink-0"
+                 style="font-size:0.85rem;margin-top:2px;"
+                 [class.bi-check-circle-fill]="n.type === 'payment_approved'"
+                 [class.bi-x-circle-fill]="n.type === 'payment_rejected'"
+                 [class.bi-clock-fill]="n.type === 'subscription_expiring'"
+                 [style.color]="n.type === 'payment_approved' ? '#059669' : n.type === 'payment_rejected' ? '#E74C6C' : '#D97706'"></i>
+              <div>
+                <p style="margin:0;font-size:0.75rem;color:var(--text-primary);line-height:1.4;">{{ n.message }}</p>
+                <span style="font-size:0.68rem;color:var(--text-muted);">{{ n.created_at | date:'short' }}</span>
+              </div>
             </div>
-          </div>
-          <button *ngIf="unreadCount > 0" (click)="markAllRead()" style="width:100%;background:none;border:none;padding:0.5rem;font-size:0.75rem;color:var(--brand-primary);cursor:pointer;font-weight:600;font-family:inherit;">
-            <i class="bi bi-check2-all me-1"></i>Mark all as read
-          </button>
+            <button *ngIf="unreadCount > 0" (click)="markAllRead()" style="width:100%;background:none;border:none;padding:0.5rem;font-size:0.75rem;color:var(--brand-primary);cursor:pointer;font-weight:600;font-family:inherit;">
+              <i class="bi bi-check2-all me-1"></i>Mark all as read
+            </button>
+          </ng-container>
+          <ng-template #noNotifs>
+            <div style="padding:0.75rem;text-align:center;font-size:0.75rem;color:var(--text-muted);">
+              <i class="bi bi-bell-slash" style="display:block;font-size:1.2rem;margin-bottom:0.25rem;"></i>
+              No notifications yet
+            </div>
+          </ng-template>
         </div>
       </div>
 </ng-container>

@@ -6,6 +6,7 @@ import { SidebarComponent } from '../sidebar/sidebar.component';
 import { CalculationService } from '../../services/calculation.service';
 import { SidebarService } from '../../services/sidebar.service';
 import { Calculation } from '../../models/calculation.model';
+import { MaterialInput } from '../../models/material.model';
 import { SubscriptionService } from '../../services/subscription.service';
 
 @Component({
@@ -25,6 +26,7 @@ export class HistoryComponent implements OnInit, OnDestroy {
   currentPlan: 'free' | 'basic' | 'pro' = 'free';
   savedCount: number = 0;
   Infinity = Infinity;
+  selectedCalc: Calculation | null = null;
   private sidebarSubscription: Subscription;
 
   constructor(
@@ -72,6 +74,14 @@ export class HistoryComponent implements OnInit, OnDestroy {
       this.loadSaved();
       this.remainingSlots = this.calculationService.getRemainingSlots();
     }
+  }
+
+  viewCalculation(calc: Calculation): void {
+    this.selectedCalc = calc;
+  }
+
+  closeView(): void {
+    this.selectedCalc = null;
   }
 
   toggleSidebar(): void {

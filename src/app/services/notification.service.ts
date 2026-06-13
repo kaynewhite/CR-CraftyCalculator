@@ -16,12 +16,20 @@ export class NotificationService {
   private notificationsSubject = new BehaviorSubject<AppNotification[]>([]);
   public notifications$ = this.notificationsSubject.asObservable();
 
+  private refreshInterval: any = null;
+
   constructor(private api: ApiService, private authService: AuthService) {
     this.authService.currentUser.subscribe(user => {
       if (user && user.role !== 'admin' && user.role !== 'superadmin') {
         this.load();
+        if (this.refreshInterval) clearInterval(this.refreshInterval);
+        this.refreshInterval = setInterval(() => this.load(), 5 * 60 * 1000);
       } else {
         this.notificationsSubject.next([]);
+        if (this.refreshInterval) {
+          clearInterval(this.refreshInterval);
+          this.refreshInterval = null;
+        }
       }
     });
   }
