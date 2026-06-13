@@ -210,6 +210,18 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_column THEN NULL;
 END $$;
 
+-- Email delivery logs
+CREATE TABLE IF NOT EXISTS email_logs (
+  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  type          TEXT NOT NULL CHECK (type IN ('otp', 'reset')),
+  to_email      TEXT NOT NULL,
+  to_name       TEXT NOT NULL DEFAULT '',
+  status        TEXT NOT NULL CHECK (status IN ('sent', 'failed')),
+  attempts      INT NOT NULL DEFAULT 1,
+  error_message TEXT,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_activity_logs_user    ON activity_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_activity_logs_created ON activity_logs(created_at DESC);

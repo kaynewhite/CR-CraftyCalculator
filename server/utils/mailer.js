@@ -1,11 +1,26 @@
+const pool = require('../db/pool');
+
 const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
 const MAX_RETRIES = 3;
 const BASE_DELAY_MS = 500;
 
-async function sendWithRetry(payload) {
-  let lastError;
+async function logEmail({ type, toEmail, toName, status, attempts, errorMessage }) {
+  try {
+    await pool.query(
+      `INSERT INTO email_logs (type, to_email, to_name, status, attempts, error_message)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [type, toEmail, toName, status, attempts, errorMessage || null]
+    );
+  } catch (err) {
+    console.error('[Mailer] Failed to write email log:', err.message);
+  }
+}
 
-  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+async function sendWithRetry(payload, type) {
+  let lastError;
+  let attempt = 0;
+
+  for (attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       const response = await fetch(BREVO_API_URL, {
         method: 'POST',
@@ -16,12 +31,30 @@ async function sendWithRetry(payload) {
         body: JSON.stringify(payload),
       });
 
-      if (response.ok) return;
+      if (response.ok) {
+        await logEmail({
+          type,
+          toEmail: payload.to[0].email,
+          toName: payload.to[0].name,
+          status: 'sent',
+          attempts: attempt,
+        });
+        return;
+      }
 
       const errorBody = await response.text();
 
       if (response.status >= 400 && response.status < 500) {
-        throw new Error(`Brevo API error (${response.status}): ${errorBody}`);
+        const err = new Error(`Brevo API error (${response.status}): ${errorBody}`);
+        await logEmail({
+          type,
+          toEmail: payload.to[0].email,
+          toName: payload.to[0].name,
+          status: 'failed',
+          attempts: attempt,
+          errorMessage: err.message,
+        });
+        throw err;
       }
 
       lastError = new Error(`Brevo API error (${response.status}): ${errorBody}`);
@@ -36,6 +69,15 @@ async function sendWithRetry(payload) {
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
+
+  await logEmail({
+    type,
+    toEmail: payload.to[0].email,
+    toName: payload.to[0].name,
+    status: 'failed',
+    attempts: attempt - 1,
+    errorMessage: lastError.message,
+  });
 
   throw new Error(`[Mailer] All ${MAX_RETRIES} attempts failed. Last error: ${lastError.message}`);
 }
@@ -58,7 +100,7 @@ async function sendOtpEmail(toEmail, toName, otp) {
         <p style="color:#888;font-size:12px;text-align:center;">If you did not sign up for Crafty Rachel, you can safely ignore this email.</p>
       </div>
     `,
-  });
+  }, 'otp');
 }
 
 async function sendResetEmail(toEmail, toName, resetLink) {
@@ -81,7 +123,7 @@ async function sendResetEmail(toEmail, toName, resetLink) {
         <p style="color:#888;font-size:12px;text-align:center;margin-top:24px;">If you did not request a password reset, you can safely ignore this email.</p>
       </div>
     `,
-  });
+  }, 'reset');
 }
 
 module.exports = { sendOtpEmail, sendResetEmail };
