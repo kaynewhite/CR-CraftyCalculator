@@ -6,7 +6,7 @@ import { AuthService } from '../../services/auth.service';
 import { LogService } from '../../services/log.service';
 import { ThemeService } from '../../services/theme.service';
 import { SidebarComponent } from '../sidebar/sidebar.component';
-import { SubscriptionLog, SystemLog, ActivityLog } from '../../models/subscription-log.model';
+import { SubscriptionLog, SystemLog, ActivityLog, EmailLog } from '../../models/subscription-log.model';
 
 @Component({
   selector: 'app-system-logs',
@@ -23,10 +23,12 @@ export class SystemLogsComponent implements OnInit {
   filteredSysLogs: SystemLog[] = [];
   filteredActivityLogs: ActivityLog[] = [];
 
-  activeTab: 'subscription' | 'system' | 'activity' = 'activity';
+  activeTab: 'subscription' | 'system' | 'activity' | 'email' = 'activity';
   logTypeFilter = 'all';
   actionFilter = 'all';
   activityActionFilter = 'all';
+  emailStatusFilter = 'all';
+  emailTypeFilter = 'all';
   searchQuery = '';
   dateRangeStart = '';
   dateRangeEnd = '';
@@ -34,6 +36,9 @@ export class SystemLogsComponent implements OnInit {
   sidebarOpen = false;
   sidebarCollapsed = false;
   isDarkMode = false;
+
+  emailLogs: EmailLog[] = [];
+  filteredEmailLogs: EmailLog[] = [];
 
   logTypes = ['all', 'approval', 'rejection', 'error', 'system', 'maintenance'];
   actionTypes = ['all', 'approved', 'rejected', 'upgraded', 'downgraded', 'cancelled'];
@@ -65,24 +70,23 @@ export class SystemLogsComponent implements OnInit {
     this.isLoading = true;
 
     this.logService.getSubscriptionLogs().subscribe({
-      next: subLogs => {
-        this.subscriptionLogs = subLogs;
-        this.filterLogs();
-      },
+      next: subLogs => { this.subscriptionLogs = subLogs; this.filterLogs(); },
       error: () => {}
     });
 
     this.logService.getSystemLogs().subscribe({
-      next: sysLogs => {
-        this.systemLogs = sysLogs;
-        this.filterLogs();
-      },
+      next: sysLogs => { this.systemLogs = sysLogs; this.filterLogs(); },
       error: () => {}
     });
 
     this.logService.getActivityLogs().subscribe({
-      next: actLogs => {
-        this.activityLogs = actLogs;
+      next: actLogs => { this.activityLogs = actLogs; this.filterLogs(); },
+      error: () => {}
+    });
+
+    this.logService.getEmailLogs().subscribe({
+      next: emailLogs => {
+        this.emailLogs = emailLogs;
         this.filterLogs();
         this.isLoading = false;
       },
@@ -90,11 +94,13 @@ export class SystemLogsComponent implements OnInit {
     });
   }
 
-  switchTab(tab: 'subscription' | 'system' | 'activity'): void {
+  switchTab(tab: 'subscription' | 'system' | 'activity' | 'email'): void {
     this.activeTab = tab;
     this.logTypeFilter = 'all';
     this.actionFilter = 'all';
     this.activityActionFilter = 'all';
+    this.emailStatusFilter = 'all';
+    this.emailTypeFilter = 'all';
     this.searchQuery = '';
     this.filterLogs();
   }
@@ -103,6 +109,7 @@ export class SystemLogsComponent implements OnInit {
     this.filteredSubLogs = this.filterSubscriptionLogs();
     this.filteredSysLogs = this.filterSystemLogs();
     this.filteredActivityLogs = this.filterActivityLogs();
+    this.filteredEmailLogs = this.filterEmailLogs();
   }
 
   filterSubscriptionLogs(): SubscriptionLog[] {
@@ -171,6 +178,30 @@ export class SystemLogsComponent implements OnInit {
       const e = new Date(this.dateRangeEnd);
       e.setHours(23, 59, 59, 999);
       filtered = filtered.filter(log => new Date(log.timestamp) <= e);
+    }
+    return filtered.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  }
+
+  filterEmailLogs(): EmailLog[] {
+    let filtered = [...this.emailLogs];
+    if (this.emailStatusFilter !== 'all') filtered = filtered.filter(l => l.status === this.emailStatusFilter);
+    if (this.emailTypeFilter !== 'all') filtered = filtered.filter(l => l.type === this.emailTypeFilter);
+    if (this.searchQuery.trim()) {
+      const q = this.searchQuery.toLowerCase();
+      filtered = filtered.filter(l =>
+        l.toEmail.toLowerCase().includes(q) ||
+        (l.toName || '').toLowerCase().includes(q) ||
+        (l.errorMessage || '').toLowerCase().includes(q)
+      );
+    }
+    if (this.dateRangeStart) {
+      const s = new Date(this.dateRangeStart);
+      filtered = filtered.filter(l => new Date(l.timestamp) >= s);
+    }
+    if (this.dateRangeEnd) {
+      const e = new Date(this.dateRangeEnd);
+      e.setHours(23, 59, 59, 999);
+      filtered = filtered.filter(l => new Date(l.timestamp) <= e);
     }
     return filtered.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   }
@@ -259,6 +290,8 @@ export class SystemLogsComponent implements OnInit {
     this.logTypeFilter = 'all';
     this.actionFilter = 'all';
     this.activityActionFilter = 'all';
+    this.emailStatusFilter = 'all';
+    this.emailTypeFilter = 'all';
     this.dateRangeStart = '';
     this.dateRangeEnd = '';
     this.filterLogs();
@@ -267,18 +300,21 @@ export class SystemLogsComponent implements OnInit {
   get currentLogCount(): number {
     if (this.activeTab === 'subscription') return this.filteredSubLogs.length;
     if (this.activeTab === 'system') return this.filteredSysLogs.length;
+    if (this.activeTab === 'email') return this.filteredEmailLogs.length;
     return this.filteredActivityLogs.length;
   }
 
   get totalLogCount(): number {
     if (this.activeTab === 'subscription') return this.subscriptionLogs.length;
     if (this.activeTab === 'system') return this.systemLogs.length;
+    if (this.activeTab === 'email') return this.emailLogs.length;
     return this.activityLogs.length;
   }
 
   get logLabel(): string {
     if (this.activeTab === 'subscription') return 'subscription log';
     if (this.activeTab === 'system') return 'system log';
+    if (this.activeTab === 'email') return 'email log';
     return 'activity log';
   }
 

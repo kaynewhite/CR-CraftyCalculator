@@ -121,6 +121,7 @@ export class ApiService {
   clearSystemLogs(): Observable<any> { return this.delete('/admin/logs/system'); }
   getActivityLogs(): Observable<any> { return this.get('/admin/logs/activity'); }
   clearActivityLogs(): Observable<any> { return this.delete('/admin/logs/activity'); }
+  getEmailLogs(): Observable<any> { return this.get('/admin/logs/email'); }
   getUsersWithPasswords(): Observable<any> { return this.get('/users/with-passwords'); }
   heartbeat(): Observable<any> { return this.put('/users/heartbeat', {}); }
   logoutApi(): Observable<any> { return this.post('/auth/logout', {}); }

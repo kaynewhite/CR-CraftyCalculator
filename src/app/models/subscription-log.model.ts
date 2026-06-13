@@ -23,6 +23,17 @@ export interface SystemLog {
   details?: any;
 }
 
+export interface EmailLog {
+  id: string;
+  type: 'otp' | 'reset';
+  toEmail: string;
+  toName: string;
+  status: 'sent' | 'failed';
+  attempts: number;
+  errorMessage?: string;
+  timestamp: string;
+}
+
 export interface ActivityLog {
   id: string;
   userId?: string;

@@ -63,6 +63,10 @@
             <i class="bi bi-gear me-2"></i>System Logs
             <span class="tab-count">{{ systemLogs.length }}</span>
           </button>
+          <button class="log-tab" [class.active]="activeTab === 'email'" (click)="switchTab('email')">
+            <i class="bi bi-envelope me-2"></i>Email Logs
+            <span class="tab-count">{{ emailLogs.length }}</span>
+          </button>
         </div>
 
         <!-- Filter Bar -->
@@ -124,13 +128,32 @@
             </div>
           </ng-container>
 
+          <ng-container *ngIf="activeTab === 'email'">
+            <div class="filter-select-wrap">
+              <i class="bi bi-funnel filter-select-icon"></i>
+              <select class="filter-select" [(ngModel)]="emailStatusFilter" (ngModelChange)="onFilterChange()">
+                <option value="all">All Statuses</option>
+                <option value="sent">Sent</option>
+                <option value="failed">Failed</option>
+              </select>
+            </div>
+            <div class="filter-select-wrap">
+              <i class="bi bi-funnel filter-select-icon"></i>
+              <select class="filter-select" [(ngModel)]="emailTypeFilter" (ngModelChange)="onFilterChange()">
+                <option value="all">All Types</option>
+                <option value="otp">OTP</option>
+                <option value="reset">Password Reset</option>
+              </select>
+            </div>
+          </ng-container>
+
           <div class="filter-date-group">
             <input type="date" class="filter-date" [(ngModel)]="dateRangeStart" (ngModelChange)="onFilterChange()" title="From date">
             <span class="filter-date-sep">to</span>
             <input type="date" class="filter-date" [(ngModel)]="dateRangeEnd" (ngModelChange)="onFilterChange()" title="To date">
           </div>
 
-          <ng-container *ngIf="searchQuery || logTypeFilter !== 'all' || actionFilter !== 'all' || activityActionFilter !== 'all' || dateRangeStart || dateRangeEnd">
+          <ng-container *ngIf="searchQuery || logTypeFilter !== 'all' || actionFilter !== 'all' || activityActionFilter !== 'all' || emailStatusFilter !== 'all' || emailTypeFilter !== 'all' || dateRangeStart || dateRangeEnd">
             <button class="btn btn-sm btn-ghost-muted" (click)="clearFilters()">
               <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
             </button>
@@ -299,6 +322,61 @@
               <i class="bi bi-journal"></i>
               <p>No system logs found</p>
               <small>Try adjusting your filters</small>
+            </div>
+          </ng-container>
+        </ng-container>
+
+        <!-- Email Logs -->
+        <ng-container *ngIf="activeTab === 'email'">
+          <ng-container *ngIf="filteredEmailLogs.length > 0">
+            <div class="logs-list">
+              <ng-container *ngFor="let log of filteredEmailLogs">
+                <div class="log-card sys-log" [class.sys-type-error]="log.status === 'failed'">
+                  <div class="sys-log-icon-col">
+                    <div class="sys-log-icon" [class]="log.status === 'sent' ? 'icon-approval' : 'icon-error'">
+                      <i class="bi" [class]="log.status === 'sent' ? 'bi-envelope-check-fill' : 'bi-envelope-x-fill'"></i>
+                    </div>
+                    <span class="sys-type-label" [class]="log.status === 'sent' ? 'label-approval' : 'label-rejection'">
+                      {{ log.status | uppercase }}
+                    </span>
+                  </div>
+                  <div class="log-card-body">
+                    <div class="log-user-info">
+                      <div class="log-avatar">{{ (log.toName || log.toEmail).charAt(0).toUpperCase() }}</div>
+                      <div>
+                        <p class="log-user-name">{{ log.toName || 'Unknown' }}</p>
+                        <p class="log-user-email">{{ log.toEmail }}</p>
+                      </div>
+                    </div>
+                    <div class="log-meta-row">
+                      <span class="log-meta-item">
+                        <i class="bi bi-tag me-1"></i>
+                        Type: <strong>{{ log.type === 'otp' ? 'OTP Verification' : 'Password Reset' }}</strong>
+                      </span>
+                      <span class="log-meta-item">
+                        <i class="bi bi-arrow-repeat me-1"></i>
+                        Attempts: <strong>{{ log.attempts }}</strong>
+                      </span>
+                      <ng-container *ngIf="log.errorMessage">
+                        <span class="log-meta-item log-feedback" style="color:#d32f2f;">
+                          <i class="bi bi-exclamation-triangle me-1"></i>{{ log.errorMessage }}
+                        </span>
+                      </ng-container>
+                    </div>
+                  </div>
+                  <div class="log-card-right">
+                    <span class="log-time">{{ log.timestamp | date:'MMM d, y' }}</span>
+                    <span class="log-time">{{ log.timestamp | date:'h:mm:ss a' }}</span>
+                  </div>
+                </div>
+              </ng-container>
+            </div>
+          </ng-container>
+          <ng-container *ngIf="filteredEmailLogs.length === 0">
+            <div class="empty-logs">
+              <i class="bi bi-envelope"></i>
+              <p>No email logs found</p>
+              <small>OTP and password reset delivery records will appear here</small>
             </div>
           </ng-container>
         </ng-container>

@@ -167,6 +167,19 @@ router.delete('/logs/activity', requireSuperAdmin, async (req, res) => {
   }
 });
 
+// GET /api/admin/logs/email — superadmin only
+router.get('/logs/email', requireSuperAdmin, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT * FROM email_logs ORDER BY created_at DESC LIMIT 300`
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch email logs' });
+  }
+});
+
 // GET /api/admin/admins — list admin accounts (superadmin only)
 router.get('/admins', requireSuperAdmin, async (req, res) => {
   try {
