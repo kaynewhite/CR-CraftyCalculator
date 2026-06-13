@@ -9,7 +9,6 @@
   </div>
 
   <div class="logs-main">
-    <!-- Header -->
     <header class="content-header">
       <button class="hamburger-btn" (click)="toggleSidebar()" aria-label="Toggle menu">
         <i class="bi bi-list"></i>
@@ -19,31 +18,43 @@
         <p><i class="bi bi-shield-lock me-1"></i>SuperAdmin — Complete audit trail</p>
       </div>
       <div class="header-actions">
-<ng-container *ngIf="(activeTab === 'subscription' ? filteredSubLogs : filteredSysLogs).length > 0">
+        <button class="btn btn-outline-secondary btn-sm" (click)="loadLogs()" title="Refresh logs">
+          <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+        </button>
+        <ng-container *ngIf="currentLogCount > 0">
           <button class="btn btn-outline-secondary btn-sm" (click)="exportLogs()">
             <i class="bi bi-download me-1"></i>Export
           </button>
-</ng-container>
-<ng-container *ngIf="activeTab === 'system' && systemLogs.length > 0">
+        </ng-container>
+        <ng-container *ngIf="activeTab === 'system' && systemLogs.length > 0">
           <button class="btn btn-outline-danger btn-sm" (click)="clearSystemLogs()">
             <i class="bi bi-trash me-1"></i>Clear All
           </button>
-</ng-container>
+        </ng-container>
+        <ng-container *ngIf="activeTab === 'activity' && activityLogs.length > 0">
+          <button class="btn btn-outline-danger btn-sm" (click)="clearActivityLogs()">
+            <i class="bi bi-trash me-1"></i>Clear All
+          </button>
+        </ng-container>
       </div>
     </header>
 
-<ng-container *ngIf="isLoading">
+    <ng-container *ngIf="isLoading">
       <div class="page-loading">
         <div class="spinner-border text-brand" style="width:2rem;height:2rem;" role="status"></div>
         <p>Loading logs…</p>
       </div>
-</ng-container>
+    </ng-container>
 
-<ng-container *ngIf="!isLoading">
+    <ng-container *ngIf="!isLoading">
       <div class="logs-container fade-in">
 
         <!-- Tabs -->
         <div class="log-tabs">
+          <button class="log-tab" [class.active]="activeTab === 'activity'" (click)="switchTab('activity')">
+            <i class="bi bi-activity me-2"></i>Activity Logs
+            <span class="tab-count">{{ activityLogs.length }}</span>
+          </button>
           <button class="log-tab" [class.active]="activeTab === 'subscription'" (click)="switchTab('subscription')">
             <i class="bi bi-receipt me-2"></i>Subscription Logs
             <span class="tab-count">{{ subscriptionLogs.length }}</span>
@@ -61,42 +72,57 @@
             <input
               type="text"
               class="filter-input"
-              placeholder="{{ activeTab === 'subscription' ? 'Search by user, email, plan…' : 'Search message, user…' }}"
+              [placeholder]="activeTab === 'activity' ? 'Search by user, email, IP…' : activeTab === 'subscription' ? 'Search by user, email, plan…' : 'Search message, user…'"
               [(ngModel)]="searchQuery"
               (ngModelChange)="onFilterChange()">
-<ng-container *ngIf="searchQuery">
+            <ng-container *ngIf="searchQuery">
               <button class="filter-clear-btn" (click)="searchQuery=''; onFilterChange()">
                 <i class="bi bi-x"></i>
               </button>
-</ng-container>
+            </ng-container>
           </div>
 
-<ng-container *ngIf="activeTab === 'subscription'">
+          <ng-container *ngIf="activeTab === 'subscription'">
             <div class="filter-select-wrap">
               <i class="bi bi-funnel filter-select-icon"></i>
               <select class="filter-select" [(ngModel)]="actionFilter" (ngModelChange)="onFilterChange()">
                 <option value="all">All Actions</option>
-<ng-container *ngFor="let a of actionTypes">
-<ng-container *ngIf="a !== 'all'">
+                <ng-container *ngFor="let a of actionTypes">
+                  <ng-container *ngIf="a !== 'all'">
                     <option [value]="a">{{ a | titlecase }}</option>
-</ng-container>
-</ng-container>
+                  </ng-container>
+                </ng-container>
               </select>
             </div>
-</ng-container>
+          </ng-container>
 
-<ng-container *ngIf="activeTab === 'system'">
+          <ng-container *ngIf="activeTab === 'activity'">
+            <div class="filter-select-wrap">
+              <i class="bi bi-funnel filter-select-icon"></i>
+              <select class="filter-select" [(ngModel)]="activityActionFilter" (ngModelChange)="onFilterChange()">
+                <option value="all">All Events</option>
+                <ng-container *ngFor="let a of activityActions">
+                  <ng-container *ngIf="a !== 'all'">
+                    <option [value]="a">{{ a | titlecase }}</option>
+                  </ng-container>
+                </ng-container>
+              </select>
+            </div>
+          </ng-container>
+
+          <ng-container *ngIf="activeTab === 'system'">
             <div class="filter-select-wrap">
               <i class="bi bi-funnel filter-select-icon"></i>
               <select class="filter-select" [(ngModel)]="logTypeFilter" (ngModelChange)="onFilterChange()">
                 <option value="all">All Types</option>
-<ng-container *ngFor="let t of logTypes">
-<ng-container *ngIf="t !== 'all'">
+                <ng-container *ngFor="let t of logTypes">
+                  <ng-container *ngIf="t !== 'all'">
                     <option [value]="t">{{ t | titlecase }}</option>
-</ng-container>
-</ng-container>
+                  </ng-container>
+                </ng-container>
               </select>
             </div>
+          </ng-container>
 
           <div class="filter-date-group">
             <input type="date" class="filter-date" [(ngModel)]="dateRangeStart" (ngModelChange)="onFilterChange()" title="From date">
@@ -104,29 +130,76 @@
             <input type="date" class="filter-date" [(ngModel)]="dateRangeEnd" (ngModelChange)="onFilterChange()" title="To date">
           </div>
 
-<ng-container *ngIf="searchQuery || logTypeFilter !== 'all' || actionFilter !== 'all' || dateRangeStart || dateRangeEnd">
+          <ng-container *ngIf="searchQuery || logTypeFilter !== 'all' || actionFilter !== 'all' || activityActionFilter !== 'all' || dateRangeStart || dateRangeEnd">
             <button class="btn btn-sm btn-ghost-muted" (click)="clearFilters()">
               <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
             </button>
-</ng-container>
-</ng-container>
+          </ng-container>
         </div>
 
         <!-- Result count -->
         <div class="result-count">
-<ng-container *ngIf="activeTab === 'subscription'">
-            Showing {{ filteredSubLogs.length }} of {{ subscriptionLogs.length }} subscription log{{ subscriptionLogs.length !== 1 ? 's' : '' }}
-            </ng-container>
-          <ng-container *ngIf="!(activeTab === 'subscription')">
-            Showing {{ filteredSysLogs.length }} of {{ systemLogs.length }} system log{{ systemLogs.length !== 1 ? 's' : '' }}
-</ng-container>
+          Showing {{ currentLogCount }} of {{ totalLogCount }} {{ logLabel }}{{ totalLogCount !== 1 ? 's' : '' }}
         </div>
 
-        <!-- Subscription Logs -->
-<ng-container *ngIf="activeTab === 'subscription'">
-<ng-container *ngIf="filteredSubLogs.length > 0">
+        <!-- Activity Logs -->
+        <ng-container *ngIf="activeTab === 'activity'">
+          <ng-container *ngIf="filteredActivityLogs.length > 0">
             <div class="logs-list">
-<ng-container *ngFor="let log of filteredSubLogs">
+              <ng-container *ngFor="let log of filteredActivityLogs">
+                <div class="log-card sys-log activity-log-card">
+                  <div class="sys-log-icon-col">
+                    <div class="sys-log-icon" [class]="'icon-activity-' + log.action">
+                      <i class="bi" [class]="getActivityIcon(log.action)"></i>
+                    </div>
+                    <span class="activity-badge" [class]="getActivityBadgeClass(log.action)">
+                      {{ log.action | uppercase }}
+                    </span>
+                  </div>
+
+                  <div class="log-card-body">
+                    <div class="log-user-info">
+                      <div class="log-avatar">{{ (log.userName || log.userEmail).charAt(0).toUpperCase() }}</div>
+                      <div>
+                        <p class="log-user-name">{{ log.userName || 'Unknown User' }}</p>
+                        <p class="log-user-email">{{ log.userEmail }}</p>
+                      </div>
+                    </div>
+                    <div class="log-meta-row">
+                      <span class="log-meta-item">
+                        <i class="bi bi-geo-alt me-1"></i>
+                        IP: <strong>{{ log.ipAddress || 'Unknown' }}</strong>
+                      </span>
+                      <ng-container *ngIf="log.userAgent">
+                        <span class="log-meta-item log-useragent" [title]="log.userAgent">
+                          <i class="bi bi-display me-1"></i>{{ log.userAgent | slice:0:60 }}{{ log.userAgent!.length > 60 ? '…' : '' }}
+                        </span>
+                      </ng-container>
+                    </div>
+                  </div>
+
+                  <div class="log-card-right">
+                    <span class="log-time">{{ log.timestamp | date:'MMM d, y' }}</span>
+                    <span class="log-time">{{ log.timestamp | date:'h:mm:ss a' }}</span>
+                  </div>
+                </div>
+              </ng-container>
+            </div>
+          </ng-container>
+          <ng-container *ngIf="filteredActivityLogs.length === 0">
+            <div class="empty-logs">
+              <i class="bi bi-activity"></i>
+              <p>No activity logs found</p>
+              <small>Login and logout events will appear here</small>
+            </div>
+          </ng-container>
+        </ng-container>
+
+        <!-- Subscription Logs -->
+        <ng-container *ngIf="activeTab === 'subscription'">
+          <ng-container *ngIf="filteredSubLogs.length > 0">
+            <div class="logs-list">
+              <ng-container *ngFor="let log of filteredSubLogs">
                 <div class="log-card sub-log">
                   <div class="log-card-left">
                     <span class="action-chip" [class]="getActionBadgeClass(log.action)">
@@ -136,7 +209,6 @@
                       <i class="bi bi-stars me-1"></i>{{ log.plan | titlecase }}
                     </div>
                   </div>
-
                   <div class="log-card-body">
                     <div class="log-user-info">
                       <div class="log-avatar">{{ (log.userName || log.userId).charAt(0).toUpperCase() }}</div>
@@ -145,42 +217,42 @@
                         <p class="log-user-email">{{ log.userEmail || log.userId }}</p>
                       </div>
                     </div>
-
                     <div class="log-meta-row">
-<ng-container *ngIf="log.approvedBy">
+                      <ng-container *ngIf="log.approvedBy">
                         <span class="log-meta-item">
                           <i class="bi bi-person-check me-1"></i>By: {{ log.approvedBy }}
                         </span>
-</ng-container>
-<ng-container *ngIf="log.feedback">
+                      </ng-container>
+                      <ng-container *ngIf="log.feedback">
                         <span class="log-meta-item log-feedback">
                           <i class="bi bi-chat-left-text me-1"></i>{{ log.feedback }}
                         </span>
-</ng-container>
+                      </ng-container>
                     </div>
-    </div>
+                  </div>
                   <div class="log-card-right">
                     <span class="log-cost">₱{{ log.cost | number:'1.2-2' }}</span>
                     <span class="log-time">{{ log.timestamp | date:'MMM d, y' }}</span>
                     <span class="log-time">{{ log.timestamp | date:'h:mm a' }}</span>
                   </div>
                 </div>
-</ng-container>
+              </ng-container>
             </div>
-            </ng-container>
-            <ng-container *ngIf="filteredSubLogs.length === 0">
-              <div class="empty-logs">
-                <i class="bi bi-inbox"></i>
-                <p>No subscription logs found</p>
-                <small>Try adjusting your filters</small>
-              </div>
-            </ng-container>
           </ng-container>
-          <!-- System Logs -->
-<ng-container *ngIf="activeTab === 'system'">
-<ng-container *ngIf="filteredSysLogs.length > 0">
+          <ng-container *ngIf="filteredSubLogs.length === 0">
+            <div class="empty-logs">
+              <i class="bi bi-inbox"></i>
+              <p>No subscription logs found</p>
+              <small>Try adjusting your filters</small>
+            </div>
+          </ng-container>
+        </ng-container>
+
+        <!-- System Logs -->
+        <ng-container *ngIf="activeTab === 'system'">
+          <ng-container *ngIf="filteredSysLogs.length > 0">
             <div class="logs-list">
-<ng-container *ngFor="let log of filteredSysLogs">
+              <ng-container *ngFor="let log of filteredSysLogs">
                 <div class="log-card sys-log" [class]="'sys-type-' + log.type">
                   <div class="sys-log-icon-col">
                     <div class="sys-log-icon" [class]="'icon-' + log.type">
@@ -188,46 +260,44 @@
                     </div>
                     <span class="sys-type-label" [class]="'label-' + log.type">{{ log.type | uppercase }}</span>
                   </div>
-
                   <div class="log-card-body">
                     <p class="sys-log-message">{{ log.message }}</p>
-<ng-container *ngIf="log.userName || log.userId">
+                    <ng-container *ngIf="log.userName || log.userId">
                       <div class="log-meta-row">
                         <span class="log-meta-item">
-                          <i class="bi bi-person me-1"></i>
-                          {{ log.userName || log.userId }}
+                          <i class="bi bi-person me-1"></i>{{ log.userName || log.userId }}
                         </span>
-<ng-container *ngIf="log.adminId">
+                        <ng-container *ngIf="log.adminId">
                           <span class="log-meta-item">
                             <i class="bi bi-shield me-1"></i>Admin: {{ log.adminId }}
                           </span>
-</ng-container>
+                        </ng-container>
                       </div>
-</ng-container>
-<ng-container *ngIf="log.details">
+                    </ng-container>
+                    <ng-container *ngIf="log.details">
                       <div class="log-details-code">
                         <code>{{ log.details | json }}</code>
                       </div>
-</ng-container>
+                    </ng-container>
                   </div>
-
                   <div class="log-card-right">
                     <span class="log-time">{{ log.timestamp | date:'MMM d, y' }}</span>
                     <span class="log-time">{{ log.timestamp | date:'h:mm a' }}</span>
                   </div>
                 </div>
-</ng-container>
+              </ng-container>
             </div>
-            </ng-container>
-          <ng-container *ngIf="filteredSysLogs.length === 0">
-              <div class="empty-logs">
-                <i class="bi bi-journal"></i>
-                <p>No system logs found</p>
-                <small>Try adjusting your filters</small>
-              </div>
-            </ng-container>
           </ng-container>
-        </div>
-      </ng-container>
-    </div>
+          <ng-container *ngIf="filteredSysLogs.length === 0">
+            <div class="empty-logs">
+              <i class="bi bi-journal"></i>
+              <p>No system logs found</p>
+              <small>Try adjusting your filters</small>
+            </div>
+          </ng-container>
+        </ng-container>
+
+      </div>
+    </ng-container>
   </div>
+</div>

@@ -139,6 +139,34 @@ router.delete('/reset-requests/:id', requireAdmin, async (req, res) => {
   }
 });
 
+// GET /api/admin/logs/activity — superadmin only
+router.get('/logs/activity', requireSuperAdmin, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT al.*, u.name AS user_name
+       FROM activity_logs al
+       LEFT JOIN users u ON u.id = al.user_id
+       ORDER BY al.created_at DESC
+       LIMIT 500`
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch activity logs' });
+  }
+});
+
+// DELETE /api/admin/logs/activity — superadmin only
+router.delete('/logs/activity', requireSuperAdmin, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM activity_logs');
+    res.json({ message: 'Activity logs cleared' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to clear activity logs' });
+  }
+});
+
 // GET /api/admin/admins — list admin accounts (superadmin only)
 router.get('/admins', requireSuperAdmin, async (req, res) => {
   try {

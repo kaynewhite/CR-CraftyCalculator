@@ -24,6 +24,9 @@
         </div>
       </div>
       <div class="header-right" style="display:flex;align-items:center;gap:0.75rem;">
+        <button class="btn btn-outline-secondary btn-sm" (click)="ngOnInit()" title="Refresh">
+          <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+        </button>
         <app-notification-bell></app-notification-bell>
         <div *ngIf="!hasUnlimitedCalculations">
           <div

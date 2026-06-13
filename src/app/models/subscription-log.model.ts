@@ -22,3 +22,14 @@ export interface SystemLog {
   timestamp: string;
   details?: any;
 }
+
+export interface ActivityLog {
+  id: string;
+  userId?: string;
+  userName?: string;
+  userEmail: string;
+  action: 'login' | 'logout' | 'signup';
+  ipAddress?: string;
+  userAgent?: string;
+  timestamp: string;
+}

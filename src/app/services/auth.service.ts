@@ -64,6 +64,7 @@ export class AuthService {
     localStorage.setItem(USER_KEY, JSON.stringify(user));
     this.api.setToken(token);
     this.currentUserSubject.next(user);
+    this.startHeartbeat();
   }
 
   private clearSession(): void {
@@ -118,7 +119,28 @@ export class AuthService {
   }
 
   logout(): void {
+    this.stopHeartbeat();
+    this.api.logoutApi().subscribe({ error: () => {} });
     this.clearSession();
+  }
+
+  private heartbeatInterval: any = null;
+
+  startHeartbeat(): void {
+    if (this.heartbeatInterval) return;
+    this.api.heartbeat().subscribe({ error: () => {} });
+    this.heartbeatInterval = setInterval(() => {
+      if (this.isAuthenticated()) {
+        this.api.heartbeat().subscribe({ error: () => {} });
+      }
+    }, 2 * 60 * 1000);
+  }
+
+  stopHeartbeat(): void {
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = null;
+    }
   }
 
   get currentUserValue(): User | null {

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { SubscriptionLog, SystemLog } from '../models/subscription-log.model';
+import { SubscriptionLog, SystemLog, ActivityLog } from '../models/subscription-log.model';
 import { ApiService } from './api.service';
 
 @Injectable({ providedIn: 'root' })
@@ -85,6 +85,36 @@ export class LogService {
   clearSystemLogs(): Observable<void> {
     return new Observable(observer => {
       this.api.clearSystemLogs().subscribe({
+        next: () => { observer.next(); observer.complete(); },
+        error: (err: any) => observer.error(err),
+      });
+    });
+  }
+
+  getActivityLogs(): Observable<ActivityLog[]> {
+    return new Observable(observer => {
+      this.api.getActivityLogs().subscribe({
+        next: (rows: any[]) => {
+          observer.next(rows.map(r => ({
+            id: r.id,
+            userId: r.user_id || null,
+            userName: r.user_name || null,
+            userEmail: r.user_email,
+            action: r.action,
+            ipAddress: r.ip_address || null,
+            userAgent: r.user_agent || null,
+            timestamp: r.created_at,
+          })));
+          observer.complete();
+        },
+        error: (err: any) => observer.error(err),
+      });
+    });
+  }
+
+  clearActivityLogs(): Observable<void> {
+    return new Observable(observer => {
+      this.api.clearActivityLogs().subscribe({
         next: () => { observer.next(); observer.complete(); },
         error: (err: any) => observer.error(err),
       });

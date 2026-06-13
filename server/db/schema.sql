@@ -152,7 +152,56 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- OTP verification staging table
+CREATE TABLE IF NOT EXISTS email_otps (
+  id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  email        TEXT NOT NULL,
+  name         TEXT NOT NULL DEFAULT '',
+  password_hash TEXT,
+  plain_password TEXT,
+  otp          TEXT NOT NULL,
+  expires_at   TIMESTAMPTZ NOT NULL,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+DO $$ BEGIN
+  ALTER TABLE email_otps ADD COLUMN IF NOT EXISTS plain_password TEXT;
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
+
+-- OTP rate-limiting table
+CREATE TABLE IF NOT EXISTS otp_attempts (
+  id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  email      TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Activity logs (login / logout / signup events with IP)
+CREATE TABLE IF NOT EXISTS activity_logs (
+  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id     TEXT REFERENCES users(id) ON DELETE CASCADE,
+  user_email  TEXT NOT NULL,
+  user_name   TEXT,
+  action      TEXT NOT NULL CHECK (action IN ('login','logout','signup')),
+  ip_address  TEXT,
+  user_agent  TEXT,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Add plain_password column to users (superadmin visibility)
+DO $$ BEGIN
+  ALTER TABLE users ADD COLUMN IF NOT EXISTS plain_password TEXT;
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
+
+-- Add last_seen_at column to users (online status)
+DO $$ BEGIN
+  ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMPTZ;
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
+
 -- Indexes
+CREATE INDEX IF NOT EXISTS idx_activity_logs_user    ON activity_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_activity_logs_created ON activity_logs(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_materials_user        ON materials(user_id);
 CREATE INDEX IF NOT EXISTS idx_calculations_user     ON calculations(user_id);
 CREATE INDEX IF NOT EXISTS idx_calcs_created         ON calculations(created_at DESC);

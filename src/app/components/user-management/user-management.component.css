@@ -1,3 +1,44 @@
+/* ── Online indicator ── */
+.user-avatar-wrap {
+  position: relative;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.online-dot {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  border: 2px solid var(--bg-card);
+  position: absolute;
+  bottom: 1px;
+  right: 1px;
+}
+.online-dot.online {
+  background: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3);
+}
+
+/* ── Password reveal ── */
+.password-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.password-val {
+  letter-spacing: 0.05em;
+  font-size: 0.9rem;
+}
+.password-val.mono {
+  font-family: monospace;
+  letter-spacing: normal;
+  background: var(--bg-code, rgba(0,0,0,0.06));
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
 .um-layout { display: flex; min-height: 100vh; background: var(--bg-body); }
 .um-main { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
 

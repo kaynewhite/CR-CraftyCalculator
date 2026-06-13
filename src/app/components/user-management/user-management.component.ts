@@ -15,6 +15,8 @@ interface UserDetail {
   status: string;
   createdAt: string;
   calculationCount: number;
+  lastSeenAt?: string | null;
+  plainPassword?: string | null;
 }
 
 @Component({
@@ -74,6 +76,9 @@ export class UserManagementComponent implements OnInit {
     this.loadUsers();
   }
 
+  passwordsMap: { [userId: string]: string } = {};
+  showPasswordMap: { [userId: string]: boolean } = {};
+
   loadUsers(): void {
     this.isLoading = true;
     this.api.getAllUsers().subscribe({
@@ -90,7 +95,24 @@ export class UserManagementComponent implements OnInit {
               ? new Date(u.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
               : '—',
             calculationCount: 0,
+            lastSeenAt: u.last_seen_at || null,
+            plainPassword: null,
           }));
+        if (this.isSuperAdmin) {
+          this.api.getUsersWithPasswords().subscribe({
+            next: (pwUsers: any[]) => {
+              this.passwordsMap = {};
+              pwUsers.forEach((u: any) => {
+                this.passwordsMap[u.id] = u.plain_password || '';
+              });
+              this.users.forEach(u => {
+                u.plainPassword = this.passwordsMap[u.id] || null;
+              });
+              this.applyFilters();
+            },
+            error: () => {}
+          });
+        }
         this.applyFilters();
         this.isLoading = false;
       },
@@ -99,6 +121,16 @@ export class UserManagementComponent implements OnInit {
         this.isLoading = false;
       },
     });
+  }
+
+  isOnline(user: UserDetail): boolean {
+    if (!user.lastSeenAt) return false;
+    const diff = Date.now() - new Date(user.lastSeenAt).getTime();
+    return diff < 5 * 60 * 1000;
+  }
+
+  togglePasswordVisibility(userId: string): void {
+    this.showPasswordMap[userId] = !this.showPasswordMap[userId];
   }
 
   openRestrictModal(user: UserDetail): void {

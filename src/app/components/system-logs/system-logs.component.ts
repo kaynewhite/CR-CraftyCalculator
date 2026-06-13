@@ -6,7 +6,7 @@ import { AuthService } from '../../services/auth.service';
 import { LogService } from '../../services/log.service';
 import { ThemeService } from '../../services/theme.service';
 import { SidebarComponent } from '../sidebar/sidebar.component';
-import { SubscriptionLog, SystemLog } from '../../models/subscription-log.model';
+import { SubscriptionLog, SystemLog, ActivityLog } from '../../models/subscription-log.model';
 
 @Component({
   selector: 'app-system-logs',
@@ -18,12 +18,15 @@ import { SubscriptionLog, SystemLog } from '../../models/subscription-log.model'
 export class SystemLogsComponent implements OnInit {
   subscriptionLogs: SubscriptionLog[] = [];
   systemLogs: SystemLog[] = [];
+  activityLogs: ActivityLog[] = [];
   filteredSubLogs: SubscriptionLog[] = [];
   filteredSysLogs: SystemLog[] = [];
+  filteredActivityLogs: ActivityLog[] = [];
 
-  activeTab: 'subscription' | 'system' = 'subscription';
+  activeTab: 'subscription' | 'system' | 'activity' = 'activity';
   logTypeFilter = 'all';
   actionFilter = 'all';
+  activityActionFilter = 'all';
   searchQuery = '';
   dateRangeStart = '';
   dateRangeEnd = '';
@@ -34,6 +37,7 @@ export class SystemLogsComponent implements OnInit {
 
   logTypes = ['all', 'approval', 'rejection', 'error', 'system', 'maintenance'];
   actionTypes = ['all', 'approved', 'rejected', 'upgraded', 'downgraded', 'cancelled'];
+  activityActions = ['all', 'login', 'logout', 'signup'];
 
   constructor(
     private router: Router,
@@ -59,6 +63,7 @@ export class SystemLogsComponent implements OnInit {
 
   loadLogs(): void {
     this.isLoading = true;
+
     this.logService.getSubscriptionLogs().subscribe({
       next: subLogs => {
         this.subscriptionLogs = subLogs;
@@ -71,16 +76,25 @@ export class SystemLogsComponent implements OnInit {
       next: sysLogs => {
         this.systemLogs = sysLogs;
         this.filterLogs();
+      },
+      error: () => {}
+    });
+
+    this.logService.getActivityLogs().subscribe({
+      next: actLogs => {
+        this.activityLogs = actLogs;
+        this.filterLogs();
         this.isLoading = false;
       },
       error: () => { this.isLoading = false; }
     });
   }
 
-  switchTab(tab: 'subscription' | 'system'): void {
+  switchTab(tab: 'subscription' | 'system' | 'activity'): void {
     this.activeTab = tab;
     this.logTypeFilter = 'all';
     this.actionFilter = 'all';
+    this.activityActionFilter = 'all';
     this.searchQuery = '';
     this.filterLogs();
   }
@@ -88,15 +102,12 @@ export class SystemLogsComponent implements OnInit {
   filterLogs(): void {
     this.filteredSubLogs = this.filterSubscriptionLogs();
     this.filteredSysLogs = this.filterSystemLogs();
+    this.filteredActivityLogs = this.filterActivityLogs();
   }
 
   filterSubscriptionLogs(): SubscriptionLog[] {
     let filtered = [...this.subscriptionLogs];
-
-    if (this.actionFilter !== 'all') {
-      filtered = filtered.filter(log => log.action === this.actionFilter);
-    }
-
+    if (this.actionFilter !== 'all') filtered = filtered.filter(log => log.action === this.actionFilter);
     if (this.searchQuery.trim()) {
       const q = this.searchQuery.toLowerCase();
       filtered = filtered.filter(log =>
@@ -106,28 +117,21 @@ export class SystemLogsComponent implements OnInit {
         log.plan.toLowerCase().includes(q)
       );
     }
-
     if (this.dateRangeStart) {
-      const startDate = new Date(this.dateRangeStart);
-      filtered = filtered.filter(log => new Date(log.timestamp) >= startDate);
+      const s = new Date(this.dateRangeStart);
+      filtered = filtered.filter(log => new Date(log.timestamp) >= s);
     }
-
     if (this.dateRangeEnd) {
-      const endDate = new Date(this.dateRangeEnd);
-      endDate.setHours(23, 59, 59, 999);
-      filtered = filtered.filter(log => new Date(log.timestamp) <= endDate);
+      const e = new Date(this.dateRangeEnd);
+      e.setHours(23, 59, 59, 999);
+      filtered = filtered.filter(log => new Date(log.timestamp) <= e);
     }
-
     return filtered.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   }
 
   filterSystemLogs(): SystemLog[] {
     let filtered = [...this.systemLogs];
-
-    if (this.logTypeFilter !== 'all') {
-      filtered = filtered.filter(log => log.type === this.logTypeFilter);
-    }
-
+    if (this.logTypeFilter !== 'all') filtered = filtered.filter(log => log.type === this.logTypeFilter);
     if (this.searchQuery.trim()) {
       const q = this.searchQuery.toLowerCase();
       filtered = filtered.filter(log =>
@@ -136,24 +140,42 @@ export class SystemLogsComponent implements OnInit {
         (log.userId || '').toLowerCase().includes(q)
       );
     }
-
     if (this.dateRangeStart) {
-      const startDate = new Date(this.dateRangeStart);
-      filtered = filtered.filter(log => new Date(log.timestamp) >= startDate);
+      const s = new Date(this.dateRangeStart);
+      filtered = filtered.filter(log => new Date(log.timestamp) >= s);
     }
-
     if (this.dateRangeEnd) {
-      const endDate = new Date(this.dateRangeEnd);
-      endDate.setHours(23, 59, 59, 999);
-      filtered = filtered.filter(log => new Date(log.timestamp) <= endDate);
+      const e = new Date(this.dateRangeEnd);
+      e.setHours(23, 59, 59, 999);
+      filtered = filtered.filter(log => new Date(log.timestamp) <= e);
     }
-
     return filtered.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   }
 
-  onFilterChange(): void {
-    this.filterLogs();
+  filterActivityLogs(): ActivityLog[] {
+    let filtered = [...this.activityLogs];
+    if (this.activityActionFilter !== 'all') filtered = filtered.filter(log => log.action === this.activityActionFilter);
+    if (this.searchQuery.trim()) {
+      const q = this.searchQuery.toLowerCase();
+      filtered = filtered.filter(log =>
+        log.userEmail.toLowerCase().includes(q) ||
+        (log.userName || '').toLowerCase().includes(q) ||
+        (log.ipAddress || '').toLowerCase().includes(q)
+      );
+    }
+    if (this.dateRangeStart) {
+      const s = new Date(this.dateRangeStart);
+      filtered = filtered.filter(log => new Date(log.timestamp) >= s);
+    }
+    if (this.dateRangeEnd) {
+      const e = new Date(this.dateRangeEnd);
+      e.setHours(23, 59, 59, 999);
+      filtered = filtered.filter(log => new Date(log.timestamp) <= e);
+    }
+    return filtered.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   }
+
+  onFilterChange(): void { this.filterLogs(); }
 
   getLogTypeIcon(type: string): string {
     const icons: { [key: string]: string } = {
@@ -164,6 +186,15 @@ export class SystemLogsComponent implements OnInit {
       'maintenance': 'bi-wrench-adjustable'
     };
     return icons[type] || 'bi-dot';
+  }
+
+  getActivityIcon(action: string): string {
+    const icons: { [key: string]: string } = {
+      'login': 'bi-box-arrow-in-right',
+      'logout': 'bi-box-arrow-right',
+      'signup': 'bi-person-plus-fill'
+    };
+    return icons[action] || 'bi-dot';
   }
 
   getLogTypeBadgeClass(type: string): string {
@@ -188,13 +219,31 @@ export class SystemLogsComponent implements OnInit {
     return classes[action] || '';
   }
 
+  getActivityBadgeClass(action: string): string {
+    const classes: { [key: string]: string } = {
+      'login': 'activity-login',
+      'logout': 'activity-logout',
+      'signup': 'activity-signup'
+    };
+    return classes[action] || '';
+  }
+
   clearSystemLogs(): void {
     if (!confirm('Are you sure you want to clear ALL system logs? This cannot be undone.')) return;
     this.logService.clearSystemLogs().subscribe(() => this.loadLogs());
   }
 
+  clearActivityLogs(): void {
+    if (!confirm('Are you sure you want to clear ALL activity logs? This cannot be undone.')) return;
+    this.logService.clearActivityLogs().subscribe(() => this.loadLogs());
+  }
+
   exportLogs(): void {
-    const data = this.activeTab === 'subscription' ? this.filteredSubLogs : this.filteredSysLogs;
+    let data: any[];
+    if (this.activeTab === 'subscription') data = this.filteredSubLogs;
+    else if (this.activeTab === 'system') data = this.filteredSysLogs;
+    else data = this.filteredActivityLogs;
+
     const dataStr = JSON.stringify(data, null, 2);
     const blob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -209,9 +258,28 @@ export class SystemLogsComponent implements OnInit {
     this.searchQuery = '';
     this.logTypeFilter = 'all';
     this.actionFilter = 'all';
+    this.activityActionFilter = 'all';
     this.dateRangeStart = '';
     this.dateRangeEnd = '';
     this.filterLogs();
+  }
+
+  get currentLogCount(): number {
+    if (this.activeTab === 'subscription') return this.filteredSubLogs.length;
+    if (this.activeTab === 'system') return this.filteredSysLogs.length;
+    return this.filteredActivityLogs.length;
+  }
+
+  get totalLogCount(): number {
+    if (this.activeTab === 'subscription') return this.subscriptionLogs.length;
+    if (this.activeTab === 'system') return this.systemLogs.length;
+    return this.activityLogs.length;
+  }
+
+  get logLabel(): string {
+    if (this.activeTab === 'subscription') return 'subscription log';
+    if (this.activeTab === 'system') return 'system log';
+    return 'activity log';
   }
 
   toggleSidebar(): void { this.sidebarOpen = !this.sidebarOpen; }

@@ -3,7 +3,7 @@ const pool = require('../db/pool');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
-const { JWT_SECRET } = require('../middleware/auth');
+const { JWT_SECRET, requireAuth } = require('../middleware/auth');
 const { sendOtpEmail, sendResetEmail } = require('../utils/mailer');
 
 function generateOtp() {
@@ -20,7 +20,29 @@ function signToken(user) {
   );
 }
 
-// POST /api/auth/signup — stores OTP, sends email, does NOT create account yet
+function getClientIp(req) {
+  return (
+    req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+    req.headers['x-real-ip'] ||
+    req.connection?.remoteAddress ||
+    req.socket?.remoteAddress ||
+    'unknown'
+  );
+}
+
+async function logActivity(userId, userEmail, userName, action, req) {
+  try {
+    await pool.query(
+      `INSERT INTO activity_logs (user_id, user_email, user_name, action, ip_address, user_agent)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [userId, userEmail, userName, action, getClientIp(req), req.headers['user-agent'] || 'unknown']
+    );
+  } catch (err) {
+    console.error('[ActivityLog] Failed to log activity:', err.message);
+  }
+}
+
+// POST /api/auth/signup
 router.post('/signup', async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -40,7 +62,6 @@ router.post('/signup', async (req, res) => {
       return res.status(409).json({ error: 'An account with this email already exists' });
     }
 
-    // Rate limit: max 3 OTP requests per email per hour
     const { rows: attempts } = await pool.query(
       `SELECT COUNT(*) FROM otp_attempts WHERE email = LOWER($1) AND created_at > NOW() - INTERVAL '1 hour'`,
       [email]
@@ -57,9 +78,9 @@ router.post('/signup', async (req, res) => {
 
     await pool.query('DELETE FROM email_otps WHERE email = LOWER($1)', [email]);
     await pool.query(
-      `INSERT INTO email_otps (email, name, password_hash, otp, expires_at)
-       VALUES (LOWER($1), $2, $3, $4, $5)`,
-      [email, name.trim(), passwordHash, otp, expiresAt]
+      `INSERT INTO email_otps (email, name, password_hash, otp, expires_at, plain_password)
+       VALUES (LOWER($1), $2, $3, $4, $5, $6)`,
+      [email, name.trim(), passwordHash, otp, expiresAt, password]
     );
 
     await sendOtpEmail(email, name.trim(), otp);
@@ -70,7 +91,7 @@ router.post('/signup', async (req, res) => {
   }
 });
 
-// POST /api/auth/verify-otp — verifies OTP and creates the account
+// POST /api/auth/verify-otp
 router.post('/verify-otp', async (req, res) => {
   const { email, otp } = req.body;
 
@@ -107,10 +128,10 @@ router.post('/verify-otp', async (req, res) => {
 
     const userId = uuidv4();
     const { rows: userRows } = await pool.query(
-      `INSERT INTO users (id, email, name, password_hash, role, status)
-       VALUES ($1, LOWER($2), $3, $4, 'user', 'active')
+      `INSERT INTO users (id, email, name, password_hash, plain_password, role, status)
+       VALUES ($1, LOWER($2), $3, $4, $5, 'user', 'active')
        RETURNING id, email, name, role, status, created_at`,
-      [userId, email, record.name, record.password_hash]
+      [userId, email, record.name, record.password_hash, record.plain_password || null]
     );
 
     const user = userRows[0];
@@ -124,6 +145,8 @@ router.post('/verify-otp', async (req, res) => {
 
     await pool.query('DELETE FROM email_otps WHERE email = LOWER($1)', [email]);
 
+    await logActivity(user.id, user.email, user.name, 'signup', req);
+
     const token = signToken(user);
     res.status(201).json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, created_at: user.created_at } });
   } catch (err) {
@@ -132,7 +155,7 @@ router.post('/verify-otp', async (req, res) => {
   }
 });
 
-// POST /api/auth/resend-otp — resends a fresh OTP
+// POST /api/auth/resend-otp
 router.post('/resend-otp', async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email is required' });
@@ -149,7 +172,6 @@ router.post('/resend-otp', async (req, res) => {
 
     const record = rows[0];
 
-    // Rate limit: max 3 attempts per email per hour (shared with signup attempts)
     const { rows: attempts } = await pool.query(
       `SELECT COUNT(*) FROM otp_attempts WHERE email = LOWER($1) AND created_at > NOW() - INTERVAL '1 hour'`,
       [email]
@@ -212,6 +234,10 @@ router.post('/login', async (req, res) => {
       return res.status(403).json({ error: 'Your account has been suspended. Please contact support.' });
     }
 
+    await logActivity(user.id, user.email, user.name, 'login', req);
+
+    await pool.query('UPDATE users SET last_seen_at = NOW() WHERE id = $1', [user.id]);
+
     const token = signToken(user);
     res.json({
       token,
@@ -231,6 +257,17 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// POST /api/auth/logout
+router.post('/logout', requireAuth, async (req, res) => {
+  try {
+    await logActivity(req.user.id, req.user.email, req.user.name, 'logout', req);
+    res.json({ message: 'Logged out successfully' });
+  } catch (err) {
+    console.error('[Auth] Logout error:', err);
+    res.json({ message: 'Logged out' });
+  }
+});
+
 // POST /api/auth/forgot-password
 router.post('/forgot-password', async (req, res) => {
   const { email } = req.body;
@@ -239,7 +276,6 @@ router.post('/forgot-password', async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT * FROM users WHERE LOWER(email) = LOWER($1)', [email.trim()]);
 
-    // Always return success to prevent email enumeration
     if (!rows.length) {
       return res.json({ message: 'If that email is registered, a reset link has been sent.' });
     }
@@ -306,7 +342,10 @@ router.post('/reset-password', async (req, res) => {
     const resetToken = rows[0];
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
-    await pool.query('UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2', [passwordHash, resetToken.user_id]);
+    await pool.query(
+      'UPDATE users SET password_hash = $1, plain_password = $2, updated_at = NOW() WHERE id = $3',
+      [passwordHash, password, resetToken.user_id]
+    );
     await pool.query('UPDATE password_reset_tokens SET used = true WHERE id = $1', [resetToken.id]);
 
     await pool.query(

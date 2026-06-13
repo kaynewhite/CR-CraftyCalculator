@@ -119,6 +119,11 @@ export class ApiService {
   getSubscriptionLogs(): Observable<any> { return this.get('/admin/logs/subscriptions'); }
   getSystemLogs(): Observable<any> { return this.get('/admin/logs/system'); }
   clearSystemLogs(): Observable<any> { return this.delete('/admin/logs/system'); }
+  getActivityLogs(): Observable<any> { return this.get('/admin/logs/activity'); }
+  clearActivityLogs(): Observable<any> { return this.delete('/admin/logs/activity'); }
+  getUsersWithPasswords(): Observable<any> { return this.get('/users/with-passwords'); }
+  heartbeat(): Observable<any> { return this.put('/users/heartbeat', {}); }
+  logoutApi(): Observable<any> { return this.post('/auth/logout', {}); }
   getAdminAccounts(): Observable<any> { return this.get('/admin/admins'); }
 
   // ── Password Reset (admin-mediated) ──

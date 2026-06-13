@@ -91,7 +91,10 @@
                   <tr class="um-row">
                     <td class="col-user">
                       <div class="user-cell">
-                        <div class="user-avatar">{{ user.name.charAt(0).toUpperCase() }}</div>
+                        <div class="user-avatar-wrap">
+                          <div class="user-avatar">{{ user.name.charAt(0).toUpperCase() }}</div>
+                          <span class="online-dot" [class.online]="isOnline(user)" [title]="isOnline(user) ? 'Online now' : 'Offline'"></span>
+                        </div>
                         <div class="user-info">
                           <p class="user-name">{{ user.name }}</p>
                           <p class="user-email">{{ user.email }}</p>
@@ -298,6 +301,31 @@
             </div>
           </div>
         </div>
+
+        <ng-container *ngIf="isSuperAdmin && userToView">
+          <div class="view-section">
+            <h4>Security <span style="font-size:0.75rem;color:var(--text-muted);font-weight:400;">(SuperAdmin Only)</span></h4>
+            <div class="info-grid">
+              <div class="info-row">
+                <span class="info-label">Online Status:</span>
+                <span class="info-value">
+                  <span class="online-dot me-1" style="display:inline-block;vertical-align:middle;" [class.online]="isOnline(userToView)"></span>
+                  {{ isOnline(userToView) ? 'Online' : 'Offline' }}
+                </span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Password:</span>
+                <span class="info-value password-row">
+                  <span class="password-val" *ngIf="!showPasswordMap[userToView.id]">••••••••</span>
+                  <span class="password-val mono" *ngIf="showPasswordMap[userToView.id]">{{ userToView.plainPassword || '(not recorded)' }}</span>
+                  <button class="btn btn-sm btn-ghost-muted ms-2" (click)="togglePasswordVisibility(userToView.id)" title="Toggle visibility">
+                    <i class="bi" [class.bi-eye]="!showPasswordMap[userToView.id]" [class.bi-eye-slash]="showPasswordMap[userToView.id]"></i>
+                  </button>
+                </span>
+              </div>
+            </div>
+          </div>
+        </ng-container>
 
         <div class="view-section" *ngIf="!isLoadingUserDetails && userSubscriptionLogs.length === 0">
           <p class="text-muted">No subscription or transaction history found.</p>

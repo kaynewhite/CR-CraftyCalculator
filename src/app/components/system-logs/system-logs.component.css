@@ -472,6 +472,58 @@
   max-width: 1200px;
 }
 
+/* ── Activity log specific ── */
+.activity-log-card {
+  align-items: flex-start;
+}
+.icon-activity-login { background: rgba(34, 197, 94, 0.12); color: #22c55e; }
+.icon-activity-logout { background: rgba(107, 114, 128, 0.12); color: #6b7280; }
+.icon-activity-signup { background: rgba(99, 102, 241, 0.12); color: #6366f1; }
+.activity-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0.2em 0.55em;
+  border-radius: 4px;
+  margin-top: 0.35rem;
+}
+.activity-login { background: rgba(34, 197, 94, 0.12); color: #16a34a; }
+.activity-logout { background: rgba(107, 114, 128, 0.12); color: #6b7280; }
+.activity-signup { background: rgba(99, 102, 241, 0.12); color: #4f46e5; }
+.log-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin-top: 0.35rem;
+}
+.log-meta-item {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+}
+.log-useragent {
+  max-width: 350px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.log-details-code {
+  margin-top: 0.4rem;
+  background: var(--bg-code, rgba(0,0,0,0.05));
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  overflow-x: auto;
+}
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+.header-title-area { flex: 1; }
+
 /* ── Responsive ── */
 @media (max-width: 768px) {
   .log-card {

@@ -74,6 +74,11 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
     this.paymentSub.unsubscribe();
   }
 
+  refreshData(): void {
+    this.currentSubscription = this.subscriptionService.getCurrentSubscription();
+    this.paymentService.loadMyRequests();
+  }
+
   changePlan(planName: 'free' | 'basic' | 'pro'): void {
     if (this.currentSubscription?.currentPlan === planName) {
       return;
