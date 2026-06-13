@@ -103,6 +103,7 @@ export class LogService {
             action: r.action,
             ipAddress: r.ip_address || null,
             userAgent: r.user_agent || null,
+            location: r.location || null,
             timestamp: r.created_at,
           })));
           observer.complete();

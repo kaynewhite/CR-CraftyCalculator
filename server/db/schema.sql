@@ -184,8 +184,13 @@ CREATE TABLE IF NOT EXISTS activity_logs (
   action      TEXT NOT NULL CHECK (action IN ('login','logout','signup')),
   ip_address  TEXT,
   user_agent  TEXT,
+  location    TEXT,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+DO $$ BEGIN
+  ALTER TABLE activity_logs ADD COLUMN IF NOT EXISTS location TEXT;
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
 
 -- Add plain_password column to users (superadmin visibility)
 DO $$ BEGIN

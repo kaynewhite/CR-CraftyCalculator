@@ -20,6 +20,8 @@ function signToken(user) {
   );
 }
 
+const http = require('http');
+
 function getClientIp(req) {
   return (
     req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
@@ -30,12 +32,44 @@ function getClientIp(req) {
   );
 }
 
+function isPrivateIp(ip) {
+  return !ip || ip === 'unknown' || ip === '::1' || ip === '127.0.0.1' ||
+    ip.startsWith('10.') || ip.startsWith('192.168.') || ip.startsWith('172.') ||
+    ip.startsWith('::ffff:127.') || ip.startsWith('::ffff:10.') || ip.startsWith('::ffff:192.168.');
+}
+
+async function getLocation(ip) {
+  if (isPrivateIp(ip)) return 'Local / Private Network';
+  return new Promise((resolve) => {
+    const cleanIp = ip.replace('::ffff:', '');
+    const req = http.get(`http://ip-api.com/json/${cleanIp}?fields=status,city,regionName,country`, (res) => {
+      let data = '';
+      res.on('data', chunk => { data += chunk; });
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(data);
+          if (json.status === 'success') {
+            const parts = [json.city, json.regionName, json.country].filter(Boolean);
+            resolve(parts.join(', ') || 'Unknown');
+          } else {
+            resolve('Unknown');
+          }
+        } catch { resolve('Unknown'); }
+      });
+    });
+    req.on('error', () => resolve('Unknown'));
+    req.setTimeout(3000, () => { req.destroy(); resolve('Unknown'); });
+  });
+}
+
 async function logActivity(userId, userEmail, userName, action, req) {
   try {
+    const ip = getClientIp(req);
+    const location = await getLocation(ip);
     await pool.query(
-      `INSERT INTO activity_logs (user_id, user_email, user_name, action, ip_address, user_agent)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
-      [userId, userEmail, userName, action, getClientIp(req), req.headers['user-agent'] || 'unknown']
+      `INSERT INTO activity_logs (user_id, user_email, user_name, action, ip_address, user_agent, location)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [userId, userEmail, userName, action, ip, req.headers['user-agent'] || 'unknown', location]
     );
   } catch (err) {
     console.error('[ActivityLog] Failed to log activity:', err.message);

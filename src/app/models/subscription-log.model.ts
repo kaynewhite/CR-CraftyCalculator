@@ -31,5 +31,6 @@ export interface ActivityLog {
   action: 'login' | 'logout' | 'signup';
   ipAddress?: string;
   userAgent?: string;
+  location?: string;
   timestamp: string;
 }
