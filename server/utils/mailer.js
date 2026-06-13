@@ -1,16 +1,12 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+const FROM_ADDRESS = 'Crafty Rachel <noreply@craftyrachel.calc.com>';
 
 async function sendOtpEmail(toEmail, toName, otp) {
-  await transporter.sendMail({
-    from: `"Crafty Rachel" <${process.env.SMTP_USER}>`,
+  await resend.emails.send({
+    from: FROM_ADDRESS,
     to: toEmail,
     subject: 'Your Crafty Rachel Verification Code',
     html: `
@@ -30,8 +26,8 @@ async function sendOtpEmail(toEmail, toName, otp) {
 }
 
 async function sendResetEmail(toEmail, toName, resetLink) {
-  await transporter.sendMail({
-    from: `"Crafty Rachel" <${process.env.SMTP_USER}>`,
+  await resend.emails.send({
+    from: FROM_ADDRESS,
     to: toEmail,
     subject: 'Reset Your Crafty Rachel Password',
     html: `
