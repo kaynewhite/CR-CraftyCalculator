@@ -192,6 +192,12 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_column THEN NULL;
 END $$;
 
+-- Single-session enforcement token
+DO $$ BEGIN
+  ALTER TABLE users ADD COLUMN IF NOT EXISTS session_token TEXT;
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
+
 -- Add plain_password column to users (superadmin visibility)
 DO $$ BEGIN
   ALTER TABLE users ADD COLUMN IF NOT EXISTS plain_password TEXT;

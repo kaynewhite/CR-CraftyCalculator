@@ -30,7 +30,13 @@ async function requireAuth(req, res, next) {
       return res.status(401).json({ error: 'User not found' });
     }
 
-    req.user = rows[0];
+    const user = rows[0];
+
+    if (payload.sessionToken && user.session_token && payload.sessionToken !== user.session_token) {
+      return res.status(401).json({ error: 'Your account was signed in on another device.', code: 'SESSION_INVALIDATED' });
+    }
+
+    req.user = user;
     next();
   } catch (err) {
     console.error('[Auth] Token verification failed:', err.message);

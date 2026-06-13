@@ -12,12 +12,18 @@ function generateOtp() {
 
 const SALT_ROUNDS = 12;
 
-function signToken(user) {
+function signToken(user, sessionToken) {
   return jwt.sign(
-    { userId: user.id, email: user.email, role: user.role },
+    { userId: user.id, email: user.email, role: user.role, sessionToken },
     JWT_SECRET,
     { expiresIn: '7d' }
   );
+}
+
+async function issueSession(userId) {
+  const sessionToken = uuidv4();
+  await pool.query('UPDATE users SET session_token = $1 WHERE id = $2', [sessionToken, userId]);
+  return sessionToken;
 }
 
 const http = require('http');
@@ -181,7 +187,8 @@ router.post('/verify-otp', async (req, res) => {
 
     await logActivity(user.id, user.email, user.name, 'signup', req);
 
-    const token = signToken(user);
+    const sessionToken = await issueSession(user.id);
+    const token = signToken(user, sessionToken);
     res.status(201).json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, created_at: user.created_at } });
   } catch (err) {
     console.error('[Auth] Verify OTP error:', err);
@@ -272,7 +279,8 @@ router.post('/login', async (req, res) => {
 
     await pool.query('UPDATE users SET last_seen_at = NOW() WHERE id = $1', [user.id]);
 
-    const token = signToken(user);
+    const sessionToken = await issueSession(user.id);
+    const token = signToken(user, sessionToken);
     res.json({
       token,
       user: {
@@ -295,6 +303,7 @@ router.post('/login', async (req, res) => {
 router.post('/logout', requireAuth, async (req, res) => {
   try {
     await logActivity(req.user.id, req.user.email, req.user.name, 'logout', req);
+    await pool.query('UPDATE users SET session_token = NULL WHERE id = $1', [req.user.id]);
     res.json({ message: 'Logged out successfully' });
   } catch (err) {
     console.error('[Auth] Logout error:', err);

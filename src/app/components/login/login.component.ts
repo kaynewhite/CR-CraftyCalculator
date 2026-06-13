@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ThemeService } from '../../services/theme.service';
 
@@ -18,15 +18,22 @@ export class LoginComponent implements OnInit {
   showPassword = false;
   isLoading = false;
   error = '';
+  sessionWarning = '';
 
   constructor(
     private authService: AuthService,
     private router: Router,
+    private route: ActivatedRoute,
     private themeService: ThemeService
   ) {}
 
   ngOnInit(): void {
     this.themeService.setTheme(this.themeService.getCurrentTheme());
+    this.route.queryParams.subscribe(params => {
+      if (params['reason'] === 'session_invalidated') {
+        this.sessionWarning = 'Your account was signed in on another device. You have been logged out.';
+      }
+    });
     if (this.authService.isAuthenticated()) {
       this.redirectByRole();
     }
