@@ -59,12 +59,12 @@ body.dark-mode .blob {
 }
 
 .brand-logo-wrap {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   overflow: hidden;
   background: var(--brand-primary-light);
-  border: 1.5px solid var(--brand-primary-light);
+  border: 1px solid var(--brand-primary-light);
   display: flex;
   align-items: center;
   justify-content: center;
