@@ -124,7 +124,7 @@
                 hasPendingRequest ||
                 (plan.name === 'free' &&
                   currentSubscription?.currentPlan &&
-                  currentSubscription?.currentPlan !== 'free')
+                  currentSubscription?.currentPlan !== 'free'|| currentSubscription?.currentPlan === 'pro')
               "
             >
               <span

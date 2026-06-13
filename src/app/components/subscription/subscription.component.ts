@@ -133,7 +133,7 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
       return 'Current Plan';
     }
     if (this.currentSubscription?.currentPlan === 'basic' && planName === 'pro') {
-      return 'Upgrade';
+      return 'Upgrade for ₱150';
     }
     return 'Select Plan';
   }
