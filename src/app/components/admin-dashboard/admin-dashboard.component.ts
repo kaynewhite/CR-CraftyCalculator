@@ -92,11 +92,15 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
         this.setupGcashQr = gcash;
         this.setupMayaQr = maya;
         if (!gcash || !maya) {
-          this.showQrSetup = true;
+          if (!localStorage.getItem('cr_qr_setup_skipped')) {
+            this.showQrSetup = true;
+          }
         }
       },
       error: () => {
-        this.showQrSetup = true;
+        if (!localStorage.getItem('cr_qr_setup_skipped')) {
+          this.showQrSetup = true;
+        }
       }
     });
   }
@@ -134,6 +138,11 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
       this.setupSaving = false;
       this.setupError = 'Failed to save QR codes. Please try again.';
     });
+  }
+
+  skipQrSetup(): void {
+    localStorage.setItem('cr_qr_setup_skipped', '1');
+    this.showQrSetup = false;
   }
 
   destroyCharts(): void {
