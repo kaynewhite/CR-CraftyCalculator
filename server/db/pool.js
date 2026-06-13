@@ -1,10 +1,12 @@
 require('dotenv').config();
 const { Pool } = require('pg');
 
-const isLocal = !process.env.DATABASE_URL || process.env.DATABASE_URL.includes('localhost');
+// Prefer an explicit Neon URL; fall back to the platform-injected DATABASE_URL
+const connectionString = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL;
+const isLocal = !connectionString || connectionString.includes('localhost') || connectionString.includes('helium');
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString,
   ssl: isLocal ? false : { rejectUnauthorized: false },
   max: 10,
   idleTimeoutMillis: 30000,
