@@ -14,13 +14,7 @@ services:
         generateValue: true
       - key: DATABASE_URL
         sync: false
-      - key: SMTP_HOST
-        value: smtp-relay.brevo.com
-      - key: SMTP_PORT
-        value: "587"
-      - key: SMTP_USER
-        sync: false
-      - key: SMTP_PASS
-        sync: false
       - key: SMTP_FROM
         value: craftyrachelscalc@gmail.com
+      - key: BREVO_API_KEY
+        sync: false

@@ -55,10 +55,9 @@ app.use((err, req, res, next) => {
 });
 
 async function start() {
-  if (!process.env.DATABASE_URL) {
-    console.error('[Server] Missing DATABASE_URL environment variable.');
-    console.error('[Server] Provide your Neon/Postgres connection string in DATABASE_URL and restart.');
-    console.error('[Server] Example: postgres://user:pass@dbhost:5432/dbname');
+  if (!process.env.DATABASE_URL && !process.env.NEON_DATABASE_URL) {
+    console.error('[Server] Missing database connection. Set DATABASE_URL or NEON_DATABASE_URL and restart.');
+    console.error('[Server] Example: postgresql://user:pass@host/dbname?sslmode=require');
     process.exit(1);
   }
 
