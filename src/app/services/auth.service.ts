@@ -86,14 +86,32 @@ export class AuthService {
     });
   }
 
-  async signUp(name: string, email: string, password: string): Promise<{ needsVerification: boolean }> {
+  async signUp(name: string, email: string, password: string): Promise<void> {
     return new Promise((resolve, reject) => {
       this.api.signup(name, email, password).subscribe({
+        next: () => resolve(),
+        error: (err: any) => reject(err),
+      });
+    });
+  }
+
+  async verifyOtp(email: string, otp: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.api.verifyOtp(email, otp).subscribe({
         next: (res: any) => {
           const user = this.mapUser({ ...res.user, plan: 'free' });
           this.storeSession(res.token, user);
-          resolve({ needsVerification: false });
+          resolve();
         },
+        error: (err: any) => reject(err),
+      });
+    });
+  }
+
+  async resendOtp(email: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.api.resendOtp(email).subscribe({
+        next: () => resolve(),
         error: (err: any) => reject(err),
       });
     });

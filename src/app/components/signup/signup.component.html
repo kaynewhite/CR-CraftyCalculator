@@ -14,17 +14,18 @@
       <span class="brand-name">Crafty Rachel</span>
     </div>
 
-    <div class="signup-card">
+    <!-- STEP 1: Sign Up Form -->
+    <div class="signup-card" *ngIf="step === 'signup'">
       <div class="card-heading">
         <h2>Create your free account</h2>
         <p>Start crafting smarter — no credit card needed</p>
       </div>
 
-<ng-container *ngIf="error">
+      <ng-container *ngIf="error">
         <div class="alert-error">
           <i class="bi bi-exclamation-circle-fill me-2"></i>{{ error }}
         </div>
-</ng-container>
+      </ng-container>
 
       <form (ngSubmit)="onSubmit()" novalidate>
         <div class="field-group">
@@ -64,15 +65,61 @@
         </div>
 
         <button type="submit" class="btn btn-primary w-100 submit-btn" [disabled]="isLoading">
-<ng-container *ngIf="!isLoading">
+          <ng-container *ngIf="!isLoading">
             <i class="bi bi-rocket-takeoff me-2"></i>Create Free Account
-          </ng-container>          <ng-container *ngIf="!(!isLoading)">
-            <span class="spinner-border spinner-border-sm me-2"></span>Creating account…
-</ng-container>
+          </ng-container>
+          <ng-container *ngIf="isLoading">
+            <span class="spinner-border spinner-border-sm me-2"></span>Sending verification code…
+          </ng-container>
         </button>
       </form>
 
       <p class="switch-link">Already have an account? <a routerLink="/login">Sign in</a></p>
+    </div>
+
+    <!-- STEP 2: OTP Verification -->
+    <div class="signup-card" *ngIf="step === 'verify'">
+      <div class="otp-icon">
+        <i class="bi bi-envelope-check-fill"></i>
+      </div>
+      <div class="card-heading" style="text-align:center;">
+        <h2>Check your email</h2>
+        <p>We sent a 6-digit verification code to<br><strong>{{ email }}</strong></p>
+      </div>
+
+      <ng-container *ngIf="error">
+        <div class="alert-error">
+          <i class="bi bi-exclamation-circle-fill me-2"></i>{{ error }}
+        </div>
+      </ng-container>
+
+      <form (ngSubmit)="onVerify()" novalidate>
+        <div class="field-group">
+          <label class="field-label" for="su-otp">Verification Code</label>
+          <input id="su-otp" type="text" class="form-control otp-input" [(ngModel)]="otp" name="otp"
+            placeholder="Enter 6-digit code" maxlength="6" autocomplete="one-time-code"
+            inputmode="numeric" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 submit-btn" [disabled]="isLoading">
+          <ng-container *ngIf="!isLoading">
+            <i class="bi bi-shield-check me-2"></i>Verify & Create Account
+          </ng-container>
+          <ng-container *ngIf="isLoading">
+            <span class="spinner-border spinner-border-sm me-2"></span>Verifying…
+          </ng-container>
+        </button>
+      </form>
+
+      <div class="otp-footer">
+        <p>Didn't receive the code?
+          <button class="btn-link-inline" (click)="onResend()" [disabled]="resendCooldown > 0">
+            <ng-container *ngIf="resendCooldown > 0">Resend in {{ resendCooldown }}s</ng-container>
+            <ng-container *ngIf="resendCooldown === 0">Resend code</ng-container>
+          </button>
+        </p>
+        <p><button class="btn-link-inline" (click)="goBack()">← Back to sign up</button></p>
+      </div>
     </div>
 
   </div>

@@ -22,6 +22,11 @@ export class SignupComponent implements OnInit {
   isLoading = false;
   error = '';
 
+  step: 'signup' | 'verify' = 'signup';
+  otp = '';
+  resendCooldown = 0;
+  private resendTimer: any;
+
   constructor(
     private authService: AuthService,
     private router: Router,
@@ -52,11 +57,56 @@ export class SignupComponent implements OnInit {
     this.error = '';
     try {
       await this.authService.signUp(this.name.trim(), this.email.trim(), this.password);
-      this.router.navigate(['/dashboard']);
+      this.step = 'verify';
+      this.startResendCooldown();
     } catch (err: any) {
       this.error = err?.message || 'Sign up failed. Please try again.';
+    } finally {
       this.isLoading = false;
     }
+  }
+
+  async onVerify(): Promise<void> {
+    if (!this.otp.trim()) {
+      this.error = 'Please enter the verification code.';
+      return;
+    }
+    this.isLoading = true;
+    this.error = '';
+    try {
+      await this.authService.verifyOtp(this.email.trim(), this.otp.trim());
+      this.router.navigate(['/dashboard']);
+    } catch (err: any) {
+      this.error = err?.message || 'Verification failed. Please try again.';
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  async onResend(): Promise<void> {
+    if (this.resendCooldown > 0) return;
+    this.error = '';
+    try {
+      await this.authService.resendOtp(this.email.trim());
+      this.startResendCooldown();
+    } catch (err: any) {
+      this.error = err?.message || 'Failed to resend code.';
+    }
+  }
+
+  private startResendCooldown(): void {
+    this.resendCooldown = 60;
+    clearInterval(this.resendTimer);
+    this.resendTimer = setInterval(() => {
+      this.resendCooldown--;
+      if (this.resendCooldown <= 0) clearInterval(this.resendTimer);
+    }, 1000);
+  }
+
+  goBack(): void {
+    this.step = 'signup';
+    this.otp = '';
+    this.error = '';
   }
 
   togglePassword(): void { this.showPassword = !this.showPassword; }

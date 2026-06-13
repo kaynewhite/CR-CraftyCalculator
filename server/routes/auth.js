@@ -4,6 +4,11 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const { JWT_SECRET } = require('../middleware/auth');
+const { sendOtpEmail } = require('../utils/mailer');
+
+function generateOtp() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
 
 const SALT_ROUNDS = 12;
 
@@ -15,7 +20,7 @@ function signToken(user) {
   );
 }
 
-// POST /api/auth/signup
+// POST /api/auth/signup — stores OTP, sends email, does NOT create account yet
 router.post('/signup', async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -36,16 +41,68 @@ router.post('/signup', async (req, res) => {
     }
 
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-    const userId = uuidv4();
+    const otp = generateOtp();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-    const { rows } = await pool.query(
-      `INSERT INTO users (id, email, name, password_hash, role, status)
-       VALUES ($1, $2, $3, $4, 'user', 'active')
-       RETURNING id, email, name, role, status, created_at`,
-      [userId, email.toLowerCase().trim(), name.trim(), passwordHash]
+    await pool.query('DELETE FROM email_otps WHERE email = LOWER($1)', [email]);
+    await pool.query(
+      `INSERT INTO email_otps (email, name, password_hash, otp, expires_at)
+       VALUES (LOWER($1), $2, $3, $4, $5)`,
+      [email, name.trim(), passwordHash, otp, expiresAt]
     );
 
-    const user = rows[0];
+    await sendOtpEmail(email, name.trim(), otp);
+    res.status(200).json({ message: 'Verification code sent. Please check your email.' });
+  } catch (err) {
+    console.error('[Auth] Signup error:', err);
+    res.status(500).json({ error: 'Failed to send verification email. Please try again.' });
+  }
+});
+
+// POST /api/auth/verify-otp — verifies OTP and creates the account
+router.post('/verify-otp', async (req, res) => {
+  const { email, otp } = req.body;
+
+  if (!email || !otp) {
+    return res.status(400).json({ error: 'Email and verification code are required' });
+  }
+
+  try {
+    const { rows } = await pool.query(
+      `SELECT * FROM email_otps WHERE email = LOWER($1) ORDER BY created_at DESC LIMIT 1`,
+      [email]
+    );
+
+    if (!rows.length) {
+      return res.status(400).json({ error: 'No pending verification found. Please sign up again.' });
+    }
+
+    const record = rows[0];
+
+    if (new Date() > new Date(record.expires_at)) {
+      await pool.query('DELETE FROM email_otps WHERE email = LOWER($1)', [email]);
+      return res.status(400).json({ error: 'Verification code has expired. Please sign up again.' });
+    }
+
+    if (record.otp !== otp.trim()) {
+      return res.status(400).json({ error: 'Incorrect verification code. Please try again.' });
+    }
+
+    const existing = await pool.query('SELECT id FROM users WHERE LOWER(email) = LOWER($1)', [email]);
+    if (existing.rows.length) {
+      await pool.query('DELETE FROM email_otps WHERE email = LOWER($1)', [email]);
+      return res.status(409).json({ error: 'An account with this email already exists' });
+    }
+
+    const userId = uuidv4();
+    const { rows: userRows } = await pool.query(
+      `INSERT INTO users (id, email, name, password_hash, role, status)
+       VALUES ($1, LOWER($2), $3, $4, 'user', 'active')
+       RETURNING id, email, name, role, status, created_at`,
+      [userId, email, record.name, record.password_hash]
+    );
+
+    const user = userRows[0];
 
     await pool.query(
       `INSERT INTO user_subscriptions (user_id, plan, is_active, start_date, expiry_date)
@@ -54,11 +111,45 @@ router.post('/signup', async (req, res) => {
       [user.id]
     );
 
+    await pool.query('DELETE FROM email_otps WHERE email = LOWER($1)', [email]);
+
     const token = signToken(user);
     res.status(201).json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
   } catch (err) {
-    console.error('[Auth] Signup error:', err);
-    res.status(500).json({ error: 'Failed to create account' });
+    console.error('[Auth] Verify OTP error:', err);
+    res.status(500).json({ error: 'Verification failed. Please try again.' });
+  }
+});
+
+// POST /api/auth/resend-otp — resends a fresh OTP
+router.post('/resend-otp', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email is required' });
+
+  try {
+    const { rows } = await pool.query(
+      `SELECT * FROM email_otps WHERE email = LOWER($1) ORDER BY created_at DESC LIMIT 1`,
+      [email]
+    );
+
+    if (!rows.length) {
+      return res.status(400).json({ error: 'No pending verification found. Please sign up again.' });
+    }
+
+    const record = rows[0];
+    const otp = generateOtp();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+    await pool.query(
+      `UPDATE email_otps SET otp = $1, expires_at = $2 WHERE email = LOWER($3)`,
+      [otp, expiresAt, email]
+    );
+
+    await sendOtpEmail(email, record.name, otp);
+    res.json({ message: 'A new verification code has been sent.' });
+  } catch (err) {
+    console.error('[Auth] Resend OTP error:', err);
+    res.status(500).json({ error: 'Failed to resend code. Please try again.' });
   }
 });
 

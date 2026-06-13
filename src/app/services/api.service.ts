@@ -55,6 +55,14 @@ export class ApiService {
     return this.handle(this.http.post(`${this.baseUrl}/auth/signup`, { name, email, password }));
   }
 
+  verifyOtp(email: string, otp: string): Observable<any> {
+    return this.handle(this.http.post(`${this.baseUrl}/auth/verify-otp`, { email, otp }));
+  }
+
+  resendOtp(email: string): Observable<any> {
+    return this.handle(this.http.post(`${this.baseUrl}/auth/resend-otp`, { email }));
+  }
+
   // ── Users ──
   getMe(): Observable<any> { return this.get('/users/me'); }
   updateMe(data: { name?: string; email?: string }): Observable<any> { return this.put('/users/me', data); }
