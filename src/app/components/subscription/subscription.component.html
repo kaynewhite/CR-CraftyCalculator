@@ -4,43 +4,70 @@
       [isOpen]="sidebarOpen"
       [isCollapsed]="sidebarCollapsed"
       (closeSidebar)="closeSidebar()"
-      (toggleCollapse)="toggleSidebarCollapse()">
+      (toggleCollapse)="toggleSidebarCollapse()"
+    >
     </app-sidebar>
   </div>
 
   <div class="main-content">
     <header class="content-header">
-      <button class="hamburger-btn" (click)="toggleSidebar()" aria-label="Open menu">
+      <button
+        class="hamburger-btn"
+        (click)="toggleSidebar()"
+        aria-label="Open menu"
+      >
         <i class="bi bi-list"></i>
       </button>
       <div>
         <h1>Subscription Plans</h1>
         <p>Plans are billed monthly — upgrade or downgrade anytime</p>
       </div>
-      <app-notification-bell style="margin-left:auto"></app-notification-bell>
+      <app-notification-bell style="margin-left: auto"></app-notification-bell>
     </header>
 
     <div class="content-body">
-      <div *ngIf="currentSubscription && currentSubscription.currentPlan && currentSubscription.currentPlan !== 'free'" class="alert alert-success mb-4" role="alert">
+      <div
+        *ngIf="
+          currentSubscription &&
+          currentSubscription.currentPlan &&
+          currentSubscription.currentPlan !== 'free'
+        "
+        class="alert alert-success mb-4"
+        role="alert"
+      >
         <i class="bi bi-stars me-2"></i>
-        You're on the <strong>{{ currentSubscription.currentPlan | uppercase }}</strong> plan.
+        You're on the
+        <strong>{{ currentSubscription.currentPlan | uppercase }}</strong> plan.
         <span *ngIf="currentSubscription.expiryDate" class="ms-2">
-          Expires: <strong>{{ currentSubscription.expiryDate | date:'MMM dd, yyyy' }}</strong>
+          Expires:
+          <strong>{{
+            currentSubscription.expiryDate | date: "MMM dd, yyyy"
+          }}</strong>
         </span>
       </div>
 
       <div class="plans-grid">
-        <div *ngFor="let plan of plans" class="plan-card" [class.current-plan]="isCurrentPlan(plan.name)">
-          <div *ngIf="isCurrentPlan(plan.name)" class="current-plan-badge">Current Plan</div>
+        <div
+          *ngFor="let plan of plans"
+          class="plan-card"
+          [class.current-plan]="isCurrentPlan(plan.name)"
+        >
+          <div *ngIf="isCurrentPlan(plan.name)" class="current-plan-badge">
+            Current Plan
+          </div>
 
-          <div class="plan-icon"
+          <div
+            class="plan-icon"
             [class.pi-free]="plan.name === 'free'"
             [class.pi-basic]="plan.name === 'basic'"
-            [class.pi-pro]="plan.name === 'pro'">
-            <i class="bi"
+            [class.pi-pro]="plan.name === 'pro'"
+          >
+            <i
+              class="bi"
               [class.bi-gift]="plan.name === 'free'"
               [class.bi-bolt]="plan.name === 'basic'"
-              [class.bi-gem]="plan.name === 'pro'">
+              [class.bi-gem]="plan.name === 'pro'"
+            >
             </i>
           </div>
 
@@ -52,43 +79,76 @@
           </div>
 
           <p class="plan-desc">
-            <ng-container *ngIf="plan.name === 'free'">Perfect for hobbyists getting started.</ng-container>
-            <ng-container *ngIf="plan.name === 'basic'">For serious crafters growing their business.</ng-container>
-            <ng-container *ngIf="plan.name === 'pro'">Unlimited access for professionals.</ng-container>
+            <ng-container *ngIf="plan.name === 'free'"
+              >Perfect for hobbyists getting started.</ng-container
+            >
+            <ng-container *ngIf="plan.name === 'basic'"
+              >For serious crafters growing their business.</ng-container
+            >
+            <ng-container *ngIf="plan.name === 'pro'"
+              >Unlimited access for professionals.</ng-container
+            >
           </p>
 
           <ul class="features-list">
-            <li *ngFor="let feature of plan.features"><i class="bi bi-check-circle-fill"></i>{{ feature }}</li>
+            <li *ngFor="let feature of plan.features">
+              <i class="bi bi-check-circle-fill"></i>{{ feature }}
+            </li>
           </ul>
 
-          <div *ngIf="plan.limitations && plan.limitations.length > 0" class="limitations">
-            <p *ngFor="let limitation of plan.limitations"><i class="bi bi-x-circle me-2"></i>{{ limitation }}</p>
+          <div
+            *ngIf="plan.limitations && plan.limitations.length > 0"
+            class="limitations"
+          >
+            <p *ngFor="let limitation of plan.limitations">
+              <i class="bi bi-x-circle me-2"></i>{{ limitation }}
+            </p>
           </div>
 
           <div class="plan-btn">
-            <button *ngIf="isCurrentPlan(plan.name)" class="btn btn-outline-secondary w-100" disabled>
+            <button
+              *ngIf="isCurrentPlan(plan.name)"
+              class="btn btn-outline-secondary w-100"
+              disabled
+            >
               <i class="bi bi-check2 me-2"></i>Active Plan
             </button>
-            <button *ngIf="!isCurrentPlan(plan.name)"
-                    class="btn w-100"
-                    [class.btn-primary]="!hasPendingRequest"
-                    [class.btn-warning]="hasPendingRequest && plan.name !== 'free'"
-                    (click)="changePlan(plan.name)"
-                    [disabled]="isLoading || hasPendingRequest || (plan.name === 'free' && currentSubscription?.currentPlan && currentSubscription?.currentPlan !== 'free')">
-              <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+            <button
+              *ngIf="!isCurrentPlan(plan.name)"
+              class="btn w-100"
+              [class.btn-primary]="!hasPendingRequest"
+              [class.btn-warning]="hasPendingRequest && plan.name !== 'free'"
+              (click)="changePlan(plan.name)"
+              [disabled]="
+                isLoading ||
+                hasPendingRequest ||
+                (plan.name === 'free' &&
+                  currentSubscription?.currentPlan &&
+                  currentSubscription?.currentPlan !== 'free')
+              "
+            >
+              <span
+                *ngIf="isLoading"
+                class="spinner-border spinner-border-sm me-2"
+              ></span>
               <ng-container *ngIf="hasPendingRequest && plan.name !== 'free'">
                 <i class="bi bi-clock me-1"></i>Pending Review
               </ng-container>
-              <ng-container *ngIf="!hasPendingRequest || plan.name === 'free'">{{ getUpgradePriceDisplay(plan.name) }}</ng-container>
+              <ng-container
+                *ngIf="!hasPendingRequest || plan.name === 'free'"
+                >{{ getUpgradePriceDisplay(plan.name) }}</ng-container
+              >
             </button>
           </div>
         </div>
       </div>
 
-      <app-payment-modal *ngIf="showPaymentModal"
-                         [plan]="pendingPlan"
-                         (cancel)="onPaymentCancel()"
-                         (submit)="onPaymentSubmit($event)">
+      <app-payment-modal
+        *ngIf="showPaymentModal"
+        [plan]="pendingPlan"
+        (cancel)="onPaymentCancel()"
+        (submit)="onPaymentSubmit($event)"
+      >
       </app-payment-modal>
     </div>
   </div>
