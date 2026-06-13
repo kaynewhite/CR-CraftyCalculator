@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { SubscriptionExpiryBannerComponent } from '../subscription-expiry-banner/subscription-expiry-banner.component';
 import { CalculationService } from '../../services/calculation.service';
@@ -13,7 +13,7 @@ import { NotificationBellComponent } from '../notification-bell/notification-bel
 
 @Component({
   selector: 'app-dashboard',
-  imports: [CommonModule, SidebarComponent, SubscriptionExpiryBannerComponent, NotificationBellComponent],
+  imports: [CommonModule, RouterLink, SidebarComponent, SubscriptionExpiryBannerComponent, NotificationBellComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
