@@ -32,7 +32,7 @@ export class ForgotPasswordComponent {
       next: () => {
         this.isLoading = false;
         this.success =
-          'Your request has been submitted. Our admin will email you a password reset link within 24 hours.';
+          'A password reset link has been sent to your email. Please check your inbox (and spam folder).';
         this.email = '';
       },
       error: (err: any) => {

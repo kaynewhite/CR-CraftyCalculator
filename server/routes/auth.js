@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const { JWT_SECRET } = require('../middleware/auth');
-const { sendOtpEmail } = require('../utils/mailer');
+const { sendOtpEmail, sendResetEmail } = require('../utils/mailer');
 
 function generateOtp() {
   return String(Math.floor(100000 + Math.random() * 900000));
@@ -215,8 +215,9 @@ router.post('/forgot-password', async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT * FROM users WHERE LOWER(email) = LOWER($1)', [email.trim()]);
 
+    // Always return success to prevent email enumeration
     if (!rows.length) {
-      return res.json({ message: 'If that email is registered, a reset request has been submitted to the admin.' });
+      return res.json({ message: 'If that email is registered, a reset link has been sent.' });
     }
 
     const user = rows[0];
@@ -234,10 +235,17 @@ router.post('/forgot-password', async (req, res) => {
       [user.id, user.email, token, expiresAt]
     );
 
-    res.json({ message: 'If that email is registered, a reset request has been submitted to the admin.' });
+    const proto = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+    const host = req.headers['x-forwarded-host'] || req.headers.host;
+    const baseUrl = `${proto}://${host}`;
+    const resetLink = `${baseUrl}/reset-password?token=${token}`;
+
+    await sendResetEmail(user.email, user.name, resetLink);
+
+    res.json({ message: 'If that email is registered, a reset link has been sent.' });
   } catch (err) {
     console.error('[Auth] Forgot password error:', err);
-    res.status(500).json({ error: 'Failed to process request' });
+    res.status(500).json({ error: 'Failed to send reset email. Please try again.' });
   }
 });
 
