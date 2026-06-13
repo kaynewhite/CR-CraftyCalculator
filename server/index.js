@@ -54,22 +54,22 @@ app.use((err, req, res, next) => {
 });
 
 async function start() {
-  try {
-    if (!process.env.DATABASE_URL) {
-      console.error('[Server] Missing DATABASE_URL environment variable.');
-      console.error('[Server] Provide your Neon/Postgres connection string in DATABASE_URL and restart.');
-      console.error('[Server] Example: postgres://user:pass@dbhost:5432/dbname');
-      process.exit(1);
-    }
+  if (!process.env.DATABASE_URL) {
+    console.error('[Server] Missing DATABASE_URL environment variable.');
+    console.error('[Server] Provide your Neon/Postgres connection string in DATABASE_URL and restart.');
+    console.error('[Server] Example: postgres://user:pass@dbhost:5432/dbname');
+    process.exit(1);
+  }
 
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`[Server] Crafty Rachel running on port ${PORT}`);
+  });
+
+  try {
     await migrate();
     await seed();
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`[Server] Crafty Rachel running on port ${PORT}`);
-    });
   } catch (err) {
-    console.error('[Server] Failed to start:', err.message);
-    process.exit(1);
+    console.error('[Server] DB init error:', err.message);
   }
 }
 
