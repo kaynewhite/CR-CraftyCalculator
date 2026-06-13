@@ -183,9 +183,9 @@ export class CalculatorComponent implements OnInit, OnDestroy {
       return sum + subtotal;
     }, 0);
 
-    // Step 2 — flat batch fees for printing & labor
-    this.totalPrinting = this.printingCostPerUnit;
-    this.totalLabor = this.laborCostPerUnit;
+    // Step 2 — per-unit fees multiplied by batch quantity
+    this.totalPrinting = this.printingCostPerUnit * this.quantityProducedPerBatch;
+    this.totalLabor = this.laborCostPerUnit * this.quantityProducedPerBatch;
 
     this.totalCostsBeforeWaste = this.materialCostTotal + this.totalPrinting + this.totalLabor;
 
