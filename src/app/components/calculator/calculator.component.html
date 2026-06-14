@@ -249,17 +249,17 @@
               <div class="calc-card__icon calc-card__icon--purple">
                 <i class="bi bi-plus-slash-minus"></i>
               </div>
-              <h5>Additional Costs (Per Unit)</h5>
+              <h5>Additional Costs (Batch Total)</h5>
             </div>
             <div class="calc-card__body">
               <div class="cost-row">
-                <label class="field-label">Printing Cost (Per Unit)</label>
+                <label class="field-label">Printing Cost (Batch Total)</label>
                 <div class="prefix-input">
                   <span class="prefix">₱</span>
                   <input
                     type="number"
                     class="form-control"
-                    [(ngModel)]="printingCostPerUnit"
+                    [(ngModel)]="printingCostBatch"
                     step="0.01"
                     min="0"
                     placeholder="0.00"
@@ -267,13 +267,13 @@
                 </div>
               </div>
               <div class="cost-row">
-                <label class="field-label">Labor Cost (Per Unit)</label>
+                <label class="field-label">Labor Cost (Batch Total)</label>
                 <div class="prefix-input">
                   <span class="prefix">₱</span>
                   <input
                     type="number"
                     class="form-control"
-                    [(ngModel)]="laborCostPerUnit"
+                    [(ngModel)]="laborCostBatch"
                     step="0.01"
                     min="0"
                     placeholder="0.00"

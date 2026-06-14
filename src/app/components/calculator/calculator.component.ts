@@ -22,8 +22,8 @@ export class CalculatorComponent implements OnInit, OnDestroy {
   category: string = '';
 
   quantityProducedPerBatch: number = 1;
-  printingCostPerUnit: number = 0;
-  laborCostPerUnit: number = 0;
+  printingCostBatch: number = 0;
+  laborCostBatch: number = 0;
   wastePercentage: number = 5;
   /** Markup % — Selling Price = Cost × (1 + markup/100) */
   markupPercent: number = 50;
@@ -177,7 +177,7 @@ export class CalculatorComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (this.selectedMaterials.length === 0 && this.printingCostPerUnit === 0 && this.laborCostPerUnit === 0) {
+    if (this.selectedMaterials.length === 0 && this.printingCostBatch === 0 && this.laborCostBatch === 0) {
       alert('Please add at least one material or other cost value');
       return;
     }
@@ -209,9 +209,9 @@ export class CalculatorComponent implements OnInit, OnDestroy {
       return sum + m.subtotal;
     }, 0);
 
-    // Step 2 — additional per-unit fees scaled to batch quantity
-    this.totalPrinting = this.printingCostPerUnit * this.quantityProducedPerBatch;
-    this.totalLabor    = this.laborCostPerUnit    * this.quantityProducedPerBatch;
+    // Step 2 — additional costs entered as batch totals (not per-unit)
+    this.totalPrinting = this.printingCostBatch;
+    this.totalLabor    = this.laborCostBatch;
 
     this.totalCostsBeforeWaste = this.materialCostTotal + this.totalPrinting + this.totalLabor;
 
@@ -277,8 +277,8 @@ export class CalculatorComponent implements OnInit, OnDestroy {
     this.category = '';
     this.selectedMaterials = [];
     this.quantityProducedPerBatch = 1;
-    this.printingCostPerUnit = 0;
-    this.laborCostPerUnit = 0;
+    this.printingCostBatch = 0;
+    this.laborCostBatch = 0;
     this.wastePercentage = 5;
     this.markupPercent = 50;
     this.showResults = false;
