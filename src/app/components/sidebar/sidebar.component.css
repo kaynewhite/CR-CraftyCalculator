@@ -137,33 +137,33 @@
   width: fit-content;
 }
 
-.collapse-btn {
-  width: 28px;
-  height: 28px;
-  border: none;
-  background: var(--bg-hover);
-  border-radius: 8px;
+/* Logo acts as the collapse/expand toggle */
+.logo-toggle {
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  transition: all var(--transition-fast);
-  flex-shrink: 0;
+  border-radius: 10px;
+  padding: 4px 6px;
+  margin: -4px -6px;
+  transition: background var(--transition-fast);
+  user-select: none;
 }
 
-.collapse-btn:hover {
+.logo-toggle:hover {
   background: var(--brand-primary-light);
-  color: var(--brand-primary);
 }
 
-.collapse-btn i {
-  font-size: 0.85rem;
-  font-weight: 600;
+/* When collapsed: center the logo in the header */
+.sidebar-collapsed .sidebar-header {
+  justify-content: center;
+}
+
+.sidebar-collapsed .logo-toggle {
+  flex: unset;
+  padding: 4px;
+  margin: -4px;
 }
 
 @media (max-width: 768px) {
-  .collapse-btn { display: none; }
+  .logo-toggle { cursor: default; pointer-events: none; }
 }
 
 /* ── User Section ── */

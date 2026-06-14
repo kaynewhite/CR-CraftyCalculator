@@ -5,9 +5,13 @@
 
 <aside class="sidebar-container" [class.sidebar-open]="isOpen" [class.sidebar-collapsed]="isCollapsed" role="navigation" aria-label="Main navigation">
 
-  <!-- Header -->
+  <!-- Header — logo is the collapse/expand toggle -->
   <div class="sidebar-header">
-    <div class="header-brand">
+    <div class="header-brand logo-toggle"
+         (click)="toggleCollapseSidebar()"
+         [title]="isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+         role="button"
+         aria-label="Toggle sidebar">
       <div class="brand-logo">
         <img src="/CRlogo.png" alt="Crafty Rachel" class="logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
         <div class="logo-fallback" style="display:none">CR</div>
@@ -21,14 +25,6 @@
         </div>
 </ng-container>
     </div>
-
-    <button
-      class="collapse-btn"
-      (click)="toggleCollapseSidebar()"
-      [title]="isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
-      aria-label="Toggle sidebar">
-      <i class="bi" [class.bi-chevron-left]="!isCollapsed" [class.bi-chevron-right]="isCollapsed"></i>
-    </button>
   </div>
 
   <!-- User Profile -->
