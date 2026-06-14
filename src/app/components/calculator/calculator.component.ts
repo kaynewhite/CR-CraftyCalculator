@@ -171,6 +171,12 @@ export class CalculatorComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (this.quantityProducedPerBatch <= 0) {
+      alert('Quantity produced per batch must be at least 1');
+      this.quantityProducedPerBatch = 1;
+      return;
+    }
+
     if (this.selectedMaterials.length === 0 && this.printingCostPerUnit === 0 && this.laborCostPerUnit === 0) {
       alert('Please add at least one material or other cost value');
       return;
@@ -209,8 +215,9 @@ export class CalculatorComponent implements OnInit, OnDestroy {
 
     this.totalCostsBeforeWaste = this.materialCostTotal + this.totalPrinting + this.totalLabor;
 
-    // Step 3 — waste allowance
-    this.wasteCost = this.totalCostsBeforeWaste * (this.wastePercentage / 100);
+    // Step 3 — waste allowance (clamped 0–100 so typed values outside range don't corrupt results)
+    const wasteRate = Math.min(Math.max(this.wastePercentage || 0, 0), 100);
+    this.wasteCost = this.totalCostsBeforeWaste * (wasteRate / 100);
 
     // Step 4 — total batch cost & cost per unit
     this.batchCostTotal = this.totalCostsBeforeWaste + this.wasteCost;
