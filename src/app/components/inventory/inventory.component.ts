@@ -87,8 +87,11 @@ export class InventoryComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Check for duplicates
-    const exists = this.materials.some(m => m.name.toLowerCase() === this.newMaterial.name.toLowerCase());
+    // Check for duplicates — exclude the item being edited from the check
+    const exists = this.materials.some(m =>
+      m.name.toLowerCase() === this.newMaterial.name.toLowerCase() &&
+      (!this.isEditing || m.id !== this.editingMaterial?.id)
+    );
     if (exists) {
       alert('A material with this name already exists!');
       return;

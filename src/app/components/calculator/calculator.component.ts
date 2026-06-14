@@ -25,7 +25,8 @@ export class CalculatorComponent implements OnInit, OnDestroy {
   printingCostPerUnit: number = 0;
   laborCostPerUnit: number = 0;
   wastePercentage: number = 5;
-  profitMarginPercent: number = 50;
+  /** Markup % — Selling Price = Cost × (1 + markup/100) */
+  markupPercent: number = 50;
 
   selectedMaterials: MaterialInput[] = [];
 
@@ -33,10 +34,10 @@ export class CalculatorComponent implements OnInit, OnDestroy {
   materialCostTotal: number = 0;
   totalCostsBeforeWaste: number = 0;
   wasteCost: number = 0;
-  batchCostTotal: number = 0;   // full batch cost (materials + printing + labor + waste)
-  costPerUnit: number = 0;      // batchCostTotal / quantity
-  finalPrice: number = 0;       // suggested price per unit (margin-based)
-  profitPerUnit: number = 0;    // finalPrice - costPerUnit
+  batchCostTotal: number = 0;
+  costPerUnit: number = 0;
+  finalPrice: number = 0;
+  profitPerUnit: number = 0;
   totalPrinting: number = 0;
   totalLabor: number = 0;
 
@@ -48,13 +49,13 @@ export class CalculatorComponent implements OnInit, OnDestroy {
   sidebarOpen: boolean = false;
   sidebarCollapsed: boolean = false;
   showResults: boolean = false;
-  private sidebarSubscription: Subscription;
-  private materialsSubscription: Subscription;
 
   currentPlan: 'free' | 'basic' | 'pro' = 'free';
-  calculationsRemaining: number = 10;
+  calculationsRemaining: number = 3;
   hasUnlimitedCalculations: boolean = false;
   builtInCategories: string[] = [];
+
+  private subs = new Subscription();
 
   constructor(
     private calculationService: CalculationService,
@@ -62,64 +63,81 @@ export class CalculatorComponent implements OnInit, OnDestroy {
     public subscriptionService: SubscriptionService,
     private router: Router,
     private sidebarService: SidebarService
-  ) {
-    this.sidebarSubscription = new Subscription();
-    this.materialsSubscription = new Subscription();
-  }
+  ) {}
 
   ngOnInit(): void {
-    this.materialsSubscription = this.materialService.materials$.subscribe(mats => {
-      this.materials = mats;
-      if (!this.searchMaterialsQuery) {
-        this.filteredMaterials = mats;
-      } else {
-        this.filteredMaterials = this.materialService.searchMaterials(this.searchMaterialsQuery);
-      }
-    });
+    // Clean up any previous subscriptions (handles manual ngOnInit calls safely)
+    this.subs.unsubscribe();
+    this.subs = new Subscription();
 
-    this.sidebarSubscription = this.sidebarService.isCollapsed$.subscribe(collapsed => {
-      this.sidebarCollapsed = collapsed;
-    });
+    // Materials
+    this.subs.add(
+      this.materialService.materials$.subscribe(mats => {
+        this.materials = mats;
+        this.filteredMaterials = this.searchMaterialsQuery
+          ? this.materialService.searchMaterials(this.searchMaterialsQuery)
+          : mats;
+      })
+    );
 
-    const subscription = this.subscriptionService.getCurrentSubscription();
-    if (subscription) {
-      this.currentPlan = subscription.currentPlan;
-      this.builtInCategories = this.subscriptionService.getCalculatorCategories();
+    // Sidebar collapse
+    this.subs.add(
+      this.sidebarService.isCollapsed$.subscribe(collapsed => {
+        this.sidebarCollapsed = collapsed;
+      })
+    );
 
-      if (this.currentPlan === 'free') {
-        this.hasUnlimitedCalculations = false;
-        const storedMonth = localStorage.getItem('calculationsUsedMonth');
-        const nowMonth = new Date().toISOString().slice(0, 7);
-        let used = parseInt(localStorage.getItem('calculationsUsedThisMonth') || '0');
-        if (storedMonth !== nowMonth) {
-          used = 0;
-          localStorage.setItem('calculationsUsedThisMonth', '0');
-          localStorage.setItem('calculationsUsedMonth', nowMonth);
+    // Subscribe REACTIVELY to subscription$ — fixes race condition where
+    // getCurrentSubscription() returns null if the API hasn't responded yet.
+    // Paid users would otherwise be treated as free until they refreshed.
+    this.subs.add(
+      this.subscriptionService.subscription$.subscribe(subscription => {
+        if (subscription) {
+          this.currentPlan = subscription.currentPlan;
+          this.builtInCategories = this.subscriptionService.getCalculatorCategories();
+
+          if (this.currentPlan === 'free') {
+            this.hasUnlimitedCalculations = false;
+            const storedMonth = localStorage.getItem('calculationsUsedMonth');
+            const nowMonth = new Date().toISOString().slice(0, 7);
+            let used = parseInt(localStorage.getItem('calculationsUsedThisMonth') || '0');
+            if (storedMonth !== nowMonth) {
+              used = 0;
+              localStorage.setItem('calculationsUsedThisMonth', '0');
+              localStorage.setItem('calculationsUsedMonth', nowMonth);
+            }
+            this.calculationsRemaining = Math.max(
+              0,
+              this.subscriptionService.getCalculationLimit('free') - used
+            );
+          } else {
+            this.hasUnlimitedCalculations = true;
+            this.calculationsRemaining = Infinity;
+          }
         }
-        this.calculationsRemaining = Math.max(0, this.subscriptionService.getCalculationLimit('free') - used);
-      } else {
-        this.hasUnlimitedCalculations = true;
-        this.calculationsRemaining = Infinity;
-      }
-    }
+      })
+    );
+  }
+
+  /** Refresh only materials from the API — does not reset calculator state. */
+  refreshMaterials(): void {
+    this.materialService.load();
   }
 
   searchMaterials(): void {
-    if (!this.searchMaterialsQuery) {
-      this.filteredMaterials = this.materials;
-    } else {
-      this.filteredMaterials = this.materialService.searchMaterials(this.searchMaterialsQuery);
-    }
+    this.filteredMaterials = this.searchMaterialsQuery
+      ? this.materialService.searchMaterials(this.searchMaterialsQuery)
+      : this.materials;
   }
 
   updateMaterialSubtotal(mat: MaterialInput): void {
     mat.subtotal = mat.quantity * mat.costPerUnit;
-    this.performPrivateCalculation();
+    this.calculate();
   }
 
   removeMaterial(index: number): void {
     this.selectedMaterials.splice(index, 1);
-    this.performPrivateCalculation();
+    this.calculate();
   }
 
   selectMaterialFromInventory(material: Material): void {
@@ -142,11 +160,12 @@ export class CalculatorComponent implements OnInit, OnDestroy {
     this.productName = this.productName || material.name;
     this.showInventorySelector = false;
     this.searchMaterialsQuery = '';
-    this.performPrivateCalculation();
+    this.calculate();
   }
 
   performCalculation(): void {
-    if (!this.hasUnlimitedCalculations && this.calculationsRemaining <= 0) {
+    // Guard: only limit free plan users who are CONFIRMED on free plan
+    if (!this.hasUnlimitedCalculations && this.currentPlan === 'free' && this.calculationsRemaining <= 0) {
       alert('You\'ve used all your calculations for this month. Upgrade your plan for unlimited calculations!');
       this.router.navigate(['/subscription']);
       return;
@@ -159,38 +178,38 @@ export class CalculatorComponent implements OnInit, OnDestroy {
 
     this.calculate();
 
+    // Decrement counter only for confirmed free-plan users
     if (!this.hasUnlimitedCalculations && this.currentPlan === 'free') {
       const used = parseInt(localStorage.getItem('calculationsUsedThisMonth') || '0');
       localStorage.setItem('calculationsUsedThisMonth', (used + 1).toString());
-      this.calculationsRemaining = Math.max(0, this.subscriptionService.getCalculationLimit('free') - (used + 1));
+      this.calculationsRemaining = Math.max(
+        0,
+        this.subscriptionService.getCalculationLimit('free') - (used + 1)
+      );
     }
 
     this.showResults = true;
 
-    if (!this.hasUnlimitedCalculations && this.calculationsRemaining <= 2 && this.calculationsRemaining > 0) {
-      alert(`You have ${this.calculationsRemaining} calculations remaining. Consider upgrading your plan!`);
+    if (!this.hasUnlimitedCalculations && this.currentPlan === 'free' &&
+        this.calculationsRemaining <= 2 && this.calculationsRemaining > 0) {
+      alert(`You have ${this.calculationsRemaining} calculation(s) remaining this month. Consider upgrading!`);
     }
   }
 
-  performPrivateCalculation(): void {
-    this.calculate();
-  }
-
   calculate(): void {
-    // Step 1 — sum material costs
+    // Step 1 — sum material costs for the full batch
     this.materialCostTotal = this.selectedMaterials.reduce((sum, m) => {
-      const subtotal = m.quantity * m.costPerUnit;
-      m.subtotal = subtotal;
-      return sum + subtotal;
+      m.subtotal = m.quantity * m.costPerUnit;
+      return sum + m.subtotal;
     }, 0);
 
-    // Step 2 — per-unit fees multiplied by batch quantity
+    // Step 2 — additional per-unit fees scaled to batch quantity
     this.totalPrinting = this.printingCostPerUnit * this.quantityProducedPerBatch;
-    this.totalLabor = this.laborCostPerUnit * this.quantityProducedPerBatch;
+    this.totalLabor    = this.laborCostPerUnit    * this.quantityProducedPerBatch;
 
     this.totalCostsBeforeWaste = this.materialCostTotal + this.totalPrinting + this.totalLabor;
 
-    // Step 3 — waste
+    // Step 3 — waste allowance
     this.wasteCost = this.totalCostsBeforeWaste * (this.wastePercentage / 100);
 
     // Step 4 — total batch cost & cost per unit
@@ -199,11 +218,18 @@ export class CalculatorComponent implements OnInit, OnDestroy {
       ? this.batchCostTotal / this.quantityProducedPerBatch
       : 0;
 
-    // Step 5 — margin-based pricing: price = cost / (1 - margin%)
-    const margin = Math.min(Math.max(this.profitMarginPercent, 0), 99.99);
-    this.finalPrice = this.costPerUnit / (1 - margin / 100);
+    // Step 5 — MARKUP-based pricing:
+    //   Selling Price = Cost Per Unit × (1 + Markup% ÷ 100)
+    //
+    //   Example: cost ₱100, markup 50%  →  ₱100 × 1.5  = ₱150  (profit ₱50)
+    //   Example: cost ₱100, markup 100% →  ₱100 × 2    = ₱200  (profit ₱100)
+    //
+    //   This is different from profit-margin pricing (cost ÷ (1 − margin%))
+    //   which gives a larger selling price for the same percentage.
+    const markup = Math.max(this.markupPercent, 0);
+    this.finalPrice = this.costPerUnit * (1 + markup / 100);
 
-    // Step 6 — profit per unit
+    // Step 6 — profit per unit (always = costPerUnit × markup/100)
     this.profitPerUnit = this.finalPrice - this.costPerUnit;
   }
 
@@ -228,12 +254,9 @@ export class CalculatorComponent implements OnInit, OnDestroy {
         costPerUnit: m.costPerUnit,
         subtotal: m.subtotal
       })),
-      // totalCost = full batch cost (e.g. ₱441)
       totalCost: parseFloat(this.batchCostTotal.toFixed(2)),
-      // suggestedPrice = price per unit (e.g. ₱58.80)
       suggestedPrice: parseFloat(this.finalPrice.toFixed(2)),
-      profitMargin: this.profitMarginPercent,
-      // profitAmount = profit per unit (e.g. ₱29.40)
+      profitMargin: this.markupPercent,        // stored as markupPercent in the DB field
       profitAmount: parseFloat(this.profitPerUnit.toFixed(2)),
       userId: ''
     });
@@ -250,7 +273,7 @@ export class CalculatorComponent implements OnInit, OnDestroy {
     this.printingCostPerUnit = 0;
     this.laborCostPerUnit = 0;
     this.wastePercentage = 5;
-    this.profitMarginPercent = 50;
+    this.markupPercent = 50;
     this.showResults = false;
     this.totalPrinting = 0;
     this.totalLabor = 0;
@@ -263,20 +286,11 @@ export class CalculatorComponent implements OnInit, OnDestroy {
     this.profitPerUnit = 0;
   }
 
-  toggleSidebar(): void {
-    this.sidebarOpen = !this.sidebarOpen;
-  }
-
-  closeSidebar(): void {
-    this.sidebarOpen = false;
-  }
-
-  toggleSidebarCollapse(): void {
-    this.sidebarService.toggleCollapsed();
-  }
+  toggleSidebar(): void { this.sidebarOpen = !this.sidebarOpen; }
+  closeSidebar(): void  { this.sidebarOpen = false; }
+  toggleSidebarCollapse(): void { this.sidebarService.toggleCollapsed(); }
 
   ngOnDestroy(): void {
-    this.sidebarSubscription.unsubscribe();
-    this.materialsSubscription.unsubscribe();
+    this.subs.unsubscribe();
   }
 }
