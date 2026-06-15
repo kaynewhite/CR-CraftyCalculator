@@ -121,6 +121,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.router.navigate(['/forgot-password']);
   }
 
+  refreshProfile(): void {
+    this.authService.refreshProfile();
+  }
+
   toggleSidebar(): void { this.sidebarOpen = !this.sidebarOpen; }
   closeSidebar(): void { this.sidebarOpen = false; }
   toggleSidebarCollapse(): void { this.sidebarService.toggleCollapsed(); }

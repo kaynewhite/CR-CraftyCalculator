@@ -30,7 +30,7 @@ export class AuthService {
     }
   }
 
-  private refreshProfile(): void {
+  refreshProfile(): void {
     this.api.getMe().subscribe({
       next: (dbUser: any) => {
         const user = this.mapUser(dbUser);

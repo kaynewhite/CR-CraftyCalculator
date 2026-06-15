@@ -65,7 +65,7 @@ export class SubscriptionService {
     });
   }
 
-  private loadQrCodes(): void {
+  loadQrCodes(): void {
     this.api.getQrCodes().subscribe({
       next: (data: any) => this.qrSubject.next({ gcash: data.gcash || null, maya: data.maya || null }),
       error: () => {},

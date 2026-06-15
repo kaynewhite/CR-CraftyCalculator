@@ -99,6 +99,10 @@ export class QrManagerComponent implements OnInit {
     });
   }
 
+  refreshQrCodes(): void {
+    this.subscriptionService.loadQrCodes();
+  }
+
   toggleSidebar(): void { this.sidebarOpen = !this.sidebarOpen; }
   onSidebarClose(): void { this.sidebarOpen = false; }
   onCollapseSidebar(): void { this.sidebarCollapsed = !this.sidebarCollapsed; }
