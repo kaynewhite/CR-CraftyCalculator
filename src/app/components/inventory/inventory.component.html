@@ -81,13 +81,13 @@
                       <td>{{ material.name }}</td>
                       <td>
                         <div class="d-flex align-items-center gap-2">
-                          <button class="btn btn-sm btn-outline-secondary" (click)="decreaseQuantity(material)" title="Decrease quantity">
+                          <!-- <button class="btn btn-sm btn-outline-secondary" (click)="decreaseQuantity(material)" title="Decrease quantity">
                             <i class="bi bi-dash"></i>
-                          </button>
+                          </button> -->
                           <span class="quantity-value">{{ material.quantity }}</span>
-                          <button class="btn btn-sm btn-outline-secondary" (click)="increaseQuantity(material)" title="Increase quantity">
+                          <!-- <button class="btn btn-sm btn-outline-secondary" (click)="increaseQuantity(material)" title="Increase quantity">
                             <i class="bi bi-plus"></i>
-                          </button>
+                          </button> -->
                         </div>
                       </td>
                       <td>₱{{ material.costPerUnit.toFixed(2) }}</td>
