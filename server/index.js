@@ -6,7 +6,6 @@ const morgan = require('morgan');
 const path = require('path');
 const fs = require('fs');
 const migrate = require('./db/migrate');
-const seed = require('./db/seed');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -67,7 +66,6 @@ async function start() {
 
   try {
     await migrate();
-    await seed();
   } catch (err) {
     console.error('[Server] DB init error:', err.message);
   }

@@ -17,22 +17,55 @@ router.get('/plans', async (req, res) => {
 router.get('/me', requireAuth, async (req, res) => {
   try {
     const { rows } = await pool.query(
-      `SELECT COALESCE(s.id, uuid_generate_v4()) AS id,
-              COALESCE(s.user_id, u.id) AS user_id,
-              COALESCE(s.plan, CASE WHEN u.role IN ('admin','superadmin') THEN 'pro' ELSE 'free' END) AS plan,
-              COALESCE(s.is_active, true) AS is_active,
-              COALESCE(s.start_date, NOW()) AS start_date,
-              COALESCE(s.expiry_date, CASE WHEN u.role IN ('admin','superadmin') THEN NOW() + INTERVAL '10 years' ELSE NOW() + INTERVAL '30 days' END) AS expiry_date,
-              COALESCE(s.duration_months, CASE WHEN u.role IN ('admin','superadmin') THEN 120 ELSE 1 END) AS duration_months,
-              p.display_name, p.price, p.max_calculations, p.calc_expiry_days, p.max_materials, p.features, p.limitations
+      `SELECT u.id AS user_id, u.role,
+              s.id AS sub_id, s.plan, s.is_active, s.start_date, s.expiry_date, s.duration_months
        FROM users u
        LEFT JOIN user_subscriptions s ON s.user_id = u.id
-       LEFT JOIN subscription_plans p ON p.name = COALESCE(s.plan, CASE WHEN u.role IN ('admin','superadmin') THEN 'pro' ELSE 'free' END)
        WHERE u.id = $1`,
       [req.user.id]
     );
     if (!rows.length) return res.status(404).json({ error: 'Subscription not found' });
-    res.json(rows[0]);
+
+    const row = rows[0];
+    const isAdminRole = row.role === 'admin' || row.role === 'superadmin';
+
+    // Determine if expired (only applies to regular users with a paid plan)
+    const now = new Date();
+    const expiryDate = row.expiry_date ? new Date(row.expiry_date) : null;
+    const isExpired = !isAdminRole && expiryDate !== null && expiryDate < now && row.plan && row.plan !== 'free';
+
+    // If expired and still marked active in DB, update it
+    if (isExpired && row.is_active) {
+      await pool.query(
+        `UPDATE user_subscriptions SET is_active = false, updated_at = NOW() WHERE user_id = $1`,
+        [row.user_id]
+      );
+    }
+
+    const effectivePlan = isAdminRole ? (row.plan || 'pro') : (isExpired ? 'free' : (row.plan || 'free'));
+    const effectiveIsActive = isAdminRole ? true : (isExpired ? false : (row.is_active ?? true));
+    const effectiveExpiry = isAdminRole
+      ? (row.expiry_date || new Date(Date.now() + 10 * 365 * 86400000))
+      : (row.expiry_date || new Date(Date.now() + 30 * 86400000));
+
+    // Fetch plan details
+    const { rows: planRows } = await pool.query(
+      `SELECT display_name, price, max_calculations, calc_expiry_days, max_materials, features, limitations
+       FROM subscription_plans WHERE name = $1`,
+      [effectivePlan]
+    );
+    const planDetails = planRows[0] || {};
+
+    res.json({
+      id: row.sub_id,
+      user_id: row.user_id,
+      plan: effectivePlan,
+      is_active: effectiveIsActive,
+      start_date: row.start_date || now,
+      expiry_date: effectiveExpiry,
+      duration_months: row.duration_months || (isAdminRole ? 120 : 1),
+      ...planDetails,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to fetch subscription' });
