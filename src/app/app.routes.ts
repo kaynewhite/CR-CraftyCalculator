@@ -16,6 +16,8 @@ import { ProfileComponent } from './components/profile/profile.component';
 import { SubscriptionComponent } from './components/subscription/subscription.component';
 import { QrManagerComponent } from './components/qr-manager/qr-manager.component';
 import { PasswordResetsComponent } from './components/password-resets/password-resets.component';
+import { ReportsComponent } from './components/reports/reports.component';
+import { AdminReportsComponent } from './components/admin-reports/admin-reports.component';
 import { authGuard, guestGuard, adminGuard, superAdminGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
@@ -33,6 +35,7 @@ export const routes: Routes = [
   { path: 'admin-users', component: UserManagementComponent, canActivate: [adminGuard] },
   { path: 'admin-resets', component: PasswordResetsComponent, canActivate: [adminGuard] },
   { path: 'admin-logs', component: SystemLogsComponent, canActivate: [superAdminGuard] },
+  { path: 'admin-reports', component: AdminReportsComponent, canActivate: [adminGuard] },
 
   { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
   { path: 'calculator', component: CalculatorComponent, canActivate: [authGuard] },
@@ -40,6 +43,7 @@ export const routes: Routes = [
   { path: 'inventory', component: InventoryComponent, canActivate: [authGuard] },
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
   { path: 'subscription', component: SubscriptionComponent, canActivate: [authGuard] },
+  { path: 'reports', component: ReportsComponent, canActivate: [authGuard] },
 
   { path: '**', redirectTo: '' },
 ];

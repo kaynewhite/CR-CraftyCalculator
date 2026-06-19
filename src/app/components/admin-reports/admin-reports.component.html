@@ -1,0 +1,254 @@
+<div class="dashboard-layout" [class.dark]="isDarkMode" [class.sidebar-collapsed]="sidebarCollapsed">
+  <app-sidebar
+    [isOpen]="sidebarOpen"
+    [isCollapsed]="sidebarCollapsed"
+    (closeSidebar)="onSidebarClose()"
+    (toggleCollapse)="onCollapseSidebar()">
+  </app-sidebar>
+
+  <div class="main-content">
+    <div class="top-bar">
+      <button class="hamburger-btn" (click)="toggleSidebar()">
+        <i class="bi bi-list"></i>
+      </button>
+      <div class="page-header">
+        <h1 class="page-title"><i class="bi bi-flag-fill me-2"></i>Reports</h1>
+        <p class="page-subtitle">{{ isSuperAdmin ? 'Review user and admin reports' : 'Manage user reports and submit your own' }}</p>
+      </div>
+    </div>
+
+    <!-- Alerts -->
+    <div class="alerts-area">
+      <div *ngIf="successMessage" class="alert alert-success">
+        <i class="bi bi-check-circle-fill me-2"></i>{{ successMessage }}
+        <button class="alert-close" (click)="clearMessages()"><i class="bi bi-x"></i></button>
+      </div>
+      <div *ngIf="errorMessage" class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ errorMessage }}
+        <button class="alert-close" (click)="clearMessages()"><i class="bi bi-x"></i></button>
+      </div>
+    </div>
+
+    <div class="reports-content">
+      <!-- Tab Bar -->
+      <div class="tab-bar">
+        <button class="tab-btn" [class.active]="activeTab==='user-reports'" (click)="switchTab('user-reports')">
+          <i class="bi bi-people me-1"></i>User Reports
+          <span class="tab-badge" *ngIf="openUserCount">{{ openUserCount }}</span>
+        </button>
+        <button *ngIf="isSuperAdmin" class="tab-btn" [class.active]="activeTab==='admin-reports'" (click)="switchTab('admin-reports')">
+          <i class="bi bi-person-badge me-1"></i>Admin Reports
+          <span class="tab-badge" *ngIf="openAdminCount">{{ openAdminCount }}</span>
+        </button>
+        <button *ngIf="!isSuperAdmin" class="tab-btn" [class.active]="activeTab==='submit'" (click)="switchTab('submit')">
+          <i class="bi bi-plus-circle me-1"></i>Submit to Superadmin
+        </button>
+      </div>
+
+      <!-- Filters (shared) -->
+      <div *ngIf="activeTab !== 'submit'" class="filter-bar">
+        <div class="search-wrap">
+          <i class="bi bi-search search-icon"></i>
+          <input class="search-input" [(ngModel)]="searchTerm" (ngModelChange)="onFilterChange()" placeholder="Search by subject or user…">
+        </div>
+        <select class="filter-select" [(ngModel)]="statusFilter" (ngModelChange)="onFilterChange()">
+          <option value="all">All Statuses</option>
+          <option value="open">Open</option>
+          <option value="seen">Seen</option>
+          <option value="resolved">Resolved</option>
+          <option value="closed">Closed</option>
+        </select>
+        <select class="filter-select" [(ngModel)]="typeFilter" (ngModelChange)="onFilterChange()">
+          <option value="all">All Types</option>
+          <option *ngFor="let t of reportTypes" [value]="t.value">{{ t.label }}</option>
+        </select>
+      </div>
+
+      <!-- User Reports Tab -->
+      <div *ngIf="activeTab==='user-reports'">
+        <div *ngIf="isLoading" class="loading-state"><span class="spinner"></span><p>Loading reports…</p></div>
+
+        <div *ngIf="!isLoading && filteredUserReports.length === 0" class="empty-state">
+          <i class="bi bi-inbox empty-icon"></i>
+          <p>No user reports {{ statusFilter !== 'all' ? 'with status "' + statusFilter + '"' : '' }} found.</p>
+        </div>
+
+        <div *ngFor="let r of filteredUserReports" class="report-card">
+          <div class="report-card-top" (click)="toggleExpand(r.id)">
+            <div class="rc-left">
+              <span class="type-badge {{ getTypeInfo(r.type).color }}">
+                <i class="bi {{ getTypeInfo(r.type).icon }}"></i> {{ getTypeInfo(r.type).label }}
+              </span>
+              <span class="status-badge {{ getStatusClass(r.status) }}">{{ getStatusLabel(r.status) }}</span>
+              <span *ngIf="r.is_forwarded" class="fwd-chip">
+                <i class="bi bi-arrow-right-circle-fill me-1"></i>Forwarded
+              </span>
+            </div>
+            <div class="rc-right">
+              <span class="reporter-info">{{ r.reporter_name || 'Unknown' }} &bull; {{ r.reporter_email }}</span>
+              <span class="report-date">{{ r.created_at | date:'MMM d, y' }}</span>
+              <i class="bi expand-icon" [class.bi-chevron-down]="expandedId !== r.id" [class.bi-chevron-up]="expandedId === r.id"></i>
+            </div>
+          </div>
+
+          <div class="report-subject-row">
+            <h3 class="report-subject">{{ r.subject }}</h3>
+          </div>
+
+          <div *ngIf="expandedId === r.id" class="report-expanded">
+            <p class="report-desc">{{ r.description }}</p>
+
+            <!-- Admin reply shown -->
+            <div *ngIf="r.admin_reply" class="reply-box admin-reply-box">
+              <p class="reply-label"><i class="bi bi-person-badge-fill me-1"></i>Your reply:</p>
+              <p class="reply-text">{{ r.admin_reply }}</p>
+              <span class="reply-date">{{ r.admin_reply_at | date:'MMM d, y, h:mm a' }}</span>
+            </div>
+
+            <!-- Superadmin reply shown (if forwarded) -->
+            <div *ngIf="r.superadmin_reply" class="reply-box super-reply-box">
+              <p class="reply-label"><i class="bi bi-shield-fill-check me-1"></i>Superadmin reply:</p>
+              <p class="reply-text">{{ r.superadmin_reply }}</p>
+              <span class="reply-date">{{ r.superadmin_reply_at | date:'MMM d, y, h:mm a' }}</span>
+            </div>
+
+            <!-- Reply input (superadmin can also reply to user reports) -->
+            <div class="reply-compose">
+              <label class="compose-label">{{ isSuperAdmin ? 'Superadmin reply' : 'Reply to user' }}</label>
+              <textarea class="reply-textarea" [(ngModel)]="replyText[r.id]"
+                        [placeholder]="isSuperAdmin ? 'Write a reply as Superadmin…' : 'Write a reply to the user…'"
+                        rows="3"></textarea>
+              <div class="action-row">
+                <button class="btn-action btn-reply" (click)="sendReply(r)" [disabled]="replyingId === r.id || !replyText[r.id]?.trim()">
+                  <i class="bi bi-reply-fill me-1"></i>
+                  {{ replyingId === r.id ? 'Sending…' : (r.admin_reply || r.superadmin_reply ? 'Update Reply' : 'Send Reply') }}
+                </button>
+                <button *ngIf="!isSuperAdmin && !r.is_forwarded && r.status !== 'resolved'" class="btn-action btn-forward" (click)="forwardReport(r)">
+                  <i class="bi bi-arrow-right-circle me-1"></i>Forward to Superadmin
+                </button>
+                <button *ngIf="r.status !== 'resolved'" class="btn-action btn-resolve" (click)="resolveReport(r)">
+                  <i class="bi bi-check-lg me-1"></i>Resolve
+                </button>
+                <button *ngIf="isSuperAdmin" class="btn-action btn-delete" (click)="deleteReport(r)">
+                  <i class="bi bi-trash me-1"></i>Delete
+                </button>
+              </div>
+            </div>
+
+            <div *ngIf="r.is_forwarded" class="fwd-info">
+              <i class="bi bi-info-circle me-1"></i>
+              Forwarded by {{ r.forwarded_by_name || 'admin' }}
+              {{ r.forwarded_at ? 'on ' + (r.forwarded_at | date:'MMM d, y') : '' }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Admin Reports Tab (superadmin only) -->
+      <div *ngIf="activeTab==='admin-reports' && isSuperAdmin">
+        <div *ngIf="isLoading" class="loading-state"><span class="spinner"></span><p>Loading admin reports…</p></div>
+
+        <div *ngIf="!isLoading && filteredAdminReports.length === 0" class="empty-state">
+          <i class="bi bi-inbox empty-icon"></i>
+          <p>No admin reports found.</p>
+        </div>
+
+        <div *ngFor="let r of filteredAdminReports" class="report-card">
+          <div class="report-card-top" (click)="toggleExpand(r.id)">
+            <div class="rc-left">
+              <span class="type-badge {{ getTypeInfo(r.type).color }}">
+                <i class="bi {{ getTypeInfo(r.type).icon }}"></i> {{ getTypeInfo(r.type).label }}
+              </span>
+              <span class="status-badge {{ getStatusClass(r.status) }}">{{ getStatusLabel(r.status) }}</span>
+              <span *ngIf="r.reporter_role === 'user' && r.is_forwarded" class="fwd-chip">
+                <i class="bi bi-arrow-right-circle-fill me-1"></i>Forwarded User Report
+              </span>
+              <span *ngIf="r.reporter_role === 'admin'" class="admin-chip">
+                <i class="bi bi-person-badge-fill me-1"></i>Admin Report
+              </span>
+            </div>
+            <div class="rc-right">
+              <span class="reporter-info">From: {{ r.reporter_name || 'Unknown' }} &bull; {{ r.reporter_email }}</span>
+              <span class="report-date">{{ r.created_at | date:'MMM d, y' }}</span>
+              <i class="bi expand-icon" [class.bi-chevron-down]="expandedId !== r.id" [class.bi-chevron-up]="expandedId === r.id"></i>
+            </div>
+          </div>
+
+          <div class="report-subject-row">
+            <h3 class="report-subject">{{ r.subject }}</h3>
+          </div>
+
+          <div *ngIf="expandedId === r.id" class="report-expanded">
+            <p class="report-desc">{{ r.description }}</p>
+
+            <div *ngIf="r.superadmin_reply" class="reply-box super-reply-box">
+              <p class="reply-label"><i class="bi bi-shield-fill-check me-1"></i>Your reply:</p>
+              <p class="reply-text">{{ r.superadmin_reply }}</p>
+              <span class="reply-date">{{ r.superadmin_reply_at | date:'MMM d, y, h:mm a' }}</span>
+            </div>
+
+            <div class="reply-compose">
+              <label class="compose-label">Reply to admin</label>
+              <textarea class="reply-textarea" [(ngModel)]="replyText[r.id]"
+                        placeholder="Write a reply to the admin…" rows="3"></textarea>
+              <div class="action-row">
+                <button class="btn-action btn-reply" (click)="sendReply(r)" [disabled]="replyingId === r.id || !replyText[r.id]?.trim()">
+                  <i class="bi bi-reply-fill me-1"></i>
+                  {{ replyingId === r.id ? 'Sending…' : (r.superadmin_reply ? 'Update Reply' : 'Send Reply') }}
+                </button>
+                <button *ngIf="r.status !== 'resolved'" class="btn-action btn-resolve" (click)="resolveReport(r)">
+                  <i class="bi bi-check-lg me-1"></i>Resolve
+                </button>
+                <button class="btn-action btn-delete" (click)="deleteReport(r)">
+                  <i class="bi bi-trash me-1"></i>Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit Report Tab (admin only) -->
+      <div *ngIf="activeTab==='submit' && !isSuperAdmin" class="card-panel">
+        <div class="panel-header">
+          <i class="bi bi-megaphone-fill"></i>
+          <span>Submit Report to Superadmin</span>
+        </div>
+        <p class="panel-desc">Report a platform-level issue, suggest improvements, or escalate anything that requires Superadmin attention.</p>
+
+        <div class="form-group">
+          <label class="form-label">Report Type</label>
+          <div class="type-grid">
+            <button *ngFor="let t of reportTypes"
+                    class="type-card"
+                    [class.selected]="submitForm.type === t.value"
+                    (click)="submitForm.type = t.value">
+              <i class="bi {{ t.icon }} type-icon {{ t.color }}"></i>
+              <span>{{ t.label }}</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Subject <span class="required">*</span></label>
+          <input class="form-input" [(ngModel)]="submitForm.subject" placeholder="Brief title of the issue" maxlength="120">
+          <p class="field-hint">{{ submitForm.subject.length }}/120</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Description <span class="required">*</span></label>
+          <textarea class="form-input form-textarea" [(ngModel)]="submitForm.description"
+                    placeholder="Describe the issue in detail…"
+                    rows="5" maxlength="2000"></textarea>
+          <p class="field-hint">{{ submitForm.description.length }}/2000</p>
+        </div>
+
+        <button class="btn-submit" (click)="submitReport()" [disabled]="isSubmitting">
+          <i class="bi bi-send-fill me-2" *ngIf="!isSubmitting"></i>
+          <span class="spinner-sm" *ngIf="isSubmitting"></span>
+          {{ isSubmitting ? 'Submitting…' : 'Submit to Superadmin' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

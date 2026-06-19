@@ -81,6 +81,10 @@
             <ng-container *ngIf="!isCollapsed"><span>Subscription</span></ng-container>
           </a>
 </ng-container>
+        <a [routerLink]="'/reports'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'Reports' : ''">
+          <i class="bi bi-flag nav-icon"></i>
+          <ng-container *ngIf="!isCollapsed"><span>Reports</span></ng-container>
+        </a>
       </div>
 
 
@@ -103,6 +107,10 @@
         <a [routerLink]="'/admin-qr'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'QR Codes' : ''">
           <i class="bi bi-qr-code nav-icon"></i>
           <ng-container *ngIf="!isCollapsed"><span>QR Codes</span></ng-container>
+        </a>
+        <a [routerLink]="'/admin-reports'" routerLinkActive="active" class="nav-item" (click)="onNavigate()" [title]="isCollapsed ? 'Reports' : ''">
+          <i class="bi bi-flag nav-icon"></i>
+          <ng-container *ngIf="!isCollapsed"><span>Reports</span></ng-container>
         </a>
       </div>
 

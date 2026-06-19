@@ -236,6 +236,33 @@ CREATE INDEX IF NOT EXISTS idx_reset_tokens_token    ON password_reset_tokens(to
 CREATE INDEX IF NOT EXISTS idx_reset_tokens_user     ON password_reset_tokens(user_id);
 CREATE INDEX IF NOT EXISTS idx_users_email           ON users(email);
 
+-- Reports (user → admin, admin → superadmin, forwarded user → superadmin)
+CREATE TABLE IF NOT EXISTS reports (
+  id                   UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  reporter_id          TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  reporter_role        TEXT NOT NULL CHECK (reporter_role IN ('user', 'admin')),
+  type                 TEXT NOT NULL CHECK (type IN ('bug', 'problem', 'feedback', 'other')),
+  subject              TEXT NOT NULL,
+  description          TEXT NOT NULL,
+  status               TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'seen', 'resolved', 'closed')),
+  is_forwarded         BOOLEAN NOT NULL DEFAULT FALSE,
+  forwarded_by         TEXT REFERENCES users(id),
+  forwarded_at         TIMESTAMPTZ,
+  admin_reply          TEXT,
+  admin_reply_at       TIMESTAMPTZ,
+  superadmin_reply     TEXT,
+  superadmin_reply_at  TIMESTAMPTZ,
+  resolved_by          TEXT REFERENCES users(id),
+  resolved_at          TIMESTAMPTZ,
+  created_at           TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at           TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_reports_reporter  ON reports(reporter_id);
+CREATE INDEX IF NOT EXISTS idx_reports_status    ON reports(status);
+CREATE INDEX IF NOT EXISTS idx_reports_role      ON reports(reporter_role);
+CREATE INDEX IF NOT EXISTS idx_reports_forwarded ON reports(is_forwarded);
+
 -- Manual Payment & Subscription Requests
 CREATE TABLE IF NOT EXISTS subscription_requests (
   id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::TEXT,

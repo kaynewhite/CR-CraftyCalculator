@@ -15,12 +15,13 @@
 9. [Upgrading Your Plan](#9-upgrading-your-plan)
 10. [Your Profile](#10-your-profile)
 11. [Notifications](#11-notifications)
-12. [Admin Guide](#12-admin-guide)
-13. [Admin: Managing Users](#13-admin-managing-users)
-14. [Admin: Approving Payments](#14-admin-approving-payments)
-15. [Admin: Managing Payment QR Codes](#15-admin-managing-payment-qr-codes)
-16. [Admin: Dashboard & Stats](#16-admin-dashboard--stats)
-17. [Contact & Support](#17-contact--support)
+12. [Submitting a Report (Users)](#12-submitting-a-report-users)
+13. [Admin Guide](#13-admin-guide)
+14. [Admin: Managing Users](#14-admin-managing-users)
+15. [Admin: Approving Payments](#15-admin-approving-payments)
+16. [Admin: Managing Payment QR Codes](#16-admin-managing-payment-qr-codes)
+17. [Admin: Dashboard & Stats](#17-admin-dashboard--stats)
+18. [Admin: Reports](#18-admin-reports)
 
 ---
 
@@ -212,21 +213,44 @@ Click a notification to mark it as read. Unread notifications show a badge count
 
 ---
 
-## 12. Admin Guide
+## 12. Submitting a Report (Users)
 
-Admins access a separate control panel. To log in as an admin:
+If you encounter a bug, a problem, or want to share feedback, you can submit a report directly to the admin team.
 
-1. Go to the **admin login page**: navigate to `/admin-login`.
-2. Enter your admin email and password.
-3. Click **Sign In**.
+1. Go to **Reports** in the sidebar.
+2. Select a **report type**:
+   - **Bug** — something in the app is broken or behaving unexpectedly.
+   - **Problem** — something is not working the way you expected.
+   - **Feedback** — a suggestion or general comment.
+   - **Other** — anything that doesn't fit the above.
+3. Enter a short **Subject** (what the issue is about).
+4. Write a detailed **Description** — the more detail you provide, the faster the issue can be resolved.
+5. Click **Submit Report**.
 
-You will land on the **Admin Dashboard**.
+You can track all your submitted reports under the **My Reports** tab on the same page. Each report shows its current status:
 
-> Admins cannot use the regular user features (Calculator, Inventory, etc.). The admin panel is dedicated to managing users, payments, and platform settings.
+| Status   | Meaning                                                       |
+|----------|---------------------------------------------------------------|
+| Open     | Submitted and waiting for admin review                        |
+| Seen     | The admin has opened and read your report                     |
+| Resolved | The admin has addressed the issue                             |
+| Closed   | The report has been closed                                    |
+
+If the admin replies to your report, the reply will appear directly on your report card.
 
 ---
 
-## 13. Admin: Managing Users
+## 13. Admin Guide
+
+Admins have access to all regular user features (Calculator, Inventory, History, Profile, Subscription) in addition to the admin control panel. This means admins can use the platform as a regular user while also managing the platform.
+
+To access the admin panel, simply log in with your admin credentials. You will be taken directly to the Admin Dashboard.
+
+> Admins navigate between admin tools and regular user features using the same sidebar.
+
+---
+
+## 14. Admin: Managing Users
 
 Go to **User Management** in the admin sidebar.
 
@@ -247,9 +271,9 @@ The user list shows all registered users with their name, email, plan, status, a
 
 ---
 
-## 14. Admin: Approving Payments
+## 15. Admin: Approving Payments
 
-Go to **Payment Approval** in the admin sidebar.
+Go to **Payment Approvals** in the admin sidebar.
 
 Each row shows the user's name, the plan they requested, the payment method, the screenshot they uploaded, and when they submitted.
 
@@ -270,9 +294,9 @@ Each row shows the user's name, the plan they requested, the payment method, the
 
 ---
 
-## 15. Admin: Managing Payment QR Codes
+## 16. Admin: Managing Payment QR Codes
 
-Go to **Manage Payment QR** in the admin sidebar.
+Go to **QR Codes** in the admin sidebar.
 
 This is where you upload the GCash and PayMaya QR codes that users scan to pay for subscriptions.
 
@@ -291,7 +315,7 @@ Click **Remove** under the current QR image. Users will see a notice that no QR 
 
 ---
 
-## 16. Admin: Dashboard & Stats
+## 17. Admin: Dashboard & Stats
 
 The **Admin Dashboard** shows a platform-wide overview:
 
@@ -306,10 +330,44 @@ Click **Refresh** to reload the stats without leaving the page.
 
 ---
 
-## 17. Contact & Support
+## 18. Admin: Reports
 
-For questions, issues, or feedback, email the Crafty Rachel team:
+Go to **Reports** in the admin sidebar to manage reports submitted by users, and to submit your own reports to the Superadmin.
 
-**rachel2buyan@gmail.com**
+### Viewing User Reports
 
-Include your account email and a description of the issue so the team can assist you promptly.
+The **User Reports** tab lists all reports submitted by regular users.
+
+Each report shows the reporter's name, email, report type, status, and subject. Click a report to expand it and see:
+- The full description
+- Any reply you have already sent
+- Action buttons
+
+### Replying to a User Report
+
+1. Expand the report by clicking on it.
+2. Type your response in the **Reply** text area.
+3. Click **Send Reply**.
+
+The user will see your reply on their Reports page.
+
+### Forwarding to Superadmin
+
+If a user report requires escalation:
+1. Expand the report.
+2. Click **Forward to Superadmin**.
+3. The report is immediately visible to the Superadmin.
+
+> Once forwarded, a report cannot be unforwarded.
+
+### Resolving a Report
+
+Click **Resolve** to mark a report as resolved. The user's report card will update to show **Resolved** status.
+
+### Submitting Your Own Report
+
+Use the **Submit to Superadmin** tab to send a report directly to the Superadmin. This is for platform-level issues, bugs, or suggestions that require Superadmin attention.
+
+1. Select the report type.
+2. Enter a subject and description.
+3. Click **Submit to Superadmin**.

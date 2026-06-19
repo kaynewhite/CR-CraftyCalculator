@@ -1,0 +1,129 @@
+<div class="dashboard-layout" [class.dark]="isDarkMode" [class.sidebar-collapsed]="sidebarCollapsed">
+  <app-sidebar
+    [isOpen]="sidebarOpen"
+    [isCollapsed]="sidebarCollapsed"
+    (closeSidebar)="onSidebarClose()"
+    (toggleCollapse)="onCollapseSidebar()">
+  </app-sidebar>
+
+  <div class="main-content">
+    <div class="top-bar">
+      <button class="hamburger-btn" (click)="toggleSidebar()">
+        <i class="bi bi-list"></i>
+      </button>
+      <div class="page-header">
+        <h1 class="page-title"><i class="bi bi-flag-fill me-2"></i>Reports</h1>
+        <p class="page-subtitle">Submit a report or track your previous submissions</p>
+      </div>
+    </div>
+
+    <div class="reports-content">
+      <!-- Tabs -->
+      <div class="tab-bar">
+        <button class="tab-btn" [class.active]="activeTab==='submit'" (click)="switchTab('submit')">
+          <i class="bi bi-plus-circle me-1"></i>Submit Report
+        </button>
+        <button class="tab-btn" [class.active]="activeTab==='mine'" (click)="switchTab('mine')">
+          <i class="bi bi-clock-history me-1"></i>My Reports
+          <span class="tab-count" *ngIf="myReports.length">{{ myReports.length }}</span>
+        </button>
+      </div>
+
+      <!-- Submit Form -->
+      <div *ngIf="activeTab==='submit'" class="card-panel">
+        <div class="panel-header">
+          <i class="bi bi-megaphone-fill"></i>
+          <span>Submit a Report</span>
+        </div>
+        <p class="panel-desc">Found a bug, encountered a problem, or have feedback? Let us know and an admin will review it.</p>
+
+        <div *ngIf="successMessage" class="alert alert-success">
+          <i class="bi bi-check-circle-fill me-2"></i>{{ successMessage }}
+        </div>
+        <div *ngIf="errorMessage" class="alert alert-danger">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ errorMessage }}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Report Type</label>
+          <div class="type-grid">
+            <button *ngFor="let t of reportTypes"
+                    class="type-card"
+                    [class.selected]="form.type === t.value"
+                    (click)="form.type = t.value">
+              <i class="bi {{ t.icon }} type-icon {{ t.color }}"></i>
+              <span>{{ t.label }}</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Subject <span class="required">*</span></label>
+          <input class="form-input" [(ngModel)]="form.subject" placeholder="Brief title of the issue" maxlength="120">
+          <p class="field-hint">{{ form.subject.length }}/120</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Description <span class="required">*</span></label>
+          <textarea class="form-input form-textarea" [(ngModel)]="form.description"
+                    placeholder="Describe the issue in detail. Include steps to reproduce if it's a bug."
+                    rows="5" maxlength="2000"></textarea>
+          <p class="field-hint">{{ form.description.length }}/2000</p>
+        </div>
+
+        <button class="btn-submit" (click)="submit()" [disabled]="isSubmitting">
+          <i class="bi bi-send-fill me-2" *ngIf="!isSubmitting"></i>
+          <span class="spinner" *ngIf="isSubmitting"></span>
+          {{ isSubmitting ? 'Submitting…' : 'Submit Report' }}
+        </button>
+      </div>
+
+      <!-- My Reports -->
+      <div *ngIf="activeTab==='mine'" class="reports-list-section">
+        <div *ngIf="isLoading" class="loading-state">
+          <span class="spinner"></span>
+          <p>Loading your reports…</p>
+        </div>
+
+        <div *ngIf="!isLoading && myReports.length === 0" class="empty-state">
+          <i class="bi bi-inbox empty-icon"></i>
+          <p>You haven't submitted any reports yet.</p>
+          <button class="btn-link" (click)="switchTab('submit')">Submit your first report</button>
+        </div>
+
+        <div *ngIf="!isLoading && myReports.length > 0" class="report-cards">
+          <div *ngFor="let r of myReports" class="report-card">
+            <div class="report-card-header">
+              <div class="report-meta">
+                <span class="type-badge {{ getTypeInfo(r.type).color }}">
+                  <i class="bi {{ getTypeInfo(r.type).icon }}"></i> {{ getTypeInfo(r.type).label }}
+                </span>
+                <span class="status-badge {{ getStatusClass(r.status) }}">{{ getStatusLabel(r.status) }}</span>
+              </div>
+              <span class="report-date">{{ r.created_at | date:'MMM d, y' }}</span>
+            </div>
+            <h3 class="report-subject">{{ r.subject }}</h3>
+            <p class="report-desc">{{ r.description }}</p>
+
+            <div *ngIf="r.is_forwarded" class="forwarded-notice">
+              <i class="bi bi-arrow-right-circle-fill me-1"></i>
+              Forwarded to Superadmin{{ r.forwarded_at ? ' on ' + (r.forwarded_at | date:'MMM d, y') : '' }}
+            </div>
+
+            <div *ngIf="r.admin_reply" class="reply-box admin-reply-box">
+              <p class="reply-label"><i class="bi bi-person-badge-fill me-1"></i>Admin replied:</p>
+              <p class="reply-text">{{ r.admin_reply }}</p>
+              <span class="reply-date">{{ r.admin_reply_at | date:'MMM d, y, h:mm a' }}</span>
+            </div>
+
+            <div *ngIf="r.superadmin_reply" class="reply-box super-reply-box">
+              <p class="reply-label"><i class="bi bi-shield-fill-check me-1"></i>Superadmin replied:</p>
+              <p class="reply-text">{{ r.superadmin_reply }}</p>
+              <span class="reply-date">{{ r.superadmin_reply_at | date:'MMM d, y, h:mm a' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
