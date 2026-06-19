@@ -142,6 +142,7 @@ body.dark-mode .orb { opacity: 0.05; }
 .footer-brand { display: flex; align-items: center; gap: 0.75rem; }
 
 .footer-logo { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary)); color: white; display: flex; align-items: center; justify-content: center; font-family: 'Fredoka', sans-serif; font-size: 0.85rem; font-weight: 700; }
+.footer-logo-img { width: 36px; height: 36px; border-radius: 10px; object-fit: contain; }
 
 .footer-name { font-size: 0.9rem; font-weight: 700; color: var(--text-primary); margin: 0; }
 .footer-tagline { font-size: 0.75rem; color: var(--text-muted); margin: 0; }
