@@ -164,7 +164,7 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
     const currentOrder = this.planOrder(this.currentSubscription?.currentPlan ?? 'free');
     const targetOrder  = this.planOrder(planName);
 
-    if (this.isNearingExpiry && targetOrder < currentOrder) {
+    if (this.isNearingExpiry && targetOrder < currentOrder && planName !== 'free') {
       return 'Downgrade & Extend';
     }
     if (this.currentSubscription?.currentPlan === 'basic' && planName === 'pro') {
