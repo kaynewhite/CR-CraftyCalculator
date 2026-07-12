@@ -24,8 +24,8 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
   isLoading = false;
   sidebarOpen = false;
   sidebarCollapsed = false;
-  private sidebarSubscription = new Subscription();
-  private paymentSub = new Subscription();
+  isNearingExpiry = false;
+  private subs = new Subscription();
 
   showPaymentModal = false;
   pendingPlan: 'basic' | 'pro' | null = null;
@@ -51,32 +51,56 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
     }
 
     this.themeService.setTheme(this.themeService.getCurrentTheme());
-    this.themeService.isDarkMode$.subscribe(isDark => {
+    this.subs.add(this.themeService.isDarkMode$.subscribe(isDark => {
       this.isDarkMode = isDark;
-    });
+    }));
 
     this.plans = this.subscriptionService.getPlans();
-    this.currentSubscription = this.subscriptionService.getCurrentSubscription();
     this.subscriptionService.qr$.subscribe();
 
-    this.paymentService.loadMyRequests();
-    this.paymentSub = this.paymentService.requests$.subscribe(requests => {
-      this.hasPendingRequest = requests.some(r => ['pending', 'scanning'].includes(r.status));
-    });
+    // Subscribe reactively so plan info and nearing-expiry state are correct on hard refresh
+    this.subs.add(
+      this.subscriptionService.subscription$.subscribe(sub => {
+        this.currentSubscription = sub;
+        if (sub && sub.currentPlan !== 'free' && sub.expiryDate) {
+          const daysLeft = Math.ceil(
+            (new Date(sub.expiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+          );
+          this.isNearingExpiry = daysLeft > 0 && daysLeft <= 7;
+        } else {
+          this.isNearingExpiry = false;
+        }
+      })
+    );
 
-    this.sidebarSubscription = this.sidebarService.isCollapsed$.subscribe(collapsed => {
+    this.paymentService.loadMyRequests();
+    this.subs.add(this.paymentService.requests$.subscribe(requests => {
+      this.hasPendingRequest = requests.some(r => ['pending', 'scanning'].includes(r.status));
+    }));
+
+    this.subs.add(this.sidebarService.isCollapsed$.subscribe(collapsed => {
       this.sidebarCollapsed = collapsed;
-    });
+    }));
   }
 
   ngOnDestroy(): void {
-    this.sidebarSubscription.unsubscribe();
-    this.paymentSub.unsubscribe();
+    this.subs.unsubscribe();
   }
 
   refreshData(): void {
-    this.currentSubscription = this.subscriptionService.getCurrentSubscription();
     this.paymentService.loadMyRequests();
+  }
+
+  private planOrder(name: string): number {
+    return ({ free: 0, basic: 1, pro: 2 } as Record<string, number>)[name] ?? 0;
+  }
+
+  extendCurrentPlan(): void {
+    const plan = this.currentSubscription?.currentPlan;
+    if (!plan || plan === 'free') return;
+    this.pendingPlan = plan as 'basic' | 'pro';
+    this.upgradeCost = this.getPlanPrice(plan as 'basic' | 'pro');
+    this.showPaymentModal = true;
   }
 
   changePlan(planName: 'free' | 'basic' | 'pro'): void {
@@ -136,6 +160,12 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
   getUpgradePriceDisplay(planName: 'free' | 'basic' | 'pro'): string {
     if (this.isCurrentPlan(planName)) {
       return 'Current Plan';
+    }
+    const currentOrder = this.planOrder(this.currentSubscription?.currentPlan ?? 'free');
+    const targetOrder  = this.planOrder(planName);
+
+    if (this.isNearingExpiry && targetOrder < currentOrder) {
+      return 'Downgrade & Extend';
     }
     if (this.currentSubscription?.currentPlan === 'basic' && planName === 'pro') {
       return 'Upgrade for ₱150';

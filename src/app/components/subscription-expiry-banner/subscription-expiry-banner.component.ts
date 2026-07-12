@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { SubscriptionService } from '../../services/subscription.service';
 
@@ -11,10 +12,11 @@ import { SubscriptionService } from '../../services/subscription.service';
   templateUrl: './subscription-expiry-banner.component.html',
   styleUrls: ['./subscription-expiry-banner.component.css']
 })
-export class SubscriptionExpiryBannerComponent implements OnInit {
+export class SubscriptionExpiryBannerComponent implements OnInit, OnDestroy {
   showBanner = false;
   daysRemaining = 0;
   expiryDate: Date | null = null;
+  private subs = new Subscription();
 
   constructor(
     private authService: AuthService,
@@ -23,26 +25,28 @@ export class SubscriptionExpiryBannerComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.checkSubscriptionExpiry();
+    // Subscribe reactively so the banner appears correctly on hard refresh
+    this.subs.add(
+      this.subscriptionService.subscription$.subscribe(subscription => {
+        if (!subscription || subscription.currentPlan === 'free') {
+          this.showBanner = false;
+          return;
+        }
+
+        const expiryDate = new Date(subscription.expiryDate);
+        this.expiryDate = expiryDate;
+
+        const now = new Date();
+        this.daysRemaining = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 3600 * 24));
+
+        // Only show when nearing expiration (1–7 days left), not after it has expired
+        this.showBanner = this.daysRemaining > 0 && this.daysRemaining <= 7;
+      })
+    );
   }
 
-  checkSubscriptionExpiry(): void {
-    const subscription = this.subscriptionService.getCurrentSubscription();
-    
-    if (!subscription || subscription.currentPlan === 'free') {
-      this.showBanner = false;
-      return;
-    }
-
-    const expiryDate = new Date(subscription.expiryDate);
-    this.expiryDate = expiryDate;
-    
-    const now = new Date();
-    const timeDiff = expiryDate.getTime() - now.getTime();
-    this.daysRemaining = Math.ceil(timeDiff / (1000 * 3600 * 24));
-
-    // Show banner if within 7 days OR already expired
-    this.showBanner = this.daysRemaining <= 7;
+  ngOnDestroy(): void {
+    this.subs.unsubscribe();
   }
 
   extendSubscription(): void {
