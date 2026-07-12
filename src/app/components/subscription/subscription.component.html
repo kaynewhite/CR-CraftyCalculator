@@ -146,9 +146,7 @@
               [disabled]="
                 isLoading ||
                 hasPendingRequest ||
-                (plan.name === 'free' &&
-                  currentSubscription?.currentPlan &&
-                  currentSubscription?.currentPlan !== 'free' || currentSubscription?.currentPlan === 'pro')
+                (plan.name === 'free' && currentSubscription?.currentPlan !== 'free')
               "
             >
               <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>

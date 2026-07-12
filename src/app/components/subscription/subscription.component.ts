@@ -123,13 +123,10 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
 
   calculateUpgradeCost(targetPlan: 'basic' | 'pro'): number {
     const current = this.currentSubscription?.currentPlan;
-    if (current === 'basic' && targetPlan === 'pro') {
-      return 150;
-    } else if (current === 'free' && targetPlan === 'basic') {
-      return 100;
-    } else if (current === 'free' && targetPlan === 'pro') {
-      return 250;
-    }
+    if (current === 'basic' && targetPlan === 'pro')  return 150;
+    if (current === 'free'  && targetPlan === 'basic') return 100;
+    if (current === 'free'  && targetPlan === 'pro')   return 250;
+    if (current === 'pro'   && targetPlan === 'basic') return 100; // downgrade & extend
     return 0;
   }
 
