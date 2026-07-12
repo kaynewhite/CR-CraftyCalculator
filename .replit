@@ -52,3 +52,5 @@ JWT_SECRET = "651a14f72425fa384c9f0982f6942ef25cb0559b557bc5e4d9a5f4b5a4f9f1674f
 SMTP_HOST = "smtp-relay.brevo.com"
 SMTP_PORT = "587"
 SMTP_FROM = "craftyrachelscalc@gmail.com"
+ALLOWED_ORIGINS = "*"
+NEON_DATABASE_URL = "postgresql://neondb_owner:npg_2YKOiV6omvzM@ep-long-sunset-aonrzg7k-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"

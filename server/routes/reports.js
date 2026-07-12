@@ -131,7 +131,6 @@ router.put('/:id/reply', requireAdmin, async (req, res) => {
       q = `UPDATE reports
            SET superadmin_reply = $1, superadmin_reply_at = NOW(), status = 'seen', updated_at = NOW()
            WHERE id = $2
-             AND (reporter_role = 'admin' OR (reporter_role = 'user' AND is_forwarded = TRUE))
            RETURNING *`;
       params = [reply.trim(), req.params.id];
     } else {
@@ -186,7 +185,7 @@ router.put('/:id/resolve', requireAdmin, async (req, res) => {
 
     let where;
     if (isSuperAdmin) {
-      where = `(reporter_role = 'admin' OR (reporter_role = 'user' AND is_forwarded = TRUE))`;
+      where = `1=1`;
     } else {
       where = `reporter_role = 'user'`;
     }
