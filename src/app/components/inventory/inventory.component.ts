@@ -9,6 +9,7 @@ import { Material } from '../../models/material.model';
 import { SubscriptionService } from '../../services/subscription.service';
 import { NotificationBellComponent } from '../notification-bell/notification-bell.component';
 
+
 @Component({
   selector: 'app-inventory',
   imports: [CommonModule, FormsModule, SidebarComponent, NotificationBellComponent],
@@ -26,7 +27,7 @@ export class InventoryComponent implements OnInit, OnDestroy {
   isEditing: boolean = false;
   currentPlan: 'free' | 'basic' | 'pro' = 'free';
   builtInCategories: string[] = [];
-  private sidebarSubscription: Subscription;
+  private subs = new Subscription();
 
   newMaterial = {
     name: '',
@@ -40,9 +41,7 @@ export class InventoryComponent implements OnInit, OnDestroy {
     private materialService: MaterialService,
     public subscriptionService: SubscriptionService,
     private sidebarService: SidebarService
-  ) {
-    this.sidebarSubscription = new Subscription();
-  }
+  ) {}
 
   // expose inventory limit values for template
   get inventoryLimit(): number {
@@ -55,22 +54,38 @@ export class InventoryComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.loadMaterials();
-    const sub = this.subscriptionService.getCurrentSubscription();
-    if (sub) {
-      this.currentPlan = sub.currentPlan;
-    }
+    this.subs = new Subscription();
+
+    // Reactively update whenever the service receives data from the API
+    this.subs.add(
+      this.materialService.materials$.subscribe(materials => {
+        this.materials = materials;
+        this.filteredMaterials = this.searchQuery
+          ? this.materialService.searchMaterials(this.searchQuery)
+          : materials;
+      })
+    );
+
+    // Reactively update plan so inventory limit is correct on hard refresh
+    this.subs.add(
+      this.subscriptionService.subscription$.subscribe(sub => {
+        if (sub) this.currentPlan = sub.currentPlan;
+      })
+    );
+
     this.builtInCategories = this.subscriptionService.getBuiltInCategories();
-    
-    // Subscribe to sidebar collapsed state
-    this.sidebarSubscription = this.sidebarService.isCollapsed$.subscribe(collapsed => {
-      this.sidebarCollapsed = collapsed;
-    });
+
+    this.subs.add(
+      this.sidebarService.isCollapsed$.subscribe(collapsed => {
+        this.sidebarCollapsed = collapsed;
+      })
+    );
   }
 
   loadMaterials(): void {
-    this.materials = this.materialService.getMaterials();
-    this.filteredMaterials = this.materials;
+    // Trigger a fresh fetch from the API; the materials$ subscription above
+    // will automatically update this.materials and this.filteredMaterials.
+    this.materialService.load();
   }
 
   searchMaterials(): void {
@@ -178,6 +193,6 @@ export class InventoryComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.sidebarSubscription.unsubscribe();
+    this.subs.unsubscribe();
   }
 }

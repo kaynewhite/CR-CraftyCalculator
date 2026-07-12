@@ -8,7 +8,7 @@ import { MaterialService } from '../../services/material.service';
 import { SidebarService } from '../../services/sidebar.service';
 import { AuthService } from '../../services/auth.service';
 import { CalculationSummary, Calculation } from '../../models/calculation.model';
-import { Subscription } from 'rxjs';
+import { combineLatest, Subscription } from 'rxjs';
 import { NotificationBellComponent } from '../notification-bell/notification-bell.component';
 
 @Component({
@@ -25,7 +25,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   recentSaved: Calculation[] = [];
   savedLimit: number = Infinity;
   Infinity = Infinity;
-  private sidebarSubscription = new Subscription();
+  private subs = new Subscription();
 
   constructor(
     public calculationService: CalculationService,
@@ -42,29 +42,42 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.loadDashboard();
-    this.sidebarSubscription = this.sidebarService.isCollapsed$.subscribe(collapsed => {
-      this.sidebarCollapsed = collapsed;
-    });
+    this.subs = new Subscription();
+
+    // Reactively rebuild dashboard whenever calculations or materials arrive from the API
+    this.subs.add(
+      combineLatest([
+        this.calculationService.calculations$,
+        this.materialService.materials$,
+      ]).subscribe(([calculations, materials]) => {
+        const allSaved = [...calculations].sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        this.summary = this.calculationService.getCalculationSummary();
+        if (this.summary) {
+          this.summary.totalMaterialsUsed = materials.length;
+        }
+        this.savedLimit = this.calculationService.getSavedLimit();
+        this.recentSaved = allSaved.slice(0, 3);
+        this.isLoading = false;
+      })
+    );
+
+    this.subs.add(
+      this.sidebarService.isCollapsed$.subscribe(collapsed => {
+        this.sidebarCollapsed = collapsed;
+      })
+    );
   }
 
   ngOnDestroy(): void {
-    this.sidebarSubscription.unsubscribe();
+    this.subs.unsubscribe();
   }
 
   loadDashboard(): void {
-    setTimeout(() => {
-      this.summary = this.calculationService.getCalculationSummary();
-      const materials = this.materialService.getMaterials();
-      if (this.summary) {
-        this.summary.totalMaterialsUsed = materials.length;
-      }
-      const allSaved = this.calculationService.getCalculations()
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      this.savedLimit = this.calculationService.getSavedLimit();
-      this.recentSaved = allSaved.slice(0, 3);
-      this.isLoading = false;
-    }, 500);
+    // Trigger fresh fetches; the combineLatest subscription above will update the view.
+    this.calculationService.load();
+    this.materialService.load();
   }
 
   toggleSidebar(): void {

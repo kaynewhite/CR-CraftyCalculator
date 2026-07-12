@@ -10,6 +10,7 @@ import { MaterialInput } from '../../models/material.model';
 import { SubscriptionService } from '../../services/subscription.service';
 import { NotificationBellComponent } from '../notification-bell/notification-bell.component';
 
+
 @Component({
   selector: 'app-history',
   imports: [CommonModule, FormsModule, SidebarComponent, NotificationBellComponent],
@@ -28,36 +29,45 @@ export class HistoryComponent implements OnInit, OnDestroy {
   savedCount: number = 0;
   Infinity = Infinity;
   selectedCalc: Calculation | null = null;
-  private sidebarSubscription: Subscription;
+  private subs = new Subscription();
 
   constructor(
     public calculationService: CalculationService,
     private subscriptionService: SubscriptionService,
     private sidebarService: SidebarService
-  ) {
-    this.sidebarSubscription = new Subscription();
-  }
+  ) {}
 
   ngOnInit(): void {
-    const sub = this.subscriptionService.getCurrentSubscription();
-    if (sub) {
-      this.currentPlan = sub.currentPlan;
-    }
-    this.loadSaved();
-    this.remainingSlots = this.calculationService.getRemainingSlots();
-    
-    // Subscribe to sidebar collapsed state
-    this.sidebarSubscription = this.sidebarService.isCollapsed$.subscribe(collapsed => {
-      this.sidebarCollapsed = collapsed;
-    });
+    this.subs = new Subscription();
+
+    // Reactively update whenever the service receives data from the API
+    this.subs.add(
+      this.calculationService.calculations$.subscribe(calculations => {
+        this.calculations = calculations;
+        this.savedCount = calculations.length;
+        this.remainingSlots = this.calculationService.getRemainingSlots();
+        this.applyFilters();
+      })
+    );
+
+    // Reactively update plan on hard refresh
+    this.subs.add(
+      this.subscriptionService.subscription$.subscribe(sub => {
+        if (sub) this.currentPlan = sub.currentPlan;
+      })
+    );
+
+    this.subs.add(
+      this.sidebarService.isCollapsed$.subscribe(collapsed => {
+        this.sidebarCollapsed = collapsed;
+      })
+    );
   }
 
   loadSaved(): void {
-    // always load calculations regardless of plan, but cap/expire is handled in service
-    this.calculations = this.calculationService.getCalculations();
-    this.savedCount = this.calculations.length;
-    this.remainingSlots = this.calculationService.getRemainingSlots();
-    this.applyFilters();
+    // Trigger a fresh fetch from the API; the calculations$ subscription above
+    // will automatically update this.calculations and re-apply filters.
+    this.calculationService.load();
   }
 
   applyFilters(): void {
@@ -98,6 +108,6 @@ export class HistoryComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.sidebarSubscription.unsubscribe();
+    this.subs.unsubscribe();
   }
 }
