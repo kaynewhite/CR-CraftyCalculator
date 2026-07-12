@@ -4,10 +4,29 @@ import { AuthService } from './auth.service';
 import { ApiService } from './api.service';
 import { BehaviorSubject, Observable } from 'rxjs';
 
+const SUB_CACHE_KEY = 'cr_subscription';
+
 @Injectable({ providedIn: 'root' })
 export class SubscriptionService {
-  private subscriptionSubject = new BehaviorSubject<UserSubscription | null>(null);
+  private subscriptionSubject = new BehaviorSubject<UserSubscription | null>(
+    SubscriptionService.readCache()
+  );
   public subscription$ = this.subscriptionSubject.asObservable();
+
+  private static readCache(): UserSubscription | null {
+    try {
+      const raw = localStorage.getItem(SUB_CACHE_KEY);
+      return raw ? JSON.parse(raw) as UserSubscription : null;
+    } catch { return null; }
+  }
+
+  private saveCache(sub: UserSubscription): void {
+    try { localStorage.setItem(SUB_CACHE_KEY, JSON.stringify(sub)); } catch {}
+  }
+
+  private clearCache(): void {
+    try { localStorage.removeItem(SUB_CACHE_KEY); } catch {}
+  }
 
   private qrSubject = new BehaviorSubject<{ maya: string | null; gcash: string | null }>({ maya: null, gcash: null });
   public qr$ = this.qrSubject.asObservable();
@@ -35,6 +54,7 @@ export class SubscriptionService {
         this.loadSubscription();
         this.loadQrCodes();
       } else {
+        this.clearCache();
         this.subscriptionSubject.next(null);
       }
     });
@@ -51,15 +71,18 @@ export class SubscriptionService {
           isActive: row.is_active,
           durationMonths: row.duration_months,
         };
+        this.saveCache(sub);
         this.subscriptionSubject.next(sub);
       },
       error: () => {
         const user = this.authService.currentUserValue;
         if (user) {
-          this.subscriptionSubject.next({
+          const fallback: UserSubscription = {
             userId: user.id, currentPlan: 'free',
             startDate: new Date(), expiryDate: new Date(Date.now() + 30 * 86400000), isActive: true,
-          });
+          };
+          this.saveCache(fallback);
+          this.subscriptionSubject.next(fallback);
         }
       },
     });
