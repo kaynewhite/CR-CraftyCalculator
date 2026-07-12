@@ -3,7 +3,6 @@ import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ThemeService } from './services/theme.service';
 import { AuthService } from './services/auth.service';
-import { SubscriptionService } from './services/subscription.service';
 
 @Component({
   selector: 'app-root',
@@ -19,12 +18,9 @@ export class AppComponent implements OnInit {
   showRejectionBox = false;
   rejectionFeedback = '';
 
-  subscriptionWarning = '';
-
   constructor(
     public themeService: ThemeService,
-    private authService: AuthService,
-    private subscriptionService: SubscriptionService
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -52,23 +48,6 @@ export class AppComponent implements OnInit {
       if (user && user.status === 'rejected' && user.rejectionFeedback) {
         this.rejectionFeedback = user.rejectionFeedback;
         this.showRejectionBox = true;
-      }
-    });
-
-    this.subscriptionService.subscription$.subscribe(subscription => {
-      if (!subscription || subscription.currentPlan === 'free') {
-        this.subscriptionWarning = '';
-        return;
-      }
-
-      const expiry = new Date(subscription.expiryDate);
-      const now = new Date();
-      const daysLeft = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-
-      if (daysLeft <= 7 && daysLeft >= 0) {
-        this.subscriptionWarning = `Your ${subscription.currentPlan.toUpperCase()} plan expires in ${daysLeft} day${daysLeft === 1 ? '' : 's'}. Please renew soon to keep access.`;
-      } else {
-        this.subscriptionWarning = '';
       }
     });
 

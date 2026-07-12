@@ -1,11 +1,4 @@
 <main class="app-root">
-  <div class="notification-bar" *ngIf="subscriptionWarning">
-    <div class="notification-content">
-      <i class="bi bi-exclamation-triangle-fill"></i>
-      <span>{{ subscriptionWarning }}</span>
-    </div>
-  </div>
-
   <router-outlet></router-outlet>
 
   <div class="rejection-overlay" *ngIf="showRejectionBox">
